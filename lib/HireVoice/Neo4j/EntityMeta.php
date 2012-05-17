@@ -17,6 +17,11 @@ class EntityMeta
     {
         $class = new \ReflectionClass($className);
 
+        if ($class->implementsInterface('HireVoice\\Neo4j\\EntityProxy')) {
+            $class = $class->getParentClass();
+            $className = $class->getName();
+        }
+
         if (! $entity = $reader->getClassAnnotation($class, 'HireVoice\\Neo4j\\Annotation\\Entity')) {
             throw new Exception("Class $className is not declared as an entity.");
         }
@@ -57,6 +62,11 @@ class EntityMeta
     function getRepositoryClass()
     {
         return $this->repositoryClass;
+    }
+
+    function getProxyClass()
+    {
+        return 'neo4jProxy' . str_replace('\\', '_', $this->className);
     }
 
     function getName()

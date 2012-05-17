@@ -1,0 +1,210 @@
+<?php
+
+namespace HireVoice\Neo4j;
+use Doctrine\Common\Collections\ArrayCollection;
+
+class ProxyFactory
+{
+    public static function fromNode($node, $repository)
+    {
+        $class = $node->getProperty('class');
+        $meta = $repository->fromClass($class);
+        $proxyClass = $meta->getProxyClass();
+
+        $proxy = self::createProxy($meta);
+        $proxy->__setMeta($meta);
+        $proxy->__setNode($node);
+        $proxy->__setRepository($repository);
+
+        $pk = $meta->getPrimaryKey();
+        $pk->setValue($proxy, $node->getId());
+        $proxy->__addHydrated($pk->getName());
+
+        foreach ($meta->getProperties() as $property) {
+            $name = $property->getName();
+
+            if ($value = $node->getProperty($name)) {
+                $property->setValue($proxy, $value);
+                $proxy->__addHydrated($name);
+            }
+        }
+
+        foreach ($meta->getManyToManyRelations() as $property) {
+            if ($property->isWriteOnly()) {
+                $proxy->__addHydrated($property->getName());
+            }
+        }
+
+        return $proxy;
+    }
+
+    private static function createProxy($meta)
+    {
+        $proxyDir = '/tmp/'; // FIXME
+        $proxyClass = $meta->getProxyClass();
+        $className = $meta->getName();
+
+        if (class_exists($proxyClass, false)) {
+            return new $proxyClass;
+        }
+
+        $targetFile = "$proxyDir$proxyClass.php";
+        //if (! file_exists($targetFile)) {
+            $functions = '';
+            $reflectionClass = new \ReflectionClass($className);
+            foreach ($reflectionClass->getMethods(\ReflectionMethod::IS_PUBLIC) as $method) {
+                if (! $method->isConstructor() && ! $method->isDestructor() && ! $method->isFinal()) {
+                    $functions .= self::methodProxy($method);
+                }
+            }
+
+            $content = <<<CONTENT
+<?php
+use HireVoice\\Neo4j\\Extension;
+use HireVoice\\Neo4j\\EntityProxy;
+use HireVoice\\Neo4j\\ProxyFactory;
+use Doctrine\\Common\\Collections\\ArrayCollection;
+
+class $proxyClass extends $className implements EntityProxy
+{
+    private \$neo4j_hydrated = array();
+    private \$neo4j_meta;
+    private \$neo4j_node;
+    private \$neo4j_repository;
+    private \$neo4j_relationships = false;
+
+    function getEntity()
+    {
+        \$entity = new $className;
+
+        foreach (\$this->neo4j_meta->getProperties() as \$prop) {
+            \$prop->setValue(\$entity, \$prop->getValue(\$this));
+        }
+
+        \$prop = \$this->neo4j_meta->getPrimaryKey();
+        \$prop->setValue(\$entity, \$prop->getValue(\$this));
+
+        return \$entity;
+    }
+
+    $functions
+
+    function __addHydrated(\$name)
+    {
+        \$this->neo4j_hydrated[] = \$name;
+    }
+
+    function __setMeta(\$meta)
+    {
+        \$this->neo4j_meta = \$meta;
+    }
+
+    function __setNode(\$node)
+    {
+        \$this->neo4j_node = \$node;
+    }
+
+    function __setRepository(\$repository)
+    {
+        \$this->neo4j_repository = \$repository;
+    }
+
+    private function __load(\$name)
+    {
+        \$property = \$this->neo4j_meta->findProperty(\$name);
+
+        if (! \$property) {
+            return;
+        }
+
+        if (strpos(\$name, 'set') === 0) {
+            \$this->__addHydrated(\$property->getName());
+            return;
+        }
+
+        if (\$property->isProperty()) {
+            return;
+        }
+
+        if (in_array(\$property->getName(), \$this->neo4j_hydrated)) {
+            return;
+        }
+
+        if (false === \$this->neo4j_relationships) {
+            \$command = new Extension\GetNodeRelationshipsLight(\$this->neo4j_node->getClient(), \$this->neo4j_node);
+            \$this->neo4j_relationships = \$command->execute();
+        }
+
+        \$this->__addHydrated(\$property->getName());
+        \$collection = new ArrayCollection;
+        foreach (\$this->neo4j_relationships as \$relation) {
+            if (\$relation['type'] == \$property->getName()) {
+                // Read-only relations read the start node instead
+                if (\$property->isTraversed()) {
+                    \$nodeUrl = \$relation['end'];
+                } else {
+                     \$nodeUrl = \$relation['start'];
+                }
+
+                \$node = \$this->neo4j_node->getClient()->getNode(basename(\$nodeUrl));
+                \$collection->add(ProxyFactory::fromNode(\$node, \$this->neo4j_repository));
+            }
+        }
+
+        if (\$property->isRelationList()) {
+            \$property->setValue(\$this, \$collection);
+        } else {
+            if (count(\$collection)) {
+                \$property->setValue(\$this, \$collection->first());
+            }
+        }
+    }
+}
+
+
+CONTENT;
+            file_put_contents($targetFile, $content);
+        //}
+
+        require $targetFile;
+        return new $proxyClass;
+    }
+
+    private static function methodProxy($method)
+    {
+        $parts = array();
+        $arguments = array();
+
+        foreach ($method->getParameters() as $parameter) {
+            $variable = '$' . $parameter->getName();
+            $parts[] = $variable;
+
+            $arg = $variable;
+
+            if ($parameter->isOptional()) {
+                $arg .= ' = ' . var_export($parameter->getDefaultValue(), true);
+            }
+
+            if ($parameter->isPassedByReference()) {
+                $arg = "& $arg";
+            }
+
+            $arguments[] = $arg;
+        }
+
+        $parts = implode(', ', $parts);
+        $arguments = implode(', ', $arguments);
+
+        $name = var_export($method->getName(), true);
+        return <<<FUNC
+
+    function {$method->getName()}($arguments)
+    {
+        self::__load($name);
+        return parent::{$method->getName()}($parts);
+    }
+
+FUNC;
+    }
+}
+

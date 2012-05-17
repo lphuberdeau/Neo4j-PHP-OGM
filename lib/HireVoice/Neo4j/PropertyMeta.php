@@ -116,8 +116,12 @@ class PropertyMeta
             $this->property->setValue($entity, json_decode($value, true));
             break;
         case 'date':
-            $date = new \DateTime($value . ' UTC');
-            $date->setTimezone(new \DateTimeZone(date_default_timezone_get()));
+            $date = null;
+            if ($value) {
+                $date = new \DateTime($value . ' UTC');
+                $date->setTimezone(new \DateTimeZone(date_default_timezone_get()));
+            }
+
             $this->property->setValue($entity, $date);
             break;
         }

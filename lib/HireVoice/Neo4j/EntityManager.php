@@ -78,7 +78,7 @@ class EntityManager
 
     function load($node)
     {
-        return EntityProxy::fromNode($node, $this->metaRepository);
+        return ProxyFactory::fromNode($node, $this->metaRepository);
     }
 
     function createGremlinQuery($query = null)
