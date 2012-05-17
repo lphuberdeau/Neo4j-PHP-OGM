@@ -5,16 +5,26 @@ use Doctrine\Common\Collections\ArrayCollection;
 
 class ProxyFactory
 {
-    public static function fromNode($node, $repository)
+    private $proxyDir;
+    private $debug;
+
+    function __construct($proxyDir = '/tmp', $debug = false)
+    {
+        $this->proxyDir = rtrim($proxyDir, '/');
+        $this->debug = (bool) $debug;
+    }
+
+    function fromNode($node, $repository)
     {
         $class = $node->getProperty('class');
         $meta = $repository->fromClass($class);
         $proxyClass = $meta->getProxyClass();
 
-        $proxy = self::createProxy($meta);
+        $proxy = $this->createProxy($meta);
         $proxy->__setMeta($meta);
         $proxy->__setNode($node);
         $proxy->__setRepository($repository);
+        $proxy->__setProxyFactory($this);
 
         $pk = $meta->getPrimaryKey();
         $pk->setValue($proxy, $node->getId());
@@ -38,9 +48,8 @@ class ProxyFactory
         return $proxy;
     }
 
-    private static function createProxy($meta)
+    private function createProxy($meta)
     {
-        $proxyDir = '/tmp/'; // FIXME
         $proxyClass = $meta->getProxyClass();
         $className = $meta->getName();
 
@@ -48,13 +57,13 @@ class ProxyFactory
             return new $proxyClass;
         }
 
-        $targetFile = "$proxyDir$proxyClass.php";
-        //if (! file_exists($targetFile)) {
+        $targetFile = "{$this->proxyDir}/$proxyClass.php";
+        if ($this->debug || ! file_exists($targetFile)) {
             $functions = '';
             $reflectionClass = new \ReflectionClass($className);
             foreach ($reflectionClass->getMethods(\ReflectionMethod::IS_PUBLIC) as $method) {
                 if (! $method->isConstructor() && ! $method->isDestructor() && ! $method->isFinal()) {
-                    $functions .= self::methodProxy($method);
+                    $functions .= $this->methodProxy($method);
                 }
             }
 
@@ -62,7 +71,6 @@ class ProxyFactory
 <?php
 use HireVoice\\Neo4j\\Extension;
 use HireVoice\\Neo4j\\EntityProxy;
-use HireVoice\\Neo4j\\ProxyFactory;
 use Doctrine\\Common\\Collections\\ArrayCollection;
 
 class $proxyClass extends $className implements EntityProxy
@@ -70,6 +78,7 @@ class $proxyClass extends $className implements EntityProxy
     private \$neo4j_hydrated = array();
     private \$neo4j_meta;
     private \$neo4j_node;
+    private \$neo4j_proxyFactory;
     private \$neo4j_repository;
     private \$neo4j_relationships = false;
 
@@ -107,6 +116,11 @@ class $proxyClass extends $className implements EntityProxy
     function __setRepository(\$repository)
     {
         \$this->neo4j_repository = \$repository;
+    }
+
+    function __setProxyFactory(\$proxyFactory)
+    {
+        \$this->neo4j_proxyFactory = \$proxyFactory;
     }
 
     private function __load(\$name)
@@ -147,7 +161,7 @@ class $proxyClass extends $className implements EntityProxy
                 }
 
                 \$node = \$this->neo4j_node->getClient()->getNode(basename(\$nodeUrl));
-                \$collection->add(ProxyFactory::fromNode(\$node, \$this->neo4j_repository));
+                \$collection->add(\$this->neo4j_proxyFactory->fromNode(\$node, \$this->neo4j_repository));
             }
         }
 
@@ -164,13 +178,13 @@ class $proxyClass extends $className implements EntityProxy
 
 CONTENT;
             file_put_contents($targetFile, $content);
-        //}
+        }
 
         require $targetFile;
         return new $proxyClass;
     }
 
-    private static function methodProxy($method)
+    private function methodProxy($method)
     {
         $parts = array();
         $arguments = array();

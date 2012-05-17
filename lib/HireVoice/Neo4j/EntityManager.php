@@ -16,6 +16,7 @@ class EntityManager
 
     private $client;
     private $metaRepository;
+    private $proxyFactory;
     private $batch;
 
     private $entities = array();
@@ -30,6 +31,7 @@ class EntityManager
 
     function __construct(Client $client, MetaRepository $repository)
     {
+        $this->proxyFactory = new ProxyFactory;
         $this->client = $client;
         $this->metaRepository = $repository;
         $this->dateGenerator = function () {
@@ -78,7 +80,7 @@ class EntityManager
 
     function load($node)
     {
-        return ProxyFactory::fromNode($node, $this->metaRepository);
+        return $this->proxyFactory->fromNode($node, $this->metaRepository);
     }
 
     function createGremlinQuery($query = null)
@@ -379,6 +381,11 @@ class EntityManager
     function setDateGenerator(\Closure $generator)
     {
         $this->dateGenerator = $generator;
+    }
+
+    function setProxyFactory(ProxyFactory $factory)
+    {
+        $this->proxyFactory = $factory;
     }
 }
 
