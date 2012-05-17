@@ -1,0 +1,21 @@
+{
+    "name": "hirevoice/neo4jphp-ogm",
+    "type": "library",
+    "description": "Doctrine2-style entity mapper for Neo4j graph database",
+    "keywords": ["neo4j","graph","database","entity-mapper","doctrine"],
+    "homepage": "https://github.com/lphuberdeau/Neo4j-PHP-OGM",
+    "license": "MIT",
+    "authors": [
+        {"name": "Louis-Philippe Huberdeau", "email": "lphuberdeau@gmail.com", "homepage": "http://lphuberdeau.com"}
+    ],
+    "require": {
+        "php": ">=5.3.2",
+        "doctrine/common": ">=2.2.0,<2.3.0",
+        "everyman/neo4jphp": "*"
+    },
+    "autoload": {
+        "psr-0": {
+            "HireVoice": "lib/"
+        }
+    }
+}

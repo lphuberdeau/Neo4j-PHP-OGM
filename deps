@@ -1,8 +1,0 @@
-
-[doctrine-common]
-    git=http://github.com/doctrine/common.git
-    version=2.2.2
-
-[neo4jphp]
-    git=git://github.com/jadell/neo4jphp.git
-    version=0.1.0
