@@ -75,18 +75,21 @@ class EntityProxy
             throw new Exception("Unable to find property $name");
         }
 
-        if (in_array($property->getName(), $this->hydrated)) {
-            return call_user_func_array(array($this->entity, $name), $arguments);
-        }
-
         if (strpos($name, 'set') === 0) {
             $this->hydrated[] = $property->getName();
             return call_user_func_array(array($this->entity, $name), $arguments);
+        }
+
+        if ($property->isProperty()) {
+            return call_user_func_array(array($this->entity, $name), $arguments);
         } else {
+            if (in_array($property->getName(), $this->hydrated)) {
+                return call_user_func_array(array($this->entity, $name), $arguments);
+            }
+
             if (false === $this->relationships) {
                 $command = new Extension\GetNodeRelationshipsLight($this->node->getClient(), $this->node);
                 $this->relationships = $command->execute();
-                //$this->relationships = $this->node->getRelationships();
             }
 
             $this->hydrated[] = $property->getName();

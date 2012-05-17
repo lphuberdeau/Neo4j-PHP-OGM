@@ -11,6 +11,9 @@ use Everyman\Neo4j\Client,
 
 class EntityManager
 {
+    const ENTITY_CREATE = 'entity.create';
+    const RELATION_CREATE = 'relation.create';
+
     private $client;
     private $metaRepository;
     private $batch;
@@ -22,6 +25,8 @@ class EntityManager
     private $repositories = array();
 
     private $dateGenerator;
+
+    private $eventHandlers = array();
 
     function __construct(Client $client, MetaRepository $repository)
     {
@@ -89,17 +94,21 @@ class EntityManager
 
     function gremlinQuery($string, $parameters)
     {
-        $query = new InternalGremlinQuery($this->client, $string, $parameters);
-        $rs = $query->getResultSet();
+        try {
+            $query = new InternalGremlinQuery($this->client, $string, $parameters);
+            $rs = $query->getResultSet();
 
-        if (count($rs) === 1
-            && is_string($rs[0][0])
-            && strpos($rs[0][0], 'Exception') !== false
-        ) {
-            throw new Exception("An error was detected: {$rs[0][0]}");
+            if (count($rs) === 1
+                && is_string($rs[0][0])
+                && strpos($rs[0][0], 'Exception') !== false
+            ) {
+                throw new Exception("An error was detected: {$rs[0][0]}");
+            }
+
+            return $rs;
+        } catch (\Everyman\Neo4j\Exception $e) {
+            throw new Exception("An error was detected: {$e->getMessage()}");
         }
-
-        return $rs;
     }
 
     function createCypherQuery()
@@ -136,6 +145,24 @@ class EntityManager
         }
 
         return $this->repositories[$class];
+    }
+
+    function registerEvent($eventName, $callback)
+    {
+        $this->eventHandlers[$eventName][] = $callback;
+    }
+
+    private function triggerEvent($eventName, $data)
+    {
+        if (isset($this->eventHandlers[$eventName])) {
+            $args = func_get_args();
+            array_shift($args);
+
+            foreach ($this->eventHandlers[$eventName] as $callback) {
+                $clone = $args;
+                call_user_func_array($callback, $clone);
+            }
+        }
     }
 
     private function discoverEntities()
@@ -194,7 +221,12 @@ class EntityManager
             $hash = $this->getHash($entity);
             $meta = $this->getMeta($entity);
             $pk = $meta->getPrimaryKey();
-            $pk->setValue($entity, $this->nodes[$hash]->getId());
+
+            $nodeId = $this->nodes[$hash]->getId();
+            if ($pk->getValue($entity) != $nodeId) {
+                $pk->setValue($entity, $nodeId);
+                $this->triggerEvent(self::ENTITY_CREATE, $this->getEntity($entity));
+            }
         }
     }
 
@@ -265,11 +297,15 @@ class EntityManager
 
     /* private */ function addRelation($relation, $a, $b)
     {
+        static $loaded = null, $existing;
         $a = $this->nodes[$this->getHash($a)];
         $b = $this->nodes[$this->getHash($b)];
 
-        $command = new Extension\GetNodeRelationshipsLight($this->client, $a);
-        $existing = $command->execute();
+        if ($loaded !== $a) {
+            $command = new Extension\GetNodeRelationshipsLight($this->client, $a);
+            $existing = $command->execute();
+            $loaded = $a;
+        }
 
         foreach ($existing as $r) {
             if ($r['type'] == $relation && basename($r['end']) == $b->getId()) {
@@ -280,6 +316,9 @@ class EntityManager
         $a->relateTo($b, $relation)
             ->setProperty('creationDate', $this->getCurrentDate())
             ->save();
+
+        list($relation, $a, $b) = func_get_args();
+        $this->triggerEvent(self::RELATION_CREATE, $relation, $this->getEntity($a), $this->getEntity($b));
     }
 
     function createIndex($className)
@@ -289,10 +328,15 @@ class EntityManager
 
     private function getHash($object)
     {
+        return spl_object_hash($this->getEntity($object));
+    }
+
+    private function getEntity($object)
+    {
         if ($object instanceof EntityProxy) {
-            return $this->getHash($object->getEntity());
+            return $this->getEntity($object->getEntity());
         } else {
-            return spl_object_hash($object);
+            return $object;
         }
     }
 

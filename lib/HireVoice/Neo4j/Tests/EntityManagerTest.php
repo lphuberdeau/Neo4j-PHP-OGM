@@ -270,6 +270,90 @@ class EntityManagerTest extends \PHPUnit_Framework_TestCase
         $this->assertEquals('foobar', $result['creationDate']);
         $this->assertEquals('baz', $result['updateDate']);
     }
+
+    function testEntityCreationHook()
+    {
+        $title = null;
+
+        $movie = new Entity\Movie;
+        $movie->setTitle('Terminator');
+        $em = $this->getEntityManager();
+        $em->registerEvent(Neo4j\EntityManager::ENTITY_CREATE, function ($entity) use (& $title) {
+            $title = $entity->getTitle();
+        });
+
+        $em->persist($movie);
+        $em->flush();
+
+        $this->assertEquals('Terminator', $title);
+    }
+
+    function testRelationCreationHook()
+    {
+        $code = null;
+        $em = $this->getEntityManager();
+        $em->registerEvent(Neo4j\EntityManager::RELATION_CREATE, function ($type, $start, $end) use (& $code) {
+            $code = $start->getTitle() . '-' . $type . '-' . $end->getFirstName();
+        });
+
+        $movie = new Entity\Movie;
+        $movie->setTitle('Terminator');
+        $actor = new Entity\Person;
+        $actor->setFirstName('Arnold');
+        $movie->addActor($actor);
+
+        $em->persist($movie);
+        $em->flush();
+
+        $this->assertEquals("Terminator-actor-Arnold", $code);
+    }
+
+    function testStoreArray()
+    {
+        $movie = new Entity\Movie;
+        $movie->setTitle(array('A', 'B'));
+
+        $em = $this->getEntityManager();
+        $em->persist($movie);
+        $em->flush();
+
+        $movie = $em->findAny($movie->getId());
+
+        $this->assertEquals(array('A', 'B'), $movie->getTitle());
+    }
+
+    function testStoreStructure()
+    {
+        $movie = new Entity\Movie;
+        $movie->setBlob(array('A' => 'B'));
+
+        $em = $this->getEntityManager();
+        $em->persist($movie);
+        $em->flush();
+
+        $movie = $em->findAny($movie->getId());
+
+        $this->assertEquals(array('A' => 'B'), $movie->getBlob());
+    }
+
+    function testEntityProxyHandlesPropertiesCorrectly()
+    {
+        $movie = new Entity\Movie;
+
+        $em = $this->getEntityManager();
+        $em->persist($movie);
+        $em->flush();
+
+        $movie = $em->findAny($movie->getId());
+        $movie->addTitle('World');
+
+        $em = $this->getEntityManager();
+        $em->persist($movie);
+        $em->flush();
+
+        $movie = $em->findAny($movie->getId());
+        $this->assertEquals('World', $movie->getTitle());
+    }
 }
 
 /**

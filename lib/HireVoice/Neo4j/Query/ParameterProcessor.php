@@ -4,8 +4,17 @@ namespace HireVoice\Neo4j\Query;
 
 class ParameterProcessor
 {
+    const GREMLIN = 'gremlin';
+    const CYPHER = 'cypher';
+
+    private $mode;
     private $query;
     private $parameters = array();
+
+    function __construct($mode = 'gremlin')
+    {
+        $this->mode = $mode;
+    }
 
     function setQuery($string)
     {
@@ -28,11 +37,12 @@ class ParameterProcessor
 
     function process()
     {
+        $mode = $this->mode;
         $parameters = $this->parameters;
         $string = $this->query;
 
         $string = str_replace('[:', '[;;', $string);
-        $parameters = array_filter($parameters, function ($value) use (& $parameters, & $string) {
+        $parameters = array_filter($parameters, function ($value) use (& $parameters, & $string, $mode) {
             $key = key($parameters);
             next($parameters);
 
@@ -40,7 +50,11 @@ class ParameterProcessor
                 $string = str_replace(":$key", $value, $string);
                 return false;
             } else {
-                $string = str_replace(":$key", $key, $string);
+                if ($mode == 'cypher') {
+                    $string = str_replace(":$key", '{' . $key . '}', $string);
+                } else {
+                    $string = str_replace(":$key", $key, $string);
+                }
                 return true;
             }
         });

@@ -12,12 +12,19 @@ class CypherQuery
     private $where = array();
     private $order = array();
     private $limit;
+    private $mode;
     private $processor;
 
     function __construct(EntityManager $em)
     {
         $this->em = $em;
-        $this->processor = new Query\ParameterProcessor;
+        $this->processor = new Query\ParameterProcessor(Query\ParameterProcessor::CYPHER);
+    }
+
+    function mode($mode)
+    {
+        $this->mode = $mode;
+        return $this;
     }
 
     function start($string)
@@ -86,7 +93,9 @@ class CypherQuery
     function getOne()
     {
         $result = $this->execute();
-        return $this->convertValue($result[0][0]);
+        if (isset($result[0])) {
+            return $this->convertValue($result[0][0]);
+        }
     }
 
     function getList()
@@ -121,7 +130,13 @@ class CypherQuery
 
     private function execute()
     {
-        $query = 'start ' . implode(', ', $this->start) . PHP_EOL;
+        $query = '';
+
+        if ($this->mode) {
+        $query .= 'CYPHER ' . $this->mode . PHP_EOL;
+        }
+
+        $query .= 'start ' . implode(', ', $this->start) . PHP_EOL;
 
         if (count($this->match)) {
             $query .= 'match ' . implode(', ', $this->match) . PHP_EOL;

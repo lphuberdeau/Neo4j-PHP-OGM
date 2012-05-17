@@ -86,14 +86,17 @@ class PropertyMeta
 
     function getValue($entity)
     {
+        $raw = $this->property->getValue($entity);
+
         switch ($this->format) {
         case 'scalar':
         case 'relation':
-            return $this->property->getValue($entity);
+            return $raw;
+        case 'json':
+            return json_encode($raw);
         case 'date':
-            $value = $this->property->getValue($entity);
-            if ($value) {
-                $value = clone $value;
+            if ($raw) {
+                $value = clone $raw;
                 $value->setTimezone(new \DateTimeZone('UTC'));
                 return $value->format('Y-m-d H:i:s');
             } else {
@@ -108,6 +111,9 @@ class PropertyMeta
         case 'scalar':
         case 'relation':
             $this->property->setValue($entity, $value);
+            break;
+        case 'json':
+            $this->property->setValue($entity, json_decode($value, true));
             break;
         case 'date':
             $date = new \DateTime($value . ' UTC');

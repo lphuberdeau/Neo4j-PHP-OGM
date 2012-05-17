@@ -98,7 +98,7 @@ class QueryTest extends \PHPUnit_Framework_TestCase
             ->set('movie', self::$root)
             ->getEntityMap();
         
-        $this->assertEquals('Bloom', $result[1]['key']->getLastName());
+        $this->assertContains('Bloom', array($result[0]['key']->getLastName(), $result[1]['key']->getLastName()));
         $this->assertEquals(1, $result[0]['value']);
         $this->assertCount(2, $result);
     }
@@ -257,6 +257,22 @@ class QueryTest extends \PHPUnit_Framework_TestCase
         $this->assertEquals(array(
             'Orlando',
             'Viggo',
+        ), $result->toArray());
+    }
+
+    function testSearchOnProperty()
+    {
+        $em = $this->getEntityManager();
+        $result = $em->createCypherQuery()
+            ->startWithNode('movie', self::$root)
+            ->match('(movie) -[:actor]-> (actor)')
+            ->where('actor.lastName = :name')
+            ->end('actor.firstName')
+            ->set('name', 'Bloom')
+            ->getList();
+
+        $this->assertEquals(array(
+            'Orlando',
         ), $result->toArray());
     }
 }

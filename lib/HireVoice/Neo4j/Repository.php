@@ -89,4 +89,9 @@ class Repository
 
         throw new Exception("Property $property is not indexed.");
     }
+
+    protected function getRepository($class)
+    {
+        return $this->entityManager->getRepository($class);
+    }
 }

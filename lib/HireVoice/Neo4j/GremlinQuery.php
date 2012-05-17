@@ -71,18 +71,30 @@ class GremlinQuery
     function getMap()
     {
         $result = $this->execute();
-        $result = $result[0][0];
-        $result = substr($result, 1, -1);
 
         $out = array();
-        $count = 0;
+        if (isset($result[0])) {
+            $result = $result[0][0];
+            $result = substr($result, 1, -1);
 
-        foreach (array_filter(explode(', ', $result)) as $entry) {
-            list($key, $value) = explode('=', $entry);
+            foreach (array_filter(explode(', ', $result)) as $entry) {
+                list($key, $value) = explode('=', $entry);
 
-            $out[$key] = $this->convertValue($value);
+                $out[$key] = $this->convertValue($value);
+            }
+        } else {
+            $class = new \ReflectionClass($result);
+            $dataProperty = $class->getProperty('data');
+            $dataProperty->setAccessible(true);
+
+            $result = $dataProperty->getValue($result);
+
+            foreach ($result as $key => $values) {
+                $value = reset($values);
+
+                $out[$key] = $this->convertValue($value);
+            }
         }
-
         return $out;
     }
 

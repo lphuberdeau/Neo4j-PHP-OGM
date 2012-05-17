@@ -18,7 +18,7 @@ class Reflection
             $property = substr($property, 0, -3) . 'y';
         }
 
-        if ('s' == substr($property, -1)) {
+        if (preg_match('/[^s]s$/', $property)) {
             $property = substr($property, 0, -1);
         }
 

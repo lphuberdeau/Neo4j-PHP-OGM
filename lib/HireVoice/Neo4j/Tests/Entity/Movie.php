@@ -45,6 +45,11 @@ class Movie
      */
     private $cinemas;
 
+    /**
+     * @OGM\Property(format="json")
+     */
+    private $blob;
+
     function __construct()
     {
         $this->actors = new ArrayCollection;
@@ -65,6 +70,11 @@ class Movie
     function getTitle()
     {
         return $this->title;
+    }
+
+    function addTitle($part)
+    {
+        $this->title .= $part;
     }
 
     function setTitle($title)
@@ -130,6 +140,16 @@ class Movie
     function getMainActor()
     {
         return $this->mainActor;
+    }
+
+    function getBlob()
+    {
+        return $this->blob;
+    }
+
+    function setBlob($blob)
+    {
+        $this->blob = $blob;
     }
 }
 
