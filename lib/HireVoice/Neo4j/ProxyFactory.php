@@ -201,6 +201,12 @@ CONTENT;
 
             if ($parameter->isPassedByReference()) {
                 $arg = "& $arg";
+            } elseif ($c = $parameter->getClass()) {
+                $arg = $c->getName() . ' ' . $arg;
+            }
+
+            if ($parameter->isArray()) {
+                $arg = "array $arg";
             }
 
             $arguments[] = $arg;
