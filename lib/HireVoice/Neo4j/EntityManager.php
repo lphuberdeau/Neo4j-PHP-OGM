@@ -43,10 +43,6 @@ class EntityManager
 
     function persist($entity)
     {
-        if ($entity instanceof EntityProxy) {
-            $entity = $entity->getEntity();
-        }
-
         $meta = $this->getMeta($entity);
 
         $hash = $this->getHash($entity);
@@ -227,7 +223,7 @@ class EntityManager
             $nodeId = $this->nodes[$hash]->getId();
             if ($pk->getValue($entity) != $nodeId) {
                 $pk->setValue($entity, $nodeId);
-                $this->triggerEvent(self::ENTITY_CREATE, $this->getEntity($entity));
+                $this->triggerEvent(self::ENTITY_CREATE, $entity);
             }
         }
     }
@@ -320,7 +316,7 @@ class EntityManager
             ->save();
 
         list($relation, $a, $b) = func_get_args();
-        $this->triggerEvent(self::RELATION_CREATE, $relation, $this->getEntity($a), $this->getEntity($b));
+        $this->triggerEvent(self::RELATION_CREATE, $relation, $a, $b);
     }
 
     function createIndex($className)
@@ -330,16 +326,7 @@ class EntityManager
 
     private function getHash($object)
     {
-        return spl_object_hash($this->getEntity($object));
-    }
-
-    private function getEntity($object)
-    {
-        if ($object instanceof EntityProxy) {
-            return $this->getEntity($object->getEntity());
-        } else {
-            return $object;
-        }
+        return spl_object_hash($object);
     }
 
     private function index($entity)
