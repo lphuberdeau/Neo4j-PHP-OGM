@@ -332,12 +332,12 @@ class EntityManager
             }
         }
 
-        $a->relateTo($b, $relation)
+        $relationship = $a->relateTo($b, $relation)
             ->setProperty('creationDate', $this->getCurrentDate())
             ->save();
 
         list($relation, $a, $b) = func_get_args();
-        $this->triggerEvent(self::RELATION_CREATE, $relation, $a, $b);
+        $this->triggerEvent(self::RELATION_CREATE, $relation, $a, $b, $relationship);
     }
 
     function createIndex($className)
