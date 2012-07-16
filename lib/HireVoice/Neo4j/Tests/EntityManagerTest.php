@@ -377,6 +377,54 @@ class EntityManagerTest extends \PHPUnit_Framework_TestCase
         $movie = $em->findAny($movie->getId());
         $this->assertEquals('World', $movie->getTitle());
     }
+
+    function testEntityRetrievedIsTheSame()
+    {
+        $movie = new Entity\Movie;
+
+        $em = $this->getEntityManager();
+        $em->persist($movie);
+        $em->flush();
+
+        $a = $em->find(get_class($movie), $movie->getId());
+        $b = $em->find(get_class($movie), $movie->getId());
+
+        $this->assertSame($a, $b);
+    }
+
+    function testClearingEntitiesFreesRelations()
+    {
+        $movie = new Entity\Movie;
+
+        $em = $this->getEntityManager();
+        $em->persist($movie);
+        $em->flush();
+
+        $a = $em->find(get_class($movie), $movie->getId());
+
+        $em->clear();
+
+        $b = $em->find(get_class($movie), $movie->getId());
+
+        $this->assertNotSame($a, $b);
+    }
+
+    function testEntityRetrievedIsTheSameFromProxyAsWell()
+    {
+        $movie = new Entity\Movie;
+        $actor = new Entity\Person;
+        $movie->addActor($actor);
+
+        $em = $this->getEntityManager();
+        $em->persist($movie);
+        $em->flush();
+
+        $movie = $em->find(get_class($movie), $movie->getId());
+        $a = $em->find(get_class($actor), $actor->getId());
+        $b = $movie->getActors()->first();
+
+        $this->assertSame($a, $b);
+    }
 }
 
 /**

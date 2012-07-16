@@ -35,7 +35,7 @@ class ProxyFactory
         $this->debug = (bool) $debug;
     }
 
-    function fromNode($node, $repository)
+    function fromNode($node, $repository, \Closure $loadCallback)
     {
         $class = $node->getProperty('class');
         $meta = $repository->fromClass($class);
@@ -44,8 +44,7 @@ class ProxyFactory
         $proxy = $this->createProxy($meta);
         $proxy->__setMeta($meta);
         $proxy->__setNode($node);
-        $proxy->__setRepository($repository);
-        $proxy->__setProxyFactory($this);
+        $proxy->__setLoadCallback($loadCallback);
 
         $pk = $meta->getPrimaryKey();
         $pk->setValue($proxy, $node->getId());
@@ -99,8 +98,7 @@ class $proxyClass extends $className implements EntityProxy
     private \$neo4j_hydrated = array();
     private \$neo4j_meta;
     private \$neo4j_node;
-    private \$neo4j_proxyFactory;
-    private \$neo4j_repository;
+    private \$neo4j_loadCallback;
     private \$neo4j_relationships = false;
 
     function getEntity()
@@ -134,14 +132,9 @@ class $proxyClass extends $className implements EntityProxy
         \$this->neo4j_node = \$node;
     }
 
-    function __setRepository(\$repository)
+    function __setLoadCallback(\Closure \$loadCallback)
     {
-        \$this->neo4j_repository = \$repository;
-    }
-
-    function __setProxyFactory(\$proxyFactory)
-    {
-        \$this->neo4j_proxyFactory = \$proxyFactory;
+        \$this->neo4j_loadCallback = \$loadCallback;
     }
 
     private function __load(\$name)
@@ -182,7 +175,8 @@ class $proxyClass extends $className implements EntityProxy
                 }
 
                 \$node = \$this->neo4j_node->getClient()->getNode(basename(\$nodeUrl));
-                \$collection->add(\$this->neo4j_proxyFactory->fromNode(\$node, \$this->neo4j_repository));
+                \$loader = \$this->neo4j_loadCallback;
+                \$collection->add(\$loader(\$node));
             }
         }
 

@@ -33,8 +33,6 @@ interface EntityProxy
 
     function __setNode($node);
 
-    function __setRepository($repository);
-
-    function __setProxyFactory($repository);
+    function __setLoadCallback(\Closure $loadCallback);
 }
 

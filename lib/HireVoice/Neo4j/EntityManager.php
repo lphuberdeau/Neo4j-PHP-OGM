@@ -46,6 +46,8 @@ class EntityManager
     private $indexes = array();
     private $repositories = array();
 
+    private $loadedNodes = array();
+
     private $dateGenerator;
 
     private $eventHandlers = array();
@@ -96,7 +98,20 @@ class EntityManager
 
     function load($node)
     {
-        return $this->proxyFactory->fromNode($node, $this->metaRepository);
+        if (! isset($this->loadedNodes[$node->getId()])) {
+            $em = $this;
+
+            $this->loadedNodes[$node->getId()] = $this->proxyFactory->fromNode($node, $this->metaRepository, function ($node) use ($em) {
+                return $em->load($node);
+            });
+        }
+
+        return $this->loadedNodes[$node->getId()];
+    }
+
+    function clear()
+    {
+        $this->loadedNodes = array();
     }
 
     function createGremlinQuery($query = null)
