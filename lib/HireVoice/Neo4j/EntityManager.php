@@ -57,7 +57,6 @@ class EntityManager
         $this->metaRepository = $repository;
         $this->dateGenerator = function () {
             $currentDate = new \DateTime;
-            $currentDate->setTimezone(new \DateTimeZone('UTC'));
             return $currentDate->format('Y-m-d H:i:s');
         };
     }
