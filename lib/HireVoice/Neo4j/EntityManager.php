@@ -394,5 +394,10 @@ class EntityManager
     {
         $this->proxyFactory = $factory;
     }
+
+    public function getClient()
+    {
+        return $this->client();
+    }
 }
 
