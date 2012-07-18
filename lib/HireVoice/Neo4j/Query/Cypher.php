@@ -21,10 +21,11 @@
  * DEALINGS IN THE SOFTWARE.
  */
 
-namespace HireVoice\Neo4j;
+namespace HireVoice\Neo4j\Query;
 use Everyman\Neo4j\Node;
+use HireVoice\Neo4j\EntityManager;
 
-class CypherQuery
+class Cypher
 {
     private $em;
     private $start = array();
@@ -39,7 +40,7 @@ class CypherQuery
     function __construct(EntityManager $em)
     {
         $this->em = $em;
-        $this->processor = new Query\ParameterProcessor(Query\ParameterProcessor::CYPHER);
+        $this->processor = new ParameterProcessor(ParameterProcessor::CYPHER);
     }
 
     function mode($mode)

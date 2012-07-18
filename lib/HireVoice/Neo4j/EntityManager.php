@@ -119,7 +119,7 @@ class EntityManager
 
     function createGremlinQuery($query = null)
     {
-        $q = new GremlinQuery($this);
+        $q = new Query\Gremlin($this);
 
         if ($query) {
             $q->add($query);
@@ -149,7 +149,7 @@ class EntityManager
 
     function createCypherQuery()
     {
-        return new CypherQuery($this);
+        return new Query\Cypher($this);
     }
 
     function cypherQuery($string, $parameters)

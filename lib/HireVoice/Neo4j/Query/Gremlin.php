@@ -21,12 +21,13 @@
  * DEALINGS IN THE SOFTWARE.
  */
 
-namespace HireVoice\Neo4j;
+namespace HireVoice\Neo4j\Query;
 
 use Doctrine\Common\Collections\ArrayCollection;
 use Everyman\Neo4j\Node;
+use HireVoice\Neo4j\EntityManager;
 
-class GremlinQuery
+class Gremlin
 {
     private $em;
     private $parts = array();
@@ -35,7 +36,7 @@ class GremlinQuery
     function __construct(EntityManager $em)
     {
         $this->em = $em;
-        $this->processor = new Query\ParameterProcessor;
+        $this->processor = new ParameterProcessor;
     }
 
     function add($query)
