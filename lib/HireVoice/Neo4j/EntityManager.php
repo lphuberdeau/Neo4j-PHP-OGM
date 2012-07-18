@@ -101,9 +101,12 @@ class EntityManager
         if (! isset($this->loadedNodes[$node->getId()])) {
             $em = $this;
 
-            $this->loadedNodes[$node->getId()] = $this->proxyFactory->fromNode($node, $this->metaRepository, function ($node) use ($em) {
+            $entity = $this->proxyFactory->fromNode($node, $this->metaRepository, function ($node) use ($em) {
                 return $em->load($node);
             });
+
+            $this->loadedNodes[$node->getId()] = $entity;
+            $this->nodes[$this->getHash($entity)] = $node;
         }
 
         return $this->loadedNodes[$node->getId()];
@@ -219,14 +222,22 @@ class EntityManager
         });
     }
 
-    private function traverseRelations($entity, $callback)
+    private function traverseRelations($entity, $addCallback, $removeCallback = null)
     {
         $meta = $this->getMeta($entity);
 
         foreach ($meta->getManyToManyRelations() as $property) {
             if ($property->isTraversed()) {
-                foreach ($property->getValue($entity) as $entry) {
-                    $callback($entry, $property->getName());
+                $list = $property->getValue($entity);
+
+                foreach ($list as $entry) {
+                    $addCallback($entry, $property->getName());
+                }
+
+                if ($removeCallback && $list instanceof Extension\ArrayCollection) {
+                    foreach ($list->getRemovedElements() as $entry) {
+                        $removeCallback($entry, $property->getName());
+                    }
                 }
             }
         }
@@ -234,7 +245,7 @@ class EntityManager
         foreach ($meta->getManyToOneRelations() as $property) {
             if ($property->isTraversed()) {
                 if ($entry = $property->getValue($entity)) {
-                    $callback($entry, $property->getName());
+                    $addCallback($entry, $property->getName());
                 }
             }
         }
@@ -323,22 +334,22 @@ class EntityManager
     {
         $em = $this;
 
-        $this->traverseRelations($entity, function ($entry, $relation) use ($entity, $em) {
+        $addCallback = function ($entry, $relation) use ($entity, $em) {
             $em->addRelation($relation, $entity, $entry);
-        });
+        };
+        $removeCallback = function ($entry, $relation) use ($entity, $em) {
+            $em->removeRelation($relation, $entity, $entry);
+        };
+
+        $this->traverseRelations($entity, $addCallback, $removeCallback);
     }
 
     /* private */ function addRelation($relation, $a, $b)
     {
-        static $loaded = null, $existing;
-        $a = $this->nodes[$this->getHash($a)];
-        $b = $this->nodes[$this->getHash($b)];
+        $a = $this->getLoadedNode($a);
+        $b = $this->getLoadedNode($b);
 
-        if ($loaded !== $a) {
-            $command = new Extension\GetNodeRelationshipsLight($this->client, $a);
-            $existing = $command->execute();
-            $loaded = $a;
-        }
+        $existing = $this->getRelationsFrom($a);
 
         foreach ($existing as $r) {
             if ($r['type'] == $relation && basename($r['end']) == $b->getId()) {
@@ -352,6 +363,41 @@ class EntityManager
 
         list($relation, $a, $b) = func_get_args();
         $this->triggerEvent(self::RELATION_CREATE, $relation, $a, $b, $relationship);
+    }
+
+    /* private */ function removeRelation($relation, $a, $b)
+    {
+        $a = $this->getLoadedNode($a);
+        $b = $this->getLoadedNode($b);
+
+        $existing = $this->getRelationsFrom($a);
+
+        foreach ($existing as $r) {
+            if ($r['type'] == $relation && basename($r['end']) == $b->getId()) {
+                if ($relationship = $this->client->getRelationship(basename($r['self'])))  {
+                    $relationship->delete();
+                }
+
+                return;
+            }
+        }
+    }
+
+    private function getLoadedNode($entity)
+    {
+        return $this->nodes[$this->getHash($entity)];
+    }
+
+    private function getRelationsFrom($node)
+    {
+        static $loaded = null, $existing;
+        if ($loaded !== $node) {
+            $command = new Extension\GetNodeRelationshipsLight($this->client, $node);
+            $existing = $command->execute();
+            $loaded = $node;
+        }
+
+        return $existing;
     }
 
     function createIndex($className)

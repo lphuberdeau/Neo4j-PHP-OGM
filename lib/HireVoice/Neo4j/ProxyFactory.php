@@ -91,7 +91,7 @@ class ProxyFactory
 <?php
 use HireVoice\\Neo4j\\Extension;
 use HireVoice\\Neo4j\\EntityProxy;
-use Doctrine\\Common\\Collections\\ArrayCollection;
+use HireVoice\\Neo4j\\Extension\\ArrayCollection;
 
 class $proxyClass extends $className implements EntityProxy
 {

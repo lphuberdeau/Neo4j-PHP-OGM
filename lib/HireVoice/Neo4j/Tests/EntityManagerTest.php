@@ -425,6 +425,31 @@ class EntityManagerTest extends \PHPUnit_Framework_TestCase
 
         $this->assertSame($a, $b);
     }
+
+    function testRelationRemovalFromList()
+    {
+        $movie = new Entity\Movie;
+        $actor = new Entity\Person;
+        $movie->addActor($actor);
+
+        $em = $this->getEntityManager();
+        $em->persist($movie);
+        $em->flush();
+
+        $em = $this->getEntityManager();
+
+        $movie = $em->find(get_class($movie), $movie->getId());
+        $actor = $movie->getActors()->first();
+        $movie->removeActor($actor);
+
+        $em->persist($movie);
+        $em->flush();
+
+        $em = $this->getEntityManager();
+        $movie = $em->find(get_class($movie), $movie->getId());
+
+        $this->assertCount(0, $movie->getActors());
+    }
 }
 
 /**

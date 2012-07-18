@@ -133,6 +133,11 @@ class Movie
         $this->actors->add($actor);
     }
 
+    function removeActor($actor)
+    {
+        $this->actors->removeElement($actor);
+    }
+
     function setActors(ArrayCollection $actors)
     {
         $this->actors = $actors;
