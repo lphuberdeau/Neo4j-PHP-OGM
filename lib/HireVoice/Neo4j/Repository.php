@@ -133,8 +133,6 @@ class Repository
             $queryMap[] = $property.':'.'"'.$value.'"';
         }
         $query = implode(' AND ', $queryMap);
-
-        return $query;
     }
 
     function __call($name, $arguments)
