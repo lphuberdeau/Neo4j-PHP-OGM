@@ -245,6 +245,9 @@ class EntityManager
         foreach ($meta->getManyToOneRelations() as $property) {
             if ($property->isTraversed()) {
                 if ($entry = $property->getValue($entity)) {
+                    if ($removeCallback) {
+                        $this->removePreviousRelations($entity, $property->getName(), $entry);
+                    }
                     $addCallback($entry, $property->getName());
                 }
             }
@@ -349,10 +352,10 @@ class EntityManager
         $a = $this->getLoadedNode($a);
         $b = $this->getLoadedNode($b);
 
-        $existing = $this->getRelationsFrom($a);
+        $existing = $this->getRelationsFrom($a, $relation);
 
         foreach ($existing as $r) {
-            if ($r['type'] == $relation && basename($r['end']) == $b->getId()) {
+            if (basename($r['end']) == $b->getId()) {
                 return;
             }
         }
@@ -370,16 +373,31 @@ class EntityManager
         $a = $this->getLoadedNode($a);
         $b = $this->getLoadedNode($b);
 
-        $existing = $this->getRelationsFrom($a);
+        $existing = $this->getRelationsFrom($a, $relation);
 
         foreach ($existing as $r) {
-            if ($r['type'] == $relation && basename($r['end']) == $b->getId()) {
-                if ($relationship = $this->client->getRelationship(basename($r['self'])))  {
-                    $relationship->delete();
-                }
-
+            if (basename($r['end']) == $b->getId()) {
+                $this->deleteRelationship($r);
                 return;
             }
+        }
+    }
+
+    function removePreviousRelations($from, $relation, $exception)
+    {
+        $node = $this->getLoadedNode($from);
+
+        foreach ($this->getRelationsFrom($node, $relation) as $r) {
+            if (basename($r['end']) != $exception->getId()) {
+                $this->deleteRelationship($r);
+            }
+        }
+    }
+
+    private function deleteRelationship($r)
+    {
+        if ($relationship = $this->client->getRelationship(basename($r['self'])))  {
+            $relationship->delete();
         }
     }
 
@@ -388,8 +406,9 @@ class EntityManager
         return $this->nodes[$this->getHash($entity)];
     }
 
-    private function getRelationsFrom($node)
+    private function getRelationsFrom($node, $relation)
     {
+        // Cache sequential calls for the same element
         static $loaded = null, $existing;
         if ($loaded !== $node) {
             $command = new Extension\GetNodeRelationshipsLight($this->client, $node);
@@ -397,7 +416,9 @@ class EntityManager
             $loaded = $node;
         }
 
-        return $existing;
+        return array_filter($existing, function ($entry) use ($relation) {
+            return $entry['type'] == $relation;
+        });
     }
 
     function createIndex($className)
@@ -417,7 +438,7 @@ class EntityManager
         foreach ($meta->getIndexedProperties() as $property) {
             $class = $meta->getName();
             $index = $this->getRepository($class)->getIndex();
-            $node = $this->nodes[$this->getHash($entity)];
+            $node = $this->getLoadedNode($entity);
             $index->add($node, $property->getName(), $property->getValue($entity));
         }
     }

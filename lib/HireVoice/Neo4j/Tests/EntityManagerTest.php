@@ -450,6 +450,33 @@ class EntityManagerTest extends \PHPUnit_Framework_TestCase
 
         $this->assertCount(0, $movie->getActors());
     }
+
+    function testRelationRemovalFromSingleElement()
+    {
+        $movie = new Entity\Movie;
+        $actor = new Entity\Person;
+        $actor->setFirstName('Bob');
+        $movie->setMainActor($actor);
+
+        $em = $this->getEntityManager();
+        $em->persist($movie);
+        $em->flush();
+
+        $em = $this->getEntityManager();
+
+        $movie = $em->find(get_class($movie), $movie->getId());
+        $replacement = new Entity\Person;
+        $replacement->setFirstName('Roger');
+        $movie->setMainActor($replacement);
+
+        $em->persist($movie);
+        $em->flush();
+
+        $em = $this->getEntityManager();
+        $movie = $em->find(get_class($movie), $movie->getId());
+
+        $this->assertEquals('Roger', $movie->getMainActor()->getFirstName());
+    }
 }
 
 /**
