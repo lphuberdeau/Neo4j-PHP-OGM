@@ -123,9 +123,6 @@ class Repository
     {
         if(empty($criteria))
         {
-            throw new \InvalidArgumentException('The supplied arguments for the find method could not be empty');
-        }
-
         $queryMap = array();
         foreach($criteria as $key => $value)
         {
@@ -133,6 +130,8 @@ class Repository
             $queryMap[] = $property.':'.'"'.$value.'"';
         }
         $query = implode(' AND ', $queryMap);
+
+        return $query;
     }
 
     function __call($name, $arguments)
