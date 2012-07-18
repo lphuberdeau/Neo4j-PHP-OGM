@@ -77,6 +77,34 @@ class Repository
         }
     }
 
+	public function findOneBy(array $arguments)
+	{
+		$property = key($arguments);
+		$property = Reflection::cleanProperty($property);
+		$value = current($arguments);
+		
+		if ($node = $this->getIndex()->findOne($property, $value)) {
+			return $this->entityManager->load($node);
+		}
+		else {
+			return null;
+		}
+	}
+	
+	public function findBy(array $arguments)
+	{
+		$property = key($arguments);
+		$property = Reflection::cleanProperty($property);
+		$value = current($arguments);
+		
+		$collection = new ArrayCollection;
+		foreach ($this->getIndex()->find($property, $value) as $node) {
+			$collection->add($this->entityManager->load($node));
+		}
+
+		return $collection;
+	}
+	
     function __call($name, $arguments)
     {
         if (strpos($name, 'findOneBy') === 0) {
