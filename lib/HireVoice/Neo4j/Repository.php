@@ -91,8 +91,8 @@ class Repository
             $queryMap[] = $key.':'.'"'.$value.'"';
         }
         $query = implode(' AND ', $queryMap);
-        if ($node = $this->getIndex()->query($query)) {
-            return $this->entityManager->load($node[0]);
+        if ($node = $this->getIndex()->queryOne($query)) {
+            return $this->entityManager->load($node);
         }
         else {
             return null;
