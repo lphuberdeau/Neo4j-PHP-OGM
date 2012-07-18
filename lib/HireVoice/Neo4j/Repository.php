@@ -92,30 +92,6 @@ class Repository
     }
 
     /**
-<<<<<<< HEAD
-     * Finds all node matching the search criteria
-     *
-     * @param array $criteria An array of search criteria
-     */
-    public function findBy(array $criteria)
-    {
-        $query = $this->createQuery($criteria);
-=======
-     * Finds one node by a set of criteria
-     *
-     * @param array $criteria An array of search criteria
-     */
-    public function findOneBy(array $criteria)
-    {
-        $query = $this->createQuery($criteria);
-        
-        if ($node = $this->getIndex()->queryOne($query)) {
-            return $this->entityManager->load($node);
-        }
-        return null;
-    }
-
-    /**
      * Finds all node matching the search criteria
      *
      * @param array $criteria An array of search criteria
