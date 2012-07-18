@@ -22,7 +22,7 @@
  */
 
 namespace HireVoice\Neo4j\Tests;
-use HireVoice\Neo4j\Reflection;
+use HireVoice\Neo4j\Meta\Reflection;
 
 class ReflectionTest extends \PHPUnit_Framework_TestCase
 {

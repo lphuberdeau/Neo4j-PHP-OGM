@@ -22,7 +22,7 @@
  */
 
 namespace HireVoice\Neo4j\Tests;
-use HireVoice\Neo4j\MetaRepository;
+use HireVoice\Neo4j\Meta\Repository as MetaRepository;
 
 class EntityMetaTest extends \PHPUnit_Framework_TestCase
 {

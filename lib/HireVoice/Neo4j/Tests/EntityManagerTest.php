@@ -29,7 +29,7 @@ class EntityManagerTest extends \PHPUnit_Framework_TestCase
     private function getEntityManager()
     {
         $client = new \Everyman\Neo4j\Client(new \Everyman\Neo4j\Transport('localhost', 7474));
-        $em = new Neo4j\EntityManager($client, new Neo4j\MetaRepository);
+        $em = new Neo4j\EntityManager($client, new Neo4j\Meta\Repository);
         $em->setProxyFactory(new Neo4j\ProxyFactory('/tmp', true));
         return $em;
     }

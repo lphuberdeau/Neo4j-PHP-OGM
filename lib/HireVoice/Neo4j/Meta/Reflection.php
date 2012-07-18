@@ -21,31 +21,29 @@
  * DEALINGS IN THE SOFTWARE.
  */
 
-namespace HireVoice\Neo4j;
-use Doctrine\Common\Annotations\Reader;
-use Doctrine\Common\Annotations\AnnotationReader;
+namespace HireVoice\Neo4j\Meta;
 
-class MetaRepository
+class Reflection
 {
-    private $reader;
-    private $metas = array();
-
-    function __construct($annotationReader = null)
+    public static function getProperty($methodName)
     {
-        if ($annotationReader instanceof Reader) {
-            $this->reader = $annotationReader;
-        } else {
-            $this->reader = new AnnotationReader;
-        }
+        $property = substr($methodName, 3);
+        return self::cleanProperty($property);
     }
 
-    function fromClass($className)
+    public static function cleanProperty($property)
     {
-        if (! isset($this->metas[$className])) {
-            $this->metas[$className] = EntityMeta::fromClass($this->reader, $className, $this);
+        $property = lcfirst($property);
+
+        if ('ies' == substr($property, -3)) {
+            $property = substr($property, 0, -3) . 'y';
         }
 
-        return $this->metas[$className];
+        if (preg_match('/[^s]s$/', $property)) {
+            $property = substr($property, 0, -1);
+        }
+
+        return $property;
     }
 }
 

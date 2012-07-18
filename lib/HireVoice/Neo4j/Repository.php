@@ -30,7 +30,7 @@ class Repository
     private $index;
     private $entityManger;
 
-    function __construct(EntityManager $entityManager, EntityMeta $meta)
+    function __construct(EntityManager $entityManager, Meta\Entity $meta)
     {
         $this->entityManager = $entityManager;
         $this->class = $meta->getName();
@@ -81,7 +81,7 @@ class Repository
     {
         if (strpos($name, 'findOneBy') === 0) {
             $property = substr($name, 9);
-            $property = Reflection::cleanProperty($property);
+            $property = Meta\Reflection::cleanProperty($property);
 
             if ($node = $this->getIndex()->findOne($property, $arguments[0])) {
                 return $this->entityManager->load($node);
@@ -100,10 +100,10 @@ class Repository
 
     private function getSearchableProperty($property)
     {
-        $property = Reflection::cleanProperty($property);
+        $property = Meta\Reflection::cleanProperty($property);
 
         foreach ($this->meta->getIndexedProperties() as $p) {
-            if (Reflection::cleanProperty($p->getName()) == $property) {
+            if (Meta\Reflection::cleanProperty($p->getName()) == $property) {
                 return $property;
             }
         }

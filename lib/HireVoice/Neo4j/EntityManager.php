@@ -52,7 +52,7 @@ class EntityManager
 
     private $eventHandlers = array();
 
-    function __construct(Client $client, MetaRepository $repository)
+    function __construct(Client $client, Meta\Repository $repository)
     {
         $this->proxyFactory = new ProxyFactory;
         $this->client = $client;

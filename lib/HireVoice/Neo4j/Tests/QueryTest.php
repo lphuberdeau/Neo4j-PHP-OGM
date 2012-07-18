@@ -33,7 +33,7 @@ class QueryTest extends \PHPUnit_Framework_TestCase
     private function getEntityManager()
     {
         $client = new \Everyman\Neo4j\Client(new \Everyman\Neo4j\Transport('localhost', 7474));
-        return new Neo4j\EntityManager($client, new Neo4j\MetaRepository);
+        return new Neo4j\EntityManager($client, new Neo4j\Meta\Repository);
     }
 
     function setUp()

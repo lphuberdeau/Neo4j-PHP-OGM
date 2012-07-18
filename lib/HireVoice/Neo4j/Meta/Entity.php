@@ -21,10 +21,11 @@
  * DEALINGS IN THE SOFTWARE.
  */
 
-namespace HireVoice\Neo4j;
+namespace HireVoice\Neo4j\Meta;
 use Doctrine\Common\Annotations\Reader as AnnotationReader;
+use HireVoice\Neo4j\Exception;
 
-class EntityMeta
+class Entity
 {
     private $repositoryClass = 'HireVoice\\Neo4j\\Repository';
     private $className;
@@ -54,7 +55,7 @@ class EntityMeta
         }
 
         foreach ($class->getProperties() as $property) {
-            $prop = new PropertyMeta($reader, $property);
+            $prop = new Property($reader, $property);
             if ($prop->isPrimaryKey()) {
                 $object->setPrimaryKey($prop);
             } elseif ($prop->isProperty($prop)) {
@@ -143,7 +144,7 @@ class EntityMeta
         }
     }
 
-    private function setPrimaryKey(PropertyMeta $property)
+    private function setPrimaryKey(Property $property)
     {
         if ($this->primaryKey) {
              throw new Exception("Class {$this->className} contains multiple targets for @Auto");

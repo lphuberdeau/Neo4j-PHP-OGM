@@ -135,7 +135,7 @@ Ideally, this would be done through DependencyInjection in your application. Her
 procedural creation.
 
     $client = new Everyman\Neo4j\Client('localhost', 7474);
-    $metaRepository = new HireVoice\Neo4j\MetaRepository; // Ideally, a cached Doctrine\Common\Annotations\Reader is provided as an argument
+    $metaRepository = new HireVoice\Neo4j\Meta\Repository; // Ideally, a cached Doctrine\Common\Annotations\Reader is provided as an argument
     $em = new HireVoice\Neo4j\EntityManager($client, $metaRepository);
 
     // for debugging purposes or to change the cache location, you can specify the ProxyFactory

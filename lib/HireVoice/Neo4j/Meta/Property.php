@@ -21,9 +21,9 @@
  * DEALINGS IN THE SOFTWARE.
  */
 
-namespace HireVoice\Neo4j;
+namespace HireVoice\Neo4j\Meta;
 
-class PropertyMeta
+class Property
 {
     const AUTO = 'HireVoice\\Neo4j\\Annotation\\Auto';
     const PROPERTY = 'HireVoice\\Neo4j\\Annotation\\Property';
