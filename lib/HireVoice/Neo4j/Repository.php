@@ -123,7 +123,7 @@ class Repository
     {
         if(empty($criteria))
         {
-            throw new \InvalidArgumentException('The criteria supplied for the search can not be empty'),
+            throw new \InvalidArgumentException('The criteria supplied for the search can not be empty');
         }
         $queryMap = array();
         foreach($criteria as $key => $value)
