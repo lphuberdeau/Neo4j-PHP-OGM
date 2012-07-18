@@ -477,9 +477,14 @@ class EntityManager
         $this->proxyFactory = $factory;
     }
 
+    /**
+     * Returns the Client
+     *
+     * @return Everyman\Neo4j\Client
+     */
     public function getClient()
     {
-        return $this->client();
+        return $this->client;
     }
 }
 
