@@ -77,6 +77,67 @@ class Repository
         }
     }
 
+    /**
+     * Finds one node by a set of criteria
+     *
+     * @param array $criteria An array of search criteria
+     */
+    public function findOneBy(array $criteria)
+    {
+        $query = $this->createQuery($criteria);
+        
+        if ($node = $this->getIndex()->queryOne($query)) {
+            return $this->entityManager->load($node);
+        }
+        return null;
+    }
+
+    /**
+     * Finds all node matching the search criteria
+     *
+     * @param array $criteria An array of search criteria
+     */
+    public function findBy(array $criteria)
+    {
+        $query = $this->createQuery($criteria);
+        $collection = new ArrayCollection();
+
+        foreach($this->getIndex()->query($query) as $node) {
+            $collection->add($this->entityManager->load($node));
+        }
+        return $collection;
+    }
+
+    /**
+     * Creates the query for the Search Index call - Lucene search Type
+     * 
+     * Query example : /index/node/MyIndex?query=key:value AND otherkey:othervalue
+     * 
+     * More info :
+     * http://docs.neo4j.org/chunked/milestone/rest-api-indexes.html#rest-api-find-node-by-query
+     * http://lucene.apache.org/java/3_5_0/queryparsersyntax.html
+     *
+     *
+     * @param array $criteria An array of search criterias
+     */
+    public function createQuery(array $criteria = array())
+    {
+        if(empty($criteria))
+        {
+            throw new \InvalidArgumentException('The supplied arguments for the find method could not be empty');
+        }
+
+        $queryMap = array();
+        foreach($criteria as $key => $value)
+        {
+            $property = $this->getSearchableProperty($key);
+            $queryMap[] = $property.':'.'"'.$value.'"';
+        }
+        $query = implode(' AND ', $queryMap);
+
+        return $query;
+    }
+
     function __call($name, $arguments)
     {
         if (strpos($name, 'findOneBy') === 0) {
