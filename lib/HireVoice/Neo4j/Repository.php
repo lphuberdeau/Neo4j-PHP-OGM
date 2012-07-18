@@ -120,7 +120,7 @@ class Repository
      *
      * @param array $criteria An array of search criterias
      */
-    private function createQuery(array $criteria = array())
+    public function createQuery(array $criteria = array())
     {
         if(empty($criteria))
         {
@@ -130,7 +130,8 @@ class Repository
         $queryMap = array();
         foreach($criteria as $key => $value)
         {
-            $queryMap[] = $key.':'.'"'.$value.'"';
+            $property = $this->getSearchableProperty($key);
+            $queryMap[] = $property.':'.'"'.$value.'"';
         }
         $query = implode(' AND ', $queryMap);
 
