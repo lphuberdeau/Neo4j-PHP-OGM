@@ -81,7 +81,7 @@ class Repository
     {
         if(!is_array($arguments))
         {
-            throw new Exception('The supplied argument in the "findOneBy" method must be an array');
+            throw new \InvalidArgumentException('The supplied argument in the "findOneBy" method must be an array');
         }
 
         $queryMap = array();
@@ -94,8 +94,7 @@ class Repository
         if ($node = $this->getIndex()->queryOne($query)) {
             return $this->entityManager->load($node);
         }
-        else {
-            return null;
+        return null;
         }
     }
 
