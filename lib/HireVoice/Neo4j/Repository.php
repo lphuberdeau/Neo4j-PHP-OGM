@@ -64,7 +64,7 @@ class Repository
     {
         if (! $this->index) {
             $this->index = $this->entityManager->createIndex($this->class);
-            $this->index->save();
+            //$this->index->save();
         }
 
         return $this->index;
@@ -76,7 +76,6 @@ class Repository
             $this->index->save();
         }
     }
-
     /**
      * Finds one node by a set of criteria
      *
