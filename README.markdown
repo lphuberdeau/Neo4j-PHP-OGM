@@ -139,4 +139,4 @@ procedural creation.
     $em = new HireVoice\Neo4j\EntityManager($client, $metaRepository);
 
     // for debugging purposes or to change the cache location, you can specify the ProxyFactory
-    // $em->setProxyFactory(new HireVoice\Neo4j\ProxyFactory('/tmp', true));
+    // $em->setProxyFactory(new HireVoice\Neo4j\Proxy\Factory('/tmp', true));

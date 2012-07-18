@@ -21,9 +21,9 @@
  * DEALINGS IN THE SOFTWARE.
  */
 
-namespace HireVoice\Neo4j;
+namespace HireVoice\Neo4j\Proxy;
 
-interface EntityProxy
+interface Entity
 {
     function getEntity();
 

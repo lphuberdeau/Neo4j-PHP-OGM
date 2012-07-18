@@ -39,7 +39,7 @@ class Entity
     {
         $class = new \ReflectionClass($className);
 
-        if ($class->implementsInterface('HireVoice\\Neo4j\\EntityProxy')) {
+        if ($class->implementsInterface('HireVoice\\Neo4j\\Proxy\\Entity')) {
             $class = $class->getParentClass();
             $className = $class->getName();
         }

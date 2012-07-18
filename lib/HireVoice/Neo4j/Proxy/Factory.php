@@ -21,10 +21,10 @@
  * DEALINGS IN THE SOFTWARE.
  */
 
-namespace HireVoice\Neo4j;
+namespace HireVoice\Neo4j\Proxy;
 use Doctrine\Common\Collections\ArrayCollection;
 
-class ProxyFactory
+class Factory
 {
     private $proxyDir;
     private $debug;
@@ -90,10 +90,9 @@ class ProxyFactory
             $content = <<<CONTENT
 <?php
 use HireVoice\\Neo4j\\Extension;
-use HireVoice\\Neo4j\\EntityProxy;
 use HireVoice\\Neo4j\\Extension\\ArrayCollection;
 
-class $proxyClass extends $className implements EntityProxy
+class $proxyClass extends $className implements HireVoice\\Neo4j\\Proxy\\Entity
 {
     private \$neo4j_hydrated = array();
     private \$neo4j_meta;

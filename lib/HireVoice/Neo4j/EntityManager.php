@@ -54,7 +54,7 @@ class EntityManager
 
     function __construct(Client $client, Meta\Repository $repository)
     {
-        $this->proxyFactory = new ProxyFactory;
+        $this->proxyFactory = new Proxy\Factory;
         $this->client = $client;
         $this->metaRepository = $repository;
         $this->dateGenerator = function () {
@@ -472,7 +472,7 @@ class EntityManager
         $this->dateGenerator = $generator;
     }
 
-    function setProxyFactory(ProxyFactory $factory)
+    function setProxyFactory(Proxy\Factory $factory)
     {
         $this->proxyFactory = $factory;
     }
