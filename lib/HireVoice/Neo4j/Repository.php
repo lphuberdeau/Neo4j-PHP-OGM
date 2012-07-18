@@ -123,6 +123,8 @@ class Repository
     {
         if(empty($criteria))
         {
+            throw new \InvalidArgumentException('The criteria supplied for the search can not be empty'),
+        }
         $queryMap = array();
         foreach($criteria as $key => $value)
         {
@@ -150,9 +152,9 @@ class Repository
             foreach ($this->getIndex()->find($property, $arguments[0]) as $node) {
                 $collection->add($this->entityManager->load($node));
             }
-
-            return $collection;
         }
+
+        return $collection;
     }
 
     private function getSearchableProperty($property)
