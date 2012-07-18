@@ -55,6 +55,11 @@ If you have used Doctrine2 before, this is a very similar process.
          */
         protected $follows;
 
+        /**
+         * @OGM\ManyToOne
+         */
+        protected $referrer;
+
         function __construct()
         {
             $this->friends = new ArrayCollection;
