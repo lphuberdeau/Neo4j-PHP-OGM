@@ -64,7 +64,7 @@ class Repository
     {
         if (! $this->index) {
             $this->index = $this->entityManager->createIndex($this->class);
-            $this->index->save();
+            //$this->index->save();
         }
 
         return $this->index;
@@ -74,6 +74,28 @@ class Repository
     {
         if ($this->index) {
             $this->index->save();
+        }
+    }
+
+    public function findOneBy(array $arguments)
+    {
+        if(!is_array($arguments))
+        {
+            throw new Exception('The supplied argument in the "findOneBy" method must be an array');
+        }
+
+        $queryMap = array();
+        foreach($arguments as $key => $value)
+        {
+            // search values with spaces need to be between ""
+            $queryMap[] = $key.':'.'"'.$value.'"';
+        }
+        $query = implode(' AND ', $queryMap);
+        if ($node = $this->getIndex()->query($query)) {
+            return $this->entityManager->load($node);
+        }
+        else {
+            return null;
         }
     }
 
