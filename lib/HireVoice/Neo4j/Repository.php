@@ -92,7 +92,7 @@ class Repository
         }
         $query = implode(' AND ', $queryMap);
         if ($node = $this->getIndex()->query($query)) {
-            return $this->entityManager->load($node);
+            return $this->entityManager->load($node[0]);
         }
         else {
             return null;
