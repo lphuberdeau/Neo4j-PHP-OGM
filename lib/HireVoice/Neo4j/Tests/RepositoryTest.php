@@ -128,22 +128,38 @@ class RepositoryTest extends \PHPUnit_Framework_TestCase
         $this->assertTrue(count($movies) == 2);
     }
 
+    public function testQueryReturningNoNodes()
+    {
+        $uid = $this->createNodes();
+
+        $repo = $this->getRepository();
+
+        $movies = $repo->findBy(array('title' => $uid, 'category' => 'none'));
+
+        $this->assertTrue($movies instanceof ArrayCollection);
+
+        $this->assertCount(0, $movies);
+    }
+
     public function createNodes()
     {
         $em = $this->getEntityManager();
 
         $entity = new Entity\Movie;
         $entity->setTitle('Return of the king');
+		$entity->setCategory('long');
         $em->persist($entity);
 
         $uid = uniqid();
 
         $matrix = new Entity\Movie;
         $matrix->setTitle($uid);
+		$matrix->setCategory('scifi');
         $em->persist($matrix);
 
         $matrix2 = new Entity\Movie;
         $matrix2->setTitle('The '.$uid);
+		$matrix->setCategory('scifi');
         $em->persist($matrix2);
 
         $em->flush();
