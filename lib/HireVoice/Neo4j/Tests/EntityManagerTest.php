@@ -341,7 +341,7 @@ class EntityManagerTest extends \PHPUnit_Framework_TestCase
         $paramsArray = null;
         $em = $this->getEntityManager();
 
-        $em->registerEvent(Neo4j\EntityManager::QUERY_RUN, function (\Everyman\Neo4j\Cypher\Query $query, $parameters, $time) use (& $queryObj, & $timeElapsed, & $paramsArray) {
+        $em->registerEvent(EntityManager::QUERY_RUN, function (\Everyman\Neo4j\Cypher\Query $query, $parameters, $time) use (& $queryObj, & $timeElapsed, & $paramsArray) {
             $queryObj = $query;
             $timeElapsed = $time;
             $paramsArray = $parameters;
@@ -374,7 +374,7 @@ class EntityManagerTest extends \PHPUnit_Framework_TestCase
         $paramsArray = null;
         $em = $this->getEntityManager();
 
-        $em->registerEvent(Neo4j\EntityManager::QUERY_RUN, function (\Everyman\Neo4j\Gremlin\Query $query, $parameters, $time) use (& $queryObj, & $timeElapsed, & $paramsArray) {
+        $em->registerEvent(EntityManager::QUERY_RUN, function (\Everyman\Neo4j\Gremlin\Query $query, $parameters, $time) use (& $queryObj, & $timeElapsed, & $paramsArray) {
             $queryObj = $query;
             $timeElapsed = $time;
             $paramsArray = $parameters;

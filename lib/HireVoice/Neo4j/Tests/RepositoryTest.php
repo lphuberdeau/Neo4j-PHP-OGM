@@ -25,39 +25,23 @@ namespace HireVoice\Neo4j\Tests;
 
 use HireVoice\Neo4j\EntityManager;
 use HireVoice\Neo4j\Meta\Repository as MetaRepository;
-use HireVoice\Neo4j\Meta\Entity as EntityMeta;
-use Hirevoice\Neo4j\Repository;
+use HireVoice\Neo4j\Proxy\Factory as ProxyFactory;
 use Doctrine\Common\Collections\ArrayCollection;
 
 class RepositoryTest extends \PHPUnit_Framework_TestCase
 {
-
-    private $client;
-    private $metaRepository;
-    private $transport;
-
-    private $uid;
-
-    public function __construct()
-    {
-        $client = new \Everyman\Neo4j\Client(new \Everyman\Neo4j\Transport($GLOBALS['host'], $GLOBALS['port']));
-        $this->client = $client;
-        $this->metaRepository = new MetaRepository();
-    }
-
     private function getEntityManager()
     {
-        return new EntityManager($this->client, $this->metaRepository);
+        $client = new \Everyman\Neo4j\Client(new \Everyman\Neo4j\Transport($GLOBALS['host'], $GLOBALS['port']));
+        $em = new EntityManager($client, new MetaRepository());
+        $em->setProxyFactory(new ProxyFactory('/tmp', true));
+        return $em;
     }
 
     private function getRepository()
     {
         $em = $this->getEntityManager();
-        $entityMeta = new EntityMeta('HireVoice\\Neo4j\\Tests\\Entity\\Movie');
-
-        $repo = new Repository($em, $entityMeta);
-
-        return $repo;
+        return $em->getRepository('HireVoice\\Neo4j\\Tests\\Entity\\Movie');
     }
 
     public function testCreateLuceneQueryWithWordWithoutSpaces()
@@ -98,33 +82,33 @@ class RepositoryTest extends \PHPUnit_Framework_TestCase
 
     public function testQueryAndReturningNode()
     {
-        $this->createNodes();
+        $uid = $this->createNodes();
 
         $repo = $this->getRepository();
 
-        $movie = $repo->findOneBy(array('title' => $this->uid));
+        $movie = $repo->findOneBy(array('title' => $uid));
 
-        $this->assertEquals($this->uid, $movie->getTitle());
+        $this->assertEquals($uid, $movie->getTitle());
     }
 
     public function testQueryWithSpacesInSearchTermAndReturningNode()
     {
-        $this->createNodes();
+        $uid = $this->createNodes();
 
         $repo = $this->getRepository();
 
-        $movie = $repo->findOneBy(array('title' => 'The '.$this->uid));
+        $movie = $repo->findOneBy(array('title' => 'The '.$uid));
 
-        $this->assertEquals('The '.$this->uid, $movie->getTitle());
+        $this->assertEquals('The '.$uid, $movie->getTitle());
     }
 
     public function testQueryForMultipleReturningNodes()
     {
-        $this->createNodes();
+        $uid = $this->createNodes();
 
         $repo = $this->getRepository();
 
-        $movies = $repo->findBy(array('title' => $this->uid));
+        $movies = $repo->findBy(array('title' => $uid));
 
         $this->assertTrue($movies instanceof ArrayCollection);
 
@@ -133,11 +117,11 @@ class RepositoryTest extends \PHPUnit_Framework_TestCase
 
     public function testQueryWithMatchMultipleAndReturnsMultiple()
     {
-        $this->createNodes();
+        $uid = $this->createNodes();
 
         $repo = $this->getRepository();
 
-        $movies = $repo->findBy(array('title' => '*'.$this->uid));
+        $movies = $repo->findBy(array('title' => '*'.$uid));
 
         $this->assertTrue($movies instanceof ArrayCollection);
 
@@ -164,7 +148,6 @@ class RepositoryTest extends \PHPUnit_Framework_TestCase
 
         $em->flush();
 
-        $this->uid = $uid;
-
+        return $uid;
     }
 }
