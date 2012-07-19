@@ -108,32 +108,20 @@ class Repository
     }
 
     /**
-     * Creates the query for the Search Index call - Lucene search Type
-     * 
-     * Query example : /index/node/MyIndex?query=key:value AND otherkey:othervalue
-     * 
-     * More info :
-     * http://docs.neo4j.org/chunked/milestone/rest-api-indexes.html#rest-api-find-node-by-query
-     * http://lucene.apache.org/java/3_5_0/queryparsersyntax.html
-     *
+     * Calls the Lucene Query Processor to build the query
      *
      * @param array $criteria An array of search criterias
      */
     public function createQuery(array $criteria = array())
     {
-        if(empty($criteria))
-        {
-            throw new \InvalidArgumentException('The criteria supplied for the search can not be empty');
+        if(!empty($criteria)) {
+            $queryProcessor = new LuceneQueryProcessor();
+            foreach($criteria as $key => $value) {
+                $queryProcessor->addTerm($key, $value);
+            }
+            return $queryProcessor->getQuery();
         }
-        $queryMap = array();
-        foreach($criteria as $key => $value)
-        {
-            $property = $this->getSearchableProperty($key);
-            $queryMap[] = $property.':'.'"'.$value.'"';
-        }
-        $query = implode(' AND ', $queryMap);
-
-        return $query;
+        throw new \InvalidArgumentException('The criteria passed to the find** method can not be empty');
     }
 
     function __call($name, $arguments)
