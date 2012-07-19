@@ -23,7 +23,7 @@ class LuceneQueryProcessor
 
 	public function __construct()
 	{
-		foreach($this->allowedExpressions as $expr) {
+		foreach($this->allowedExpressions as $expr => $queryExpr) {
 			$this->_args[$expr] = array();
 		}
 	}
@@ -31,7 +31,7 @@ class LuceneQueryProcessor
 	public function addQueryTerm($term, $value, $expr = 'AND', $mode = self::STRICT)
 	{
 		if($this->isValidExpression($expr)) {
-			$method = strtolower($expr);
+			$method = '_'.strtolower($expr);
 			$this->$method($term, $value);
 		}
 	}
@@ -39,10 +39,10 @@ class LuceneQueryProcessor
 	/**
 	 * Adds a 'AND' search to the query array
 	 */
-	public function and($term, $value)
+	public function _and($term, $value)
 	{
 		$value = $this->prepareValue($value);
-		array_push($this->_args['AND'], array($term => $value));
+		array_push($this->_args['AND'], array('term' => $term, 'value' => $value));
 	}
 
 	/**
@@ -86,13 +86,13 @@ class LuceneQueryProcessor
 		foreach($this->allowedExpressions as $expr => $queryExpr) {
 			$arguments = $this->_args[$expr];
 			$inlinedArguments = array();
-			foreach($arguments as $term => $value) {
-				$inlinedArguments[] = $term.':'.$value;
+			foreach($arguments as $arg) {
+				$inlinedArguments[] = $arg['term'].':'.$arg['value'];
 			}
 			if('' !== $query) {
 				$query .= $queryExpr;
 			}
-			$query .= implode($queryExpr, $inlinedArguments)
+			$query .= implode($queryExpr, $inlinedArguments);
 		}
 		return $query;
 	}

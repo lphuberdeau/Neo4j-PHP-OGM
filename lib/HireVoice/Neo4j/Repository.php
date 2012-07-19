@@ -118,7 +118,7 @@ class Repository
         if(!empty($criteria)) {
             $queryProcessor = new LuceneQueryProcessor();
             foreach($criteria as $key => $value) {
-                $queryProcessor->addTerm($key, $value);
+                $queryProcessor->addQueryTerm($key, $value);
             }
             return $queryProcessor->getQuery();
         }
