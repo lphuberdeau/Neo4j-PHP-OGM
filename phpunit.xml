@@ -19,11 +19,12 @@
         </testsuite>
     </testsuites>
 
-    <!--
+    
     <php>
-        <server name="KERNEL_DIR" value="/path/to/your/app/" />
+        <var name="host" value="localhost"/>
+        <var name="port" value="7474"/>
     </php>
-    -->
+    
 
     <filter>
         <whitelist>

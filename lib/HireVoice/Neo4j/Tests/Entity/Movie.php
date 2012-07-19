@@ -37,8 +37,14 @@ class Movie
 
     /**
      * @OGM\Property
+     * @OGM\Index
      */
     private $title;
+
+    /**
+     * @OGM\Property
+     */
+    private $category;
 
     /**
      * @OGM\Property(format="date")
@@ -176,6 +182,16 @@ class Movie
     function setBlob($blob)
     {
         $this->blob = $blob;
+    }
+
+    function setCategory($category)
+    {
+        $this->category = $category;
+    }
+
+    function getCategory()
+    {
+        return $this->category;
     }
 }
 

@@ -23,6 +23,7 @@
 
 namespace HireVoice\Neo4j;
 use Doctrine\Common\Collections\ArrayCollection;
+use HireVoice\Neo4j\Query\LuceneQueryProcessor;
 
 class Repository
 {
@@ -76,6 +77,53 @@ class Repository
             $this->index->save();
         }
     }
+    /**
+     * Finds one node by a set of criteria
+     *
+     * @param array $criteria An array of search criteria
+     */
+    public function findOneBy(array $criteria)
+    {
+        $query = $this->createQuery($criteria);
+        
+        if ($node = $this->getIndex()->queryOne($query)) {
+            return $this->entityManager->load($node);
+        }
+        return null;
+    }
+
+    /**
+     * Finds all node matching the search criteria
+     *
+     * @param array $criteria An array of search criteria
+     */
+    public function findBy(array $criteria)
+    {
+        $query = $this->createQuery($criteria);
+        $collection = new ArrayCollection();
+
+        foreach($this->getIndex()->query($query) as $node) {
+            $collection->add($this->entityManager->load($node));
+        }
+        return $collection;
+    }
+
+    /**
+     * Calls the Lucene Query Processor to build the query
+     *
+     * @param array $criteria An array of search criterias
+     */
+    public function createQuery(array $criteria = array())
+    {
+        if(!empty($criteria)) {
+            $queryProcessor = new LuceneQueryProcessor();
+            foreach($criteria as $key => $value) {
+                $queryProcessor->addQueryTerm($key, $value);
+            }
+            return $queryProcessor->getQuery();
+        }
+        throw new \InvalidArgumentException('The criteria passed to the find** method can not be empty');
+    }
 
     function __call($name, $arguments)
     {
@@ -93,9 +141,10 @@ class Repository
             foreach ($this->getIndex()->find($property, $arguments[0]) as $node) {
                 $collection->add($this->entityManager->load($node));
             }
-
             return $collection;
         }
+
+        
     }
 
     private function getSearchableProperty($property)

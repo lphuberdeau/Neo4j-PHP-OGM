@@ -68,7 +68,7 @@ If you have used Doctrine2 before, this is a very similar process.
         /* Add your accessors here */
     }
 
-Using the library is very simple.
+### Storing entities into the graph database
 
     // Let's assume the entity manager is initialized. More on this later.
     $em = $this->get('hirevoice.neo4j.entity_manager');
@@ -85,7 +85,32 @@ Using the library is very simple.
     $em->persist($jane);
     $em->flush(); // Stores both Jane and John, along with the new relation
 
-Complex queries can also be made.
+### Fetching entities from the database
+
+````
+$em = $this->get('hirevoice.neo4j.entity_manager');
+$repository = $em->getRepository('Entity\\User');
+
+// Find a User by a specific field
+
+$user = $repository->findOneByFullName('superman'); // Returns a User object
+
+// Find some users by a specific field
+
+$usersFromFrance = $repository->findByCountry('FR'); // Returns a collection of User object
+
+// Find one User with more than one criteria
+
+$nonActiveWithSuchEmail = $repository->findOneBy(array('status' => 'idle', 'email' => 'superman@chucknorris.com'));
+
+// Find Multiple Users with more than one criteria
+
+$activeUsersFromFrance = $repository->findBy(array('status' => 'active', 'country' => 'FR'));
+````
+
+
+
+### Complex queries can also be made.
 
     $em = $this->get('hirevoice.neo4j.entity_manager');
     $john = $repo->findOneByFullName('John Doe');
