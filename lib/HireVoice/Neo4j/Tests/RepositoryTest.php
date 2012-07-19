@@ -112,7 +112,7 @@ class RepositoryTest extends \PHPUnit_Framework_TestCase
 
         $this->assertTrue($movies instanceof ArrayCollection);
 
-        $this->assertTrue(count($movies) == 1);
+        $this->assertCount(1, $movies);
     }
 
     public function testQueryWithMatchMultipleAndReturnsMultiple()
@@ -125,7 +125,7 @@ class RepositoryTest extends \PHPUnit_Framework_TestCase
 
         $this->assertTrue($movies instanceof ArrayCollection);
 
-        $this->assertTrue(count($movies) == 2);
+        $this->assertCount(2, $movies);
     }
 
     public function testQueryReturningNoNodes()
