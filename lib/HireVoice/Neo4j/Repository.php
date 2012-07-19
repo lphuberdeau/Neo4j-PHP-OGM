@@ -23,6 +23,7 @@
 
 namespace HireVoice\Neo4j;
 use Doctrine\Common\Collections\ArrayCollection;
+use HireVoice\Neo4j\Query\LuceneQueryProcessor;
 
 class Repository
 {
