@@ -24,17 +24,11 @@
 namespace HireVoice\Neo4j\Tests;
 use HireVoice\Neo4j;
 
-class QueryTest extends \PHPUnit_Framework_TestCase
+class QueryTest extends TestCase
 {
     static $root;
     static $aragorn;
     static $legolas;
-
-    private function getEntityManager()
-    {
-        $client = new \Everyman\Neo4j\Client(new \Everyman\Neo4j\Transport($GLOBALS['host'], $GLOBALS['port']));
-        return new Neo4j\EntityManager($client, new Neo4j\Meta\Repository);
-    }
 
     function setUp()
     {
