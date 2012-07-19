@@ -83,9 +83,18 @@ class Factory
             $reflectionClass = new \ReflectionClass($className);
             foreach ($reflectionClass->getMethods(\ReflectionMethod::IS_PUBLIC) as $method) {
                 if (! $method->isConstructor() && ! $method->isDestructor() && ! $method->isFinal()) {
-                    $functions .= $this->methodProxy($method);
+                    $functions .= $this->methodProxy($method, $meta);
                 }
             }
+
+			$properties = $meta->getProperties();
+			$properties = array_filter($properties, function ($property) {
+				return ! $property->isPrivate();
+			});
+			$properties = array_map(function ($property) {
+				return $property->getName();
+			}, $properties);
+			$properties = var_export($properties, true);
 
             $content = <<<CONTENT
 <?php
@@ -136,24 +145,20 @@ class $proxyClass extends $className implements HireVoice\\Neo4j\\Proxy\\Entity
         \$this->neo4j_loadCallback = \$loadCallback;
     }
 
-    private function __load(\$name)
+    private function __load(\$name, \$propertyName)
     {
+        if (in_array(\$propertyName, \$this->neo4j_hydrated)) {
+            return;
+        }
+
+		if (! \$this->neo4j_meta) {
+			throw new \\HireVoice\\Neo4j\\Exception('Proxy not fully initialized. Relations are not available when loading the object from a session or other forms of serialization.');
+		}
+
         \$property = \$this->neo4j_meta->findProperty(\$name);
 
-        if (! \$property) {
-            return;
-        }
-
         if (strpos(\$name, 'set') === 0) {
-            \$this->__addHydrated(\$property->getName());
-            return;
-        }
-
-        if (\$property->isProperty()) {
-            return;
-        }
-
-        if (in_array(\$property->getName(), \$this->neo4j_hydrated)) {
+            \$this->__addHydrated(\$propertyName);
             return;
         }
 
@@ -162,10 +167,10 @@ class $proxyClass extends $className implements HireVoice\\Neo4j\\Proxy\\Entity
             \$this->neo4j_relationships = \$command->execute();
         }
 
-        \$this->__addHydrated(\$property->getName());
+        \$this->__addHydrated(\$propertyName);
         \$collection = new ArrayCollection;
         foreach (\$this->neo4j_relationships as \$relation) {
-            if (\$relation['type'] == \$property->getName()) {
+            if (\$relation['type'] == \$propertyName) {
                 // Read-only relations read the start node instead
                 if (\$property->isTraversed()) {
                     \$nodeUrl = \$relation['end'];
@@ -191,6 +196,11 @@ class $proxyClass extends $className implements HireVoice\\Neo4j\\Proxy\\Entity
             }
         }
     }
+
+	function __sleep()
+	{
+		return $properties;
+	}
 }
 
 
@@ -202,8 +212,20 @@ CONTENT;
         return new $proxyClass;
     }
 
-    private function methodProxy($method)
+    private function methodProxy($method, $meta)
     {
+		$property = $meta->findProperty($method->getName());
+
+		if (! $property) {
+			// No need for a proxy if not related to a property
+			return;
+		}
+
+		if ($property->isProperty()) {
+			// Properties are loaded straight-up, no need for proxies
+			return;
+		}
+
         $parts = array();
         $arguments = array();
 
@@ -234,11 +256,13 @@ CONTENT;
         $arguments = implode(', ', $arguments);
 
         $name = var_export($method->getName(), true);
+		$propertyName = var_export($property->getName(), true);
+
         return <<<FUNC
 
     function {$method->getName()}($arguments)
     {
-        self::__load($name);
+        self::__load($name, $propertyName);
         return parent::{$method->getName()}($parts);
     }
 

@@ -113,6 +113,11 @@ class EntityManager
         return $this->loadedNodes[$node->getId()];
     }
 
+	function reload($entity)
+	{
+		return $this->find(get_class($entity), $entity->getId());
+	}
+
     function clear()
     {
         $this->loadedNodes = array();

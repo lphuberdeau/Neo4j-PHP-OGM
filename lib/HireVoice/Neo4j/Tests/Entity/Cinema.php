@@ -33,22 +33,22 @@ class Cinema
     /**
      * @OGM\Auto
      */
-    private $id;
+    protected $id;
 
     /**
      * @OGM\Property
      */
-    private $name;
+    protected $name;
 
     /**
      * @OGM\ManyToMany(relation="presentedMovie")
      */
-    private $presentedMovies;
+    protected $presentedMovies;
 
     /**
      * @OGM\ManyToMany(writeOnly=true)
      */
-    private $rejectedMovies;
+    protected $rejectedMovies;
 
     function __construct()
     {

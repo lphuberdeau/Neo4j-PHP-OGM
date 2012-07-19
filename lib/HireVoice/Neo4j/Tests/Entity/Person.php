@@ -32,22 +32,22 @@ class Person
     /**
      * @OGM\Auto
      */
-    private $id;
+    protected $id;
 
     /**
      * @OGM\Property
      */
-    private $firstName;
+    protected $firstName;
 
     /**
      * @OGM\Property
      */
-    private $lastName;
+    protected $lastName;
 
     /**
      * @OGM\ManyToMany
      */
-    private $friends;
+    protected $friends;
 
     function __construct()
     {

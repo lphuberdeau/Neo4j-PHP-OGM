@@ -105,6 +105,11 @@ class Property
         return false;
     }
 
+	function isPrivate()
+	{
+		return $this->property->isPrivate();
+	}
+
     function getValue($entity)
     {
         $raw = $this->property->getValue($entity);

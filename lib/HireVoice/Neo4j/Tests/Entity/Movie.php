@@ -33,49 +33,49 @@ class Movie
     /**
      * @OGM\Auto
      */
-    private $id;
+    protected $id;
 
     /**
      * @OGM\Property
      * @OGM\Index
      */
-    private $title;
+    protected $title;
 
     /**
      * @OGM\Property
      */
-    private $category;
+    protected $category;
 
     /**
      * @OGM\Property(format="date")
      */
-    private $releaseDate;
+    protected $releaseDate;
 
     /**
      * @OGM\Property
      * @OGM\Index
      */
-    private $movieRegistryCode;
+    protected $movieRegistryCode;
 
     /**
      * @OGM\ManyToMany
      */
-    private $actors;
+    protected $actors;
 
     /**
      * @OGM\ManyToOne
      */
-    private $mainActor;
+    protected $mainActor;
 
     /**
      * @OGM\ManyToMany(readOnly=true, relation="presentedMovie")
      */
-    private $cinemas;
+    protected $cinemas;
 
     /**
      * @OGM\Property(format="json")
      */
-    private $blob;
+    protected $blob;
 
     function __construct()
     {
