@@ -477,6 +477,24 @@ class EntityManagerTest extends \PHPUnit_Framework_TestCase
 
         $this->assertEquals('Roger', $movie->getMainActor()->getFirstName());
     }
+
+    function testSelfReferencingNodes()
+    {
+        $em = $this->getEntityManager();
+
+        $a = new Entity\Person;
+        $b = new Entity\Person;
+
+        $a->addFriend($b);
+        $b->addFriend($a);
+
+        $em->persist($a);
+        $em->flush();
+
+        $loaded = $em->find(get_class($a), $a->getId());
+
+        $this->assertCount(1, $loaded->getFriends());
+    }
 }
 
 /**

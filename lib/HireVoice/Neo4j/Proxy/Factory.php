@@ -169,13 +169,17 @@ class $proxyClass extends $className implements HireVoice\\Neo4j\\Proxy\\Entity
                 // Read-only relations read the start node instead
                 if (\$property->isTraversed()) {
                     \$nodeUrl = \$relation['end'];
+                    \$root = \$relation['start'];
                 } else {
                      \$nodeUrl = \$relation['start'];
+                     \$root = \$relation['end'];
                 }
 
-                \$node = \$this->neo4j_node->getClient()->getNode(basename(\$nodeUrl));
-                \$loader = \$this->neo4j_loadCallback;
-                \$collection->add(\$loader(\$node));
+                if (basename(\$root) == \$this->getId()) {
+                    \$node = \$this->neo4j_node->getClient()->getNode(basename(\$nodeUrl));
+                    \$loader = \$this->neo4j_loadCallback;
+                    \$collection->add(\$loader(\$node));
+                }
             }
         }
 

@@ -44,6 +44,16 @@ class Person
      */
     private $lastName;
 
+    /**
+     * @OGM\ManyToMany
+     */
+    private $friends;
+
+    function __construct()
+    {
+        $this->friends = new \Doctrine\Common\Collections\ArrayCollection;
+    }
+
     function getId()
     {
         return $this->id;
@@ -72,6 +82,16 @@ class Person
     function setLastName($lastName)
     {
         $this->lastName = $lastName;
+    }
+
+    function getFriends()
+    {
+        return $this->friends;
+    }
+
+    function addFriend(Person $friend)
+    {
+        $this->friends->add($friend);
     }
 }
 
