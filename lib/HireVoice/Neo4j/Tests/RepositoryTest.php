@@ -47,12 +47,19 @@ class RepositoryTest extends \PHPUnit_Framework_TestCase
         return new EntityManager($this->client, $this->metaRepository);
     }
 
-    public function testCreateLuceneQueryWithWordWithoutSpaces()
+    private function getRepository()
     {
         $em = $this->getEntityManager();
-        $entityMeta = new EntityMeta('HireVoice\Neo4j\Tests\Entity\Person');
+        $entityMeta = new EntityMeta('HireVoice\\Neo4j\\Tests\\Entity\\Movie');
 
         $repo = new Repository($em, $entityMeta);
+
+        return $repo;
+    }
+
+    public function testCreateLuceneQueryWithWordWithoutSpaces()
+    {
+        $repo = $this->getRepository();
         $criteria = array('fullname' => 'chris', 'lastname' => 'lord');
         $query = $repo->createQuery($criteria);
         $expectedQuery = 'fullname:chris AND lastname:lord';
@@ -61,13 +68,68 @@ class RepositoryTest extends \PHPUnit_Framework_TestCase
 
         public function testCreateLuceneQueryWithWordWithSpaces()
     {
-        $em = $this->getEntityManager();
-        $entityMeta = new EntityMeta('HireVoice\Neo4j\Tests\Entity\Person');
-
-        $repo = new Repository($em, $entityMeta);
+        $repo = $this->getRepository();
         $criteria = array('fullname' => 'angus young', 'lastname' => 'lord nelson');
         $query = $repo->createQuery($criteria);
         $expectedQuery = 'fullname:"angus young" AND lastname:"lord nelson"';
         $this->assertEquals($expectedQuery, $query);
+    }
+
+    public function testQueryWithOneTermWithoutSpaces()
+    {
+        $repo = $this->getRepository();
+        $criteria = array('fullname' => 'angus');
+        $query = $repo->createQuery($criteria);
+        $expectedQuery = 'fullname:angus';
+        $this->assertEquals($expectedQuery, $query);
+    }
+
+    public function testQueryWithOneTermWithSpaces()
+    {
+        $repo = $this->getRepository();
+        $criteria = array('fullname' => 'angus young');
+        $query = $repo->createQuery($criteria);
+        $expectedQuery = 'fullname:"angus young"';
+        $this->assertEquals($expectedQuery, $query);
+    }
+
+    public function testQueryAndReturningNode()
+    {
+        $this->createNodes();
+
+        $repo = $this->getRepository();
+
+        $movie = $repo->findOneBy(array('title' => 'Matrix'));
+
+        $this->assertEquals('Matrix', $movie->getTitle());
+    }
+
+    public function testQueryWithSpacesInSearchTermAndReturningNode()
+    {
+        $repo = $this->getRepository();
+
+        $movie = $repo->findOneBy(array('title' => 'The Matrix'));
+
+        $this->assertEquals('The Matrix', $movie->getTitle());
+    }
+
+    public function createNodes()
+    {
+        $em = $this->getEntityManager();
+
+        $entity = new Entity\Movie;
+        $entity->setTitle('Return of the king');
+        $em->persist($entity);
+
+        $matrix = new Entity\Movie;
+        $matrix->setTitle('Matrix');
+        $em->persist($matrix);
+
+        $matrix2 = new Entity\Movie;
+        $matrix2->setTitle('The Matrix');
+        $em->persist($matrix2);
+
+        $em->flush();
+
     }
 }

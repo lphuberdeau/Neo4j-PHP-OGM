@@ -123,7 +123,7 @@ class EntityManagerTest extends \PHPUnit_Framework_TestCase
         $em = $this->getEntityManager();
         $repository = $em->getRepository('HireVoice\\Neo4j\\Tests\\Entity\\Movie');
 
-        $repository->findByTitle('Return of the king');
+        $repository->findByCategory('Return of the king');
     }
 
     function testRelationsDoNotDuplicate()

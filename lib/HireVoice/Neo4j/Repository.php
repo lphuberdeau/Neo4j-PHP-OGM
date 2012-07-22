@@ -141,9 +141,10 @@ class Repository
             foreach ($this->getIndex()->find($property, $arguments[0]) as $node) {
                 $collection->add($this->entityManager->load($node));
             }
+            return $collection;
         }
 
-        return $collection;
+        
     }
 
     private function getSearchableProperty($property)
