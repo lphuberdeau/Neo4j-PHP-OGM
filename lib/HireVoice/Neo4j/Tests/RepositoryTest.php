@@ -37,7 +37,7 @@ class RepositoryTest extends \PHPUnit_Framework_TestCase
 
     public function __construct()
     {
-        $client = new \Everyman\Neo4j\Client(new \Everyman\Neo4j\Transport('localhost', 7474));
+        $client = new \Everyman\Neo4j\Client(new \Everyman\Neo4j\Transport($GLOBALS['host'], $GLOBALS['port']));
         $this->client = $client;
         $this->metaRepository = new MetaRepository();
     }

@@ -22,15 +22,18 @@
  */
 
 namespace HireVoice\Neo4j\Tests;
-use HireVoice\Neo4j;
+
+use HireVoice\Neo4j\EntityManager;
+use HireVoice\Neo4j\Meta\Repository as MetaRepository;
+use HireVoice\Neo4j\Proxy\Factory as ProxyFactory;
 
 class EntityManagerTest extends \PHPUnit_Framework_TestCase
 {
     private function getEntityManager()
     {
-        $client = new \Everyman\Neo4j\Client(new \Everyman\Neo4j\Transport('localhost', 7474));
-        $em = new Neo4j\EntityManager($client, new Neo4j\Meta\Repository);
-        $em->setProxyFactory(new Neo4j\Proxy\Factory('/tmp', true));
+        $client = new \Everyman\Neo4j\Client(new \Everyman\Neo4j\Transport($GLOBALS['host'], $GLOBALS['port']));
+        $em = new EntityManager($client, new MetaRepository());
+        $em->setProxyFactory(new ProxyFactory('/tmp', true));
         return $em;
     }
 
@@ -301,7 +304,7 @@ class EntityManagerTest extends \PHPUnit_Framework_TestCase
         $movie = new Entity\Movie;
         $movie->setTitle('Terminator');
         $em = $this->getEntityManager();
-        $em->registerEvent(Neo4j\EntityManager::ENTITY_CREATE, function ($entity) use (& $title) {
+        $em->registerEvent(EntityManager::ENTITY_CREATE, function ($entity) use (& $title) {
             $title = $entity->getTitle();
         });
 
@@ -315,7 +318,7 @@ class EntityManagerTest extends \PHPUnit_Framework_TestCase
     {
         $code = null;
         $em = $this->getEntityManager();
-        $em->registerEvent(Neo4j\EntityManager::RELATION_CREATE, function ($type, $start, $end) use (& $code) {
+        $em->registerEvent(EntityManager::RELATION_CREATE, function ($type, $start, $end) use (& $code) {
             $code = $start->getTitle() . '-' . $type . '-' . $end->getFirstName();
         });
 
@@ -498,12 +501,12 @@ class EntityManagerTest extends \PHPUnit_Framework_TestCase
 }
 
 /**
- * @Neo4j\Annotation\Entity
+ * @HireVoice\Neo4j\Annotation\Entity
  */
 class FailedEntity
 {
     /**
-     * @Neo4j\Annotation\Property
+     * @HireVoice\Neo4j\Annotation\Property
      */
     private $name;
 }
