@@ -23,12 +23,10 @@
 
 namespace HireVoice\Neo4j\Tests;
 
-use HireVoice\Neo4j\EntitManager;
-use HireVoice\Neo4j\MetaRepository;
-use HireVoice\Neo4j\EntityMeta;
+use HireVoice\Neo4j\EntityManager;
+use HireVoice\Neo4j\Meta\Repository as MetaRepository;
+use HireVoice\Neo4j\Meta\Entity as EntityMeta;
 use Hirevoice\Neo4j\Repository;
-use \Everyman\Neo4j\Transport;
-use \Everyman\Neo4j\Client;
 
 class RepositoryTest extends \PHPUnit_Framework_TestCase
 {
@@ -39,18 +37,17 @@ class RepositoryTest extends \PHPUnit_Framework_TestCase
 
     public function __construct()
     {
-        $this->transport = new Transport('localhost', 7474);
-        $this->client = new Client($transport);
+        $client = new \Everyman\Neo4j\Client(new \Everyman\Neo4j\Transport('localhost', 7474));
+        $this->client = $client;
         $this->metaRepository = new MetaRepository();
     }
 
     private function getEntityManager()
     {
-        $client = new \Everyman\Neo4j\Client(new Transport('localhost', 7474));
         return new EntityManager($this->client, $this->metaRepository);
     }
 
-    public function testCreateLuceneQuery()
+    public function testCreateLuceneQueryWithWordWithoutSpaces()
     {
         $em = $this->getEntityManager();
         $entityMeta = new EntityMeta('HireVoice\Neo4j\Tests\Entity\Person');
@@ -58,7 +55,19 @@ class RepositoryTest extends \PHPUnit_Framework_TestCase
         $repo = new Repository($em, $entityMeta);
         $criteria = array('fullname' => 'chris', 'lastname' => 'lord');
         $query = $repo->createQuery($criteria);
-        $expectedQuery = 'fullname:"chris" AND lastname:"lord"';
+        $expectedQuery = 'fullname:chris AND lastname:lord';
+        $this->assertEquals($expectedQuery, $query);
+    }
+
+        public function testCreateLuceneQueryWithWordWithSpaces()
+    {
+        $em = $this->getEntityManager();
+        $entityMeta = new EntityMeta('HireVoice\Neo4j\Tests\Entity\Person');
+
+        $repo = new Repository($em, $entityMeta);
+        $criteria = array('fullname' => 'angus young', 'lastname' => 'lord nelson');
+        $query = $repo->createQuery($criteria);
+        $expectedQuery = 'fullname:"angus young" AND lastname:"lord nelson"';
         $this->assertEquals($expectedQuery, $query);
     }
 }
