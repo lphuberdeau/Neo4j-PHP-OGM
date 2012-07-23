@@ -26,9 +26,12 @@ use Doctrine\Common\Collections\ArrayCollection;
 
 class Repository
 {
+	/** @var Meta\Entity */
     private $meta;
     private $index;
-    private $entityManger;
+	/** @var EntityManager */
+    private $entityManager;
+	private $class;
 
     function __construct(EntityManager $entityManager, Meta\Entity $meta)
     {
