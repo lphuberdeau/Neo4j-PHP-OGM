@@ -27,6 +27,7 @@ use HireVoice\Neo4j\EntityManager;
 use HireVoice\Neo4j\Meta\Repository as MetaRepository;
 use HireVoice\Neo4j\Meta\Entity as EntityMeta;
 use Hirevoice\Neo4j\Repository;
+use Doctrine\Common\Collections\ArrayCollection;
 
 class RepositoryTest extends \PHPUnit_Framework_TestCase
 {
@@ -34,6 +35,8 @@ class RepositoryTest extends \PHPUnit_Framework_TestCase
     private $client;
     private $metaRepository;
     private $transport;
+
+    private $uid;
 
     public function __construct()
     {
@@ -99,18 +102,46 @@ class RepositoryTest extends \PHPUnit_Framework_TestCase
 
         $repo = $this->getRepository();
 
-        $movie = $repo->findOneBy(array('title' => 'Matrix'));
+        $movie = $repo->findOneBy(array('title' => $this->uid));
 
-        $this->assertEquals('Matrix', $movie->getTitle());
+        $this->assertEquals($this->uid, $movie->getTitle());
     }
 
     public function testQueryWithSpacesInSearchTermAndReturningNode()
     {
+        $this->createNodes();
+
         $repo = $this->getRepository();
 
-        $movie = $repo->findOneBy(array('title' => 'The Matrix'));
+        $movie = $repo->findOneBy(array('title' => 'The '.$this->uid));
 
-        $this->assertEquals('The Matrix', $movie->getTitle());
+        $this->assertEquals('The '.$this->uid, $movie->getTitle());
+    }
+
+    public function testQueryForMultipleReturningNodes()
+    {
+        $this->createNodes();
+
+        $repo = $this->getRepository();
+
+        $movies = $repo->findBy(array('title' => $this->uid));
+
+        $this->assertTrue($movies instanceof ArrayCollection);
+
+        $this->assertTrue(count($movies) == 1);
+    }
+
+    public function testQueryWithMatchMultipleAndReturnsMultiple()
+    {
+        $this->createNodes();
+
+        $repo = $this->getRepository();
+
+        $movies = $repo->findBy(array('title' => '*'.$this->uid));
+
+        $this->assertTrue($movies instanceof ArrayCollection);
+
+        $this->assertTrue(count($movies) == 2);
     }
 
     public function createNodes()
@@ -121,15 +152,19 @@ class RepositoryTest extends \PHPUnit_Framework_TestCase
         $entity->setTitle('Return of the king');
         $em->persist($entity);
 
+        $uid = uniqid();
+
         $matrix = new Entity\Movie;
-        $matrix->setTitle('Matrix');
+        $matrix->setTitle($uid);
         $em->persist($matrix);
 
         $matrix2 = new Entity\Movie;
-        $matrix2->setTitle('The Matrix');
+        $matrix2->setTitle('The '.$uid);
         $em->persist($matrix2);
 
         $em->flush();
+
+        $this->uid = $uid;
 
     }
 }

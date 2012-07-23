@@ -184,7 +184,7 @@ class Movie
         $this->blob = $blob;
     }
 
-    function setCategory()
+    function setCategory($category)
     {
         $this->category = $category;
     }
