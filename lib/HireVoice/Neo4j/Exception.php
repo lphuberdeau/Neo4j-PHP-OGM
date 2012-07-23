@@ -23,7 +23,28 @@
 
 namespace HireVoice\Neo4j;
 
+use Everyman\Neo4j\Query;
+
 class Exception extends \Exception
 {
+    /** @var Query */
+    private $query;
+    
+    public function __construct($message = null, $code = 0, Exception $previous = null, Query $query = null)
+    {
+        parent::__construct($message, $code, $previous);
+        $this->query = $query;
+    }
+    
+    public function getQuery() 
+    {
+        return $this->query;
+    }
+
+    public function setQuery($query) 
+    {
+        $this->query = $query;
+        return $this;
+    }
 }
 
