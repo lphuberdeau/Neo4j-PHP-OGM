@@ -144,12 +144,12 @@ class EntityManager
                 && is_string($rs[0][0])
                 && strpos($rs[0][0], 'Exception') !== false
             ) {
-                throw new Exception("An error was detected: {$rs[0][0]}");
+                throw new Exception("An error was detected: {$rs[0][0]}", 0, null, $query);
             }
 
             return $rs;
         } catch (\Everyman\Neo4j\Exception $e) {
-            throw new Exception("An error was detected: {$e->getMessage()}");
+            throw new Exception("An error was detected: {$e->getMessage()}", 0, null, $query);
         }
     }
 
@@ -173,7 +173,7 @@ class EntityManager
         } catch (\Everyman\Neo4j\Exception $e) {
             $message = $e->getMessage();
             preg_match('/\[message\] => (.*)/', $message, $parts);
-            throw new Exception('Query execution failed: ' . $parts[1], 0, $e);
+            throw new Exception('Query execution failed: ' . $parts[1], 0, $e, $query);
         }
     }
 
