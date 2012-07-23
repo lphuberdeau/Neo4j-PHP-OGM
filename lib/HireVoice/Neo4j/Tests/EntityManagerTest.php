@@ -330,6 +330,70 @@ class EntityManagerTest extends \PHPUnit_Framework_TestCase
 
         $this->assertEquals("Terminator-actor-Arnold", $code);
     }
+	
+    function testCypherQueryRunHook()
+    {
+        $queryObj = null;
+        $timeElapsed = null;
+        $paramsArray = null;
+        $em = $this->getEntityManager();
+
+        $em->registerEvent(Neo4j\EntityManager::QUERY_RUN, function (\Everyman\Neo4j\Cypher\Query $query, $parameters, $time) use (& $queryObj, & $timeElapsed, & $paramsArray) {
+            $queryObj = $query;
+            $timeElapsed = $time;
+            $paramsArray = $parameters;
+        });
+
+        $movie = new Entity\Movie;
+        $movie->setTitle('Terminator');
+        $actor = new Entity\Person;
+        $actor->setFirstName('Arnold');
+        $movie->addActor($actor);
+
+        $em->persist($movie);
+        $em->flush();
+
+        $em->createCypherQuery()
+           ->start('movie = node(:movie)')
+           ->end('movie')
+           ->set('movie', $movie)
+           ->getOne();
+
+        $this->assertInstanceOf('Everyman\Neo4j\Cypher\Query', $queryObj);
+        $this->assertEmpty($paramsArray);
+        $this->assertGreaterThan(0, $timeElapsed);
+    }
+	
+    function testGremlinQueryRunHook()
+    {
+        $queryObj = null;
+        $timeElapsed = null;
+        $paramsArray = null;
+        $em = $this->getEntityManager();
+
+        $em->registerEvent(Neo4j\EntityManager::QUERY_RUN, function (\Everyman\Neo4j\Gremlin\Query $query, $parameters, $time) use (& $queryObj, & $timeElapsed, & $paramsArray) {
+            $queryObj = $query;
+            $timeElapsed = $time;
+            $paramsArray = $parameters;
+        });
+
+        $movie = new Entity\Movie;
+        $movie->setTitle('Terminator');
+        $actor = new Entity\Person;
+        $actor->setFirstName('Arnold');
+        $movie->addActor($actor);
+
+        $em->persist($movie);
+        $em->flush();
+
+        $em->createGremlinQuery("g.v(:movie).out('actor')")
+           ->set('movie', $movie)
+           ->getList();
+
+        $this->assertInstanceOf('Everyman\Neo4j\Gremlin\Query', $queryObj);
+        $this->assertEmpty($paramsArray);
+        $this->assertGreaterThan(0, $timeElapsed);
+    }
 
     function testStoreArray()
     {
