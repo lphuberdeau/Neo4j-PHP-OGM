@@ -99,6 +99,40 @@ class QueryTest extends \PHPUnit_Framework_TestCase
             ->getList();
     }
 
+    function testExceptionContainsCypherQuery()
+    {
+        $em = $this->getEntityManager();
+        
+        $query = null;
+        
+        try {
+            $result = $em->createCypherQuery()
+                         ->start('movie = node(:movie)')
+                         ->end('movie')
+                         ->getOne();
+        } catch(\HireVoice\Neo4j\Exception $e) {
+            $query = $e->getQuery();
+        }
+        
+        $this->assertInstanceOf('Everyman\Neo4j\Cypher\Query', $query);
+    }
+    
+    function testExceptionContainsGremlinQuery()
+    {
+        $em = $this->getEntityManager();
+        
+        $query = null;
+        
+        try {
+            $result = $em->createGremlinQuery("g.v(:movie)")
+                         ->getList();
+        } catch(\HireVoice\Neo4j\Exception $e) {
+            $query = $e->getQuery();
+        }
+        
+        $this->assertInstanceOf('Everyman\Neo4j\Gremlin\Query', $query);
+    }
+    
     function testGroupCount()
     {
         $em = $this->getEntityManager();
