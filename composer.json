@@ -13,6 +13,7 @@
         "doctrine/common": ">=2.2.0,<2.3.0",
         "everyman/neo4jphp": "*"
     },
+    "minimum-stability": "dev",
     "autoload": {
         "psr-0": {
             "HireVoice": "lib/"
