@@ -88,6 +88,7 @@ class Factory
             }
 
 			$properties = $meta->getProperties();
+			$properties[] = $meta->getPrimaryKey();
 			$properties = array_filter($properties, function ($property) {
 				return ! $property->isPrivate();
 			});

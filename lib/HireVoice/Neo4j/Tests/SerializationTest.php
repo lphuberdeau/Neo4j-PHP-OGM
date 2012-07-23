@@ -36,6 +36,22 @@ class SerializationTest extends TestCase
 		$movie->getActors();
 	}
 
+	function testReloadConnectsTheProxy()
+	{
+		$em = $this->getEntityManager();
+
+		$movie = new Entity\Movie;
+		$em->persist($movie);
+		$em->flush();
+
+		$movie = $em->reload($movie);
+		$movie = unserialize(serialize($movie));
+
+		$other = $em->reload($movie);
+
+		$other->getActors(); // On failure, this would throw an exception
+	}
+
 	function testUnserializeLeavesPropertiesAvailable()
 	{
 		$em = $this->getEntityManager();

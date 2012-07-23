@@ -115,7 +115,11 @@ class EntityManager
 
 	function reload($entity)
 	{
-		return $this->find(get_class($entity), $entity->getId());
+		if ($entity instanceof Proxy\Entity) {
+			return $this->load($this->findAny($entity->getId()));
+		} else {
+			return $this->find(get_class($entity), $entity->getId());
+		}
 	}
 
     function clear()
