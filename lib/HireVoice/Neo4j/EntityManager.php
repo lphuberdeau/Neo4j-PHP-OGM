@@ -132,13 +132,13 @@ class EntityManager
     function gremlinQuery($string, $parameters)
     {
         try {
-			$start = microtime(true);
+            $start = microtime(true);
 			
             $query = new InternalGremlinQuery($this->client, $string, $parameters);
             $rs = $query->getResultSet();
 			
-			$time = microtime(true) - $start;
-			$this->triggerEvent(self::QUERY_RUN, $query, $parameters, $time);
+            $time = microtime(true) - $start;
+            $this->triggerEvent(self::QUERY_RUN, $query, $parameters, $time);
 			
             if (count($rs) === 1
                 && is_string($rs[0][0])
@@ -161,13 +161,13 @@ class EntityManager
     function cypherQuery($string, $parameters)
     {
         try {
-			$start = microtime(true);
+            $start = microtime(true);
 			
             $query = new InternalCypherQuery($this->client, $string, $parameters);
             $rs = $query->getResultSet();
 			
-			$time = microtime(true) - $start;
-			$this->triggerEvent(self::QUERY_RUN, $query, $parameters, $time);
+            $time = microtime(true) - $start;
+            $this->triggerEvent(self::QUERY_RUN, $query, $parameters, $time);
 			
             return $rs;
         } catch (\Everyman\Neo4j\Exception $e) {
