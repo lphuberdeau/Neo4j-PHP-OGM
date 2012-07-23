@@ -331,20 +331,20 @@ class EntityManagerTest extends \PHPUnit_Framework_TestCase
         $this->assertEquals("Terminator-actor-Arnold", $code);
     }
 	
-	function testCypherQueryRunHook()
+    function testCypherQueryRunHook()
     {
-		$queryObj = null;
-		$timeElapsed = null;
-		$paramsArray = null;
+        $queryObj = null;
+        $timeElapsed = null;
+        $paramsArray = null;
         $em = $this->getEntityManager();
-		
+
         $em->registerEvent(Neo4j\EntityManager::QUERY_RUN, function (\Everyman\Neo4j\Cypher\Query $query, $parameters, $time) use (& $queryObj, & $timeElapsed, & $paramsArray) {
             $queryObj = $query;
-			$timeElapsed = $time;
-			$paramsArray = $parameters;
+            $timeElapsed = $time;
+            $paramsArray = $parameters;
         });
-		
-		$movie = new Entity\Movie;
+
+        $movie = new Entity\Movie;
         $movie->setTitle('Terminator');
         $actor = new Entity\Person;
         $actor->setFirstName('Arnold');
@@ -352,32 +352,32 @@ class EntityManagerTest extends \PHPUnit_Framework_TestCase
 
         $em->persist($movie);
         $em->flush();
-		
-		$em->createCypherQuery()
-			->start('movie = node(:movie)')
-            ->end('movie')
-            ->set('movie', $movie)
-            ->getOne();
 
-		$this->assertInstanceOf('Everyman\Neo4j\Cypher\Query', $queryObj);
-		$this->assertEmpty($paramsArray);
-		$this->assertGreaterThan(0, $timeElapsed);
+        $em->createCypherQuery()
+           ->start('movie = node(:movie)')
+           ->end('movie')
+           ->set('movie', $movie)
+           ->getOne();
+
+        $this->assertInstanceOf('Everyman\Neo4j\Cypher\Query', $queryObj);
+        $this->assertEmpty($paramsArray);
+        $this->assertGreaterThan(0, $timeElapsed);
     }
 	
-	function testGremlinQueryRunHook()
+    function testGremlinQueryRunHook()
     {
-		$queryObj = null;
-		$timeElapsed = null;
-		$paramsArray = null;
+        $queryObj = null;
+        $timeElapsed = null;
+        $paramsArray = null;
         $em = $this->getEntityManager();
-		
+
         $em->registerEvent(Neo4j\EntityManager::QUERY_RUN, function (\Everyman\Neo4j\Gremlin\Query $query, $parameters, $time) use (& $queryObj, & $timeElapsed, & $paramsArray) {
             $queryObj = $query;
-			$timeElapsed = $time;
-			$paramsArray = $parameters;
+            $timeElapsed = $time;
+            $paramsArray = $parameters;
         });
-		
-		$movie = new Entity\Movie;
+
+        $movie = new Entity\Movie;
         $movie->setTitle('Terminator');
         $actor = new Entity\Person;
         $actor->setFirstName('Arnold');
@@ -385,14 +385,14 @@ class EntityManagerTest extends \PHPUnit_Framework_TestCase
 
         $em->persist($movie);
         $em->flush();
-		
-		$result = $result = $em->createGremlinQuery("g.v(:movie).out('actor')")
-            ->set('movie', $movie)
-            ->getList();
 
-		$this->assertInstanceOf('Everyman\Neo4j\Gremlin\Query', $queryObj);
-		$this->assertEmpty($paramsArray);
-		$this->assertGreaterThan(0, $timeElapsed);
+        $em->createGremlinQuery("g.v(:movie).out('actor')")
+           ->set('movie', $movie)
+           ->getList();
+
+        $this->assertInstanceOf('Everyman\Neo4j\Gremlin\Query', $queryObj);
+        $this->assertEmpty($paramsArray);
+        $this->assertGreaterThan(0, $timeElapsed);
     }
 
     function testStoreArray()
