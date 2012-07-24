@@ -53,11 +53,20 @@ class EntityManager
 
     private $eventHandlers = array();
 
-    function __construct(Client $client, Meta\Repository $repository)
+    function __construct($configuration = null)
     {
-        $this->proxyFactory = new Proxy\Factory;
-        $this->client = $client;
-        $this->metaRepository = $repository;
+		if (is_null($configuration)) {
+			$configuration = new Configuration;
+		} elseif (is_array($configuration)) {
+			$configuration = new Configuration($configuration);
+		} elseif (! $configuration instanceof Configuration) {
+			throw new Exception('Provided argument must be a Configuration object or an array.');
+		}
+
+        $this->proxyFactory = $configuration->getProxyFactory();
+        $this->client = $configuration->getClient();
+        $this->metaRepository = $configuration->getMetaRepository();
+
         $this->dateGenerator = function () {
             $currentDate = new \DateTime;
             return $currentDate->format('Y-m-d H:i:s');

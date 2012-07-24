@@ -159,9 +159,11 @@ Initialize the EntityManager
 Ideally, this would be done through DependencyInjection in your application. Here is the
 procedural creation.
 
-    $client = new Everyman\Neo4j\Client('localhost', 7474);
-    $metaRepository = new HireVoice\Neo4j\Meta\Repository; // Ideally, a cached Doctrine\Common\Annotations\Reader is provided as an argument
-    $em = new HireVoice\Neo4j\EntityManager($client, $metaRepository);
+    $em = new HireVoice\Neo4j\EntityManager(array(
+		// 'host' => 'localhost',
+		// 'port' => 7474,
+		// 'proxy_dir' => '/tmp',
+		// 'debug' => true, // Force proxy regeneration on each request
+		// 'annotation_reader' => ... // Should be a cached instance of the doctrine annotation reader in production
+	));
 
-    // for debugging purposes or to change the cache location, you can specify the ProxyFactory
-    // $em->setProxyFactory(new HireVoice\Neo4j\Proxy\Factory('/tmp', true));

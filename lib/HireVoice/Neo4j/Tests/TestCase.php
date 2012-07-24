@@ -9,10 +9,12 @@ abstract class TestCase extends \PHPUnit_Framework_TestCase
 {
     protected function getEntityManager()
     {
-        $client = new \Everyman\Neo4j\Client(new \Everyman\Neo4j\Transport($GLOBALS['host'], $GLOBALS['port']));
-        $em = new EntityManager($client, new MetaRepository());
-        $em->setProxyFactory(new ProxyFactory('/tmp', true));
-        return $em;
+    	return new EntityManager(array(
+			'host' => $GLOBALS['host'],
+			'port' => $GLOBALS['port'],
+			'proxy_dir' => '/tmp',
+			'debug' => true,
+		));
     }
 }
 
