@@ -53,9 +53,9 @@ class EntityManager
 
     private $eventHandlers = array();
 
-    function __construct(Client $client, Meta\Repository $repository)
+    function __construct(Client $client, Meta\Repository $repository, $proxyDirectory)
     {
-        $this->proxyFactory = new Proxy\Factory;
+        $this->proxyFactory = new Proxy\Factory($proxyDirectory);
         $this->client = $client;
         $this->metaRepository = $repository;
         $this->dateGenerator = function () {

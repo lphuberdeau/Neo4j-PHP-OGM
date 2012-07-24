@@ -22,7 +22,9 @@
  */
 
 namespace HireVoice\Neo4j\Proxy;
+
 use Doctrine\Common\Collections\ArrayCollection;
+use HireVoice\Neo4j\Exception;
 
 class Factory
 {
@@ -206,6 +208,13 @@ class $proxyClass extends $className implements HireVoice\\Neo4j\\Proxy\\Entity
 
 
 CONTENT;
+        if ( ! is_dir($this->proxyDir)) {
+        if (false === @mkdir($this->proxyDir, 0775, true)) {
+            throw new Exception('Proxy Dir is not writable');
+            }
+        } else if ( ! is_writable($this->proxyDir)) {
+            throw new Exception('Proxy Dir is not writable');
+        }
             file_put_contents($targetFile, $content);
         }
 
