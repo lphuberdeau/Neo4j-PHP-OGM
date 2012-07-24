@@ -1,9 +1,26 @@
 <?php
 /**
- * This file is part of the Neo4j PHP OGM Package
+ * Copyright (C) 2012 Louis-Philippe Huberdeau
  *
- * HireVoice
+ * Permission is hereby granted, free of charge, to any person obtaining a 
+ * copy of this software and associated documentation files (the "Software"),
+ * to deal in the Software without restriction, including without limitation
+ * the rights to use, copy, modify, merge, publish, distribute, sublicense,
+ * and/or sell copies of the Software, and to permit persons to whom the
+ * Software is furnished to do so, subject to the following conditions:
+ *
+ * The above copyright notice and this permission notice shall be included
+ * in all copies or substantial portions of the Software.
+ *
+ * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+ * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+ * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+ * AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+ * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING
+ * FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
+ * DEALINGS IN THE SOFTWARE.
  */
+
 namespace HireVoice\Neo4j\Query;
 
 /**
@@ -13,87 +30,87 @@ namespace HireVoice\Neo4j\Query;
  */
 class LuceneQueryProcessor
 {
-	const STRICT = 'STRICT_MODE';
+    const STRICT = 'STRICT_MODE';
 
-	protected $_args;
+    protected $_args;
+    protected $query;
+    protected $allowedExpressions = array('AND' => ' AND ');
 
-	protected $query;
+    public function __construct()
+    {
+        foreach($this->allowedExpressions as $expr => $queryExpr) {
+            $this->_args[$expr] = array();
+        }
+    }
 
-	protected $allowedExpressions = array('AND' => ' AND ');
+    public function addQueryTerm($term, $value, $expr = 'AND', $mode = self::STRICT)
+    {
+        if($this->isValidExpression($expr)) {
+            $method = '_'.strtolower($expr);
+            $this->$method($term, $value);
+        }
+    }
 
-	public function __construct()
-	{
-		foreach($this->allowedExpressions as $expr => $queryExpr) {
-			$this->_args[$expr] = array();
-		}
-	}
+    /**
+     * Adds a 'AND' search to the query array
+     */
+    public function _and($term, $value)
+    {
+        $value = $this->prepareValue($value);
+        array_push($this->_args['AND'], array('term' => $term, 'value' => $value));
+    }
 
-	public function addQueryTerm($term, $value, $expr = 'AND', $mode = self::STRICT)
-	{
-		if($this->isValidExpression($expr)) {
-			$method = '_'.strtolower($expr);
-			$this->$method($term, $value);
-		}
-	}
+    /**
+     * Embed the value between "" if she contains spaces
+     */
+    public function prepareValue($value)
+    {
+        $value = trim($value);
+        if(strpos($value, ' ')) {
+            return '"'.$value.'"';
+        }
+        return $value;
+    }
 
-	/**
-	 * Adds a 'AND' search to the query array
-	 */
-	public function _and($term, $value)
-	{
-		$value = $this->prepareValue($value);
-		array_push($this->_args['AND'], array('term' => $term, 'value' => $value));
-	}
+    /**
+     * Checks whether or not the given expression is valid
+     */
+    public function isValidExpression($expr)
+    {
+        if(!array_key_exists($expr, $this->allowedExpressions)) {
+            throw new \InvalidArgumentException(sprintf('The expression "%s" is not a valid expression', $expr));
+        }
+        return true;
+    }
 
-	/**
-	 * Embed the value between "" if she contains spaces
-	 */
-	public function prepareValue($value)
-	{
-		$value = trim($value);
-		if(strpos($value, ' ')) {
-			return '"'.$value.'"';
-		}
-		return $value;
-	}
+    /**
+     * Returns an array with the valid expressions to use
+     */
+    public function getValidExpressions()
+    {
+        return $this->allowedExpressions;
+    }
 
-	/**
-	 * Checks whether or not the given expression is valid
-	 */
-	public function isValidExpression($expr)
-	{
-		if(!array_key_exists($expr, $this->allowedExpressions)) {
-			throw new \InvalidArgumentException(sprintf('The expression "%s" is not a valid expression', $expr));
-		}
-		return true;
-	}
+    /**
+     * Returns the query to be send to the Lucene Query Engine
+     */
+    public function getQuery()
+    {
+        $query = '';
 
-	/**
-	 * Returns an array with the valid expressions to use
-	 */
-	public function getValidExpressions()
-	{
-		return $this->allowedExpressions;
-	}
+        foreach($this->allowedExpressions as $expr => $queryExpr) {
+            $arguments = $this->_args[$expr];
+            $inlinedArguments = array();
+            foreach($arguments as $arg) {
+                $inlinedArguments[] = $arg['term'].':'.$arg['value'];
+            }
+            if('' !== $query) {
+                $query .= $queryExpr;
+            }
+            $query .= implode($queryExpr, $inlinedArguments);
+        }
 
-	/**
-	 * Returns the query to be send to the Lucene Query Engine
-	 */
-	public function getQuery()
-	{
-		$query = '';
-
-		foreach($this->allowedExpressions as $expr => $queryExpr) {
-			$arguments = $this->_args[$expr];
-			$inlinedArguments = array();
-			foreach($arguments as $arg) {
-				$inlinedArguments[] = $arg['term'].':'.$arg['value'];
-			}
-			if('' !== $query) {
-				$query .= $queryExpr;
-			}
-			$query .= implode($queryExpr, $inlinedArguments);
-		}
-		return $query;
-	}
+        return $query;
+    }
 }
+

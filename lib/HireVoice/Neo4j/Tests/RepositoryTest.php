@@ -135,19 +135,19 @@ class RepositoryTest extends TestCase
 
         $entity = new Entity\Movie;
         $entity->setTitle('Return of the king');
-		$entity->setCategory('long');
+        $entity->setCategory('long');
         $em->persist($entity);
 
         $uid = uniqid();
 
         $matrix = new Entity\Movie;
         $matrix->setTitle($uid);
-		$matrix->setCategory('scifi');
+        $matrix->setCategory('scifi');
         $em->persist($matrix);
 
         $matrix2 = new Entity\Movie;
         $matrix2->setTitle('The '.$uid);
-		$matrix->setCategory('scifi');
+        $matrix->setCategory('scifi');
         $em->persist($matrix2);
 
         $em->flush();

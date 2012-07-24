@@ -55,13 +55,13 @@ class EntityManager
 
     function __construct($configuration = null)
     {
-		if (is_null($configuration)) {
-			$configuration = new Configuration;
-		} elseif (is_array($configuration)) {
-			$configuration = new Configuration($configuration);
-		} elseif (! $configuration instanceof Configuration) {
-			throw new Exception('Provided argument must be a Configuration object or an array.');
-		}
+        if (is_null($configuration)) {
+            $configuration = new Configuration;
+        } elseif (is_array($configuration)) {
+            $configuration = new Configuration($configuration);
+        } elseif (! $configuration instanceof Configuration) {
+            throw new Exception('Provided argument must be a Configuration object or an array.');
+        }
 
         $this->proxyFactory = $configuration->getProxyFactory();
         $this->client = $configuration->getClient();
@@ -122,14 +122,14 @@ class EntityManager
         return $this->loadedNodes[$node->getId()];
     }
 
-	function reload($entity)
-	{
-		if ($entity instanceof Proxy\Entity) {
-			return $this->load($this->findAny($entity->getId()));
-		} else {
-			return $this->find(get_class($entity), $entity->getId());
-		}
-	}
+    function reload($entity)
+    {
+        if ($entity instanceof Proxy\Entity) {
+            return $this->load($this->findAny($entity->getId()));
+        } else {
+            return $this->find(get_class($entity), $entity->getId());
+        }
+    }
 
     function clear()
     {
@@ -151,13 +151,13 @@ class EntityManager
     {
         try {
             $start = microtime(true);
-			
+
             $query = new InternalGremlinQuery($this->client, $string, $parameters);
             $rs = $query->getResultSet();
-			
+
             $time = microtime(true) - $start;
             $this->triggerEvent(self::QUERY_RUN, $query, $parameters, $time);
-			
+
             if (count($rs) === 1
                 && is_string($rs[0][0])
                 && strpos($rs[0][0], 'Exception') !== false
@@ -180,13 +180,13 @@ class EntityManager
     {
         try {
             $start = microtime(true);
-			
+
             $query = new InternalCypherQuery($this->client, $string, $parameters);
             $rs = $query->getResultSet();
-			
+
             $time = microtime(true) - $start;
             $this->triggerEvent(self::QUERY_RUN, $query, $parameters, $time);
-			
+
             return $rs;
         } catch (\Everyman\Neo4j\Exception $e) {
             $message = $e->getMessage();

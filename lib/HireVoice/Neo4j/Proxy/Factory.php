@@ -87,15 +87,15 @@ class Factory
                 }
             }
 
-			$properties = $meta->getProperties();
-			$properties[] = $meta->getPrimaryKey();
-			$properties = array_filter($properties, function ($property) {
-				return ! $property->isPrivate();
-			});
-			$properties = array_map(function ($property) {
-				return $property->getName();
-			}, $properties);
-			$properties = var_export($properties, true);
+            $properties = $meta->getProperties();
+            $properties[] = $meta->getPrimaryKey();
+            $properties = array_filter($properties, function ($property) {
+                return ! $property->isPrivate();
+            });
+            $properties = array_map(function ($property) {
+                return $property->getName();
+            }, $properties);
+            $properties = var_export($properties, true);
 
             $content = <<<CONTENT
 <?php
@@ -152,9 +152,9 @@ class $proxyClass extends $className implements HireVoice\\Neo4j\\Proxy\\Entity
             return;
         }
 
-		if (! \$this->neo4j_meta) {
-			throw new \\HireVoice\\Neo4j\\Exception('Proxy not fully initialized. Relations are not available when loading the object from a session or other forms of serialization.');
-		}
+        if (! \$this->neo4j_meta) {
+            throw new \\HireVoice\\Neo4j\\Exception('Proxy not fully initialized. Relations are not available when loading the object from a session or other forms of serialization.');
+        }
 
         \$property = \$this->neo4j_meta->findProperty(\$name);
 
@@ -198,10 +198,10 @@ class $proxyClass extends $className implements HireVoice\\Neo4j\\Proxy\\Entity
         }
     }
 
-	function __sleep()
-	{
-		return $properties;
-	}
+    function __sleep()
+    {
+        return $properties;
+    }
 }
 
 
@@ -215,17 +215,17 @@ CONTENT;
 
     private function methodProxy($method, $meta)
     {
-		$property = $meta->findProperty($method->getName());
+        $property = $meta->findProperty($method->getName());
 
-		if (! $property) {
-			// No need for a proxy if not related to a property
-			return;
-		}
+        if (! $property) {
+            // No need for a proxy if not related to a property
+            return;
+        }
 
-		if ($property->isProperty()) {
-			// Properties are loaded straight-up, no need for proxies
-			return;
-		}
+        if ($property->isProperty()) {
+            // Properties are loaded straight-up, no need for proxies
+            return;
+        }
 
         $parts = array();
         $arguments = array();
@@ -257,7 +257,7 @@ CONTENT;
         $arguments = implode(', ', $arguments);
 
         $name = var_export($method->getName(), true);
-		$propertyName = var_export($property->getName(), true);
+        $propertyName = var_export($property->getName(), true);
 
         return <<<FUNC
 

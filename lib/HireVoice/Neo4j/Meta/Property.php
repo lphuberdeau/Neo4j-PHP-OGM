@@ -105,10 +105,10 @@ class Property
         return false;
     }
 
-	function isPrivate()
-	{
-		return $this->property->isPrivate();
-	}
+    function isPrivate()
+    {
+        return $this->property->isPrivate();
+    }
 
     function getValue($entity)
     {
