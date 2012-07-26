@@ -30,6 +30,10 @@ use Everyman\Neo4j\Client,
     Everyman\Neo4j\Gremlin\Query as InternalGremlinQuery,
     Everyman\Neo4j\Cypher\Query as InternalCypherQuery;
 
+/**
+ * The entity manager handles the communication with the database server and
+ * keeps track of the various entities in the system.
+ */
 class EntityManager
 {
     const ENTITY_CREATE = 'entity.create';
@@ -53,6 +57,12 @@ class EntityManager
 
     private $eventHandlers = array();
 
+    /**
+     * Initialize the entity manager using the provided configuration.
+     * Configuration options are detailed in the Configuration class.
+     * 
+     * @param Configuration|array $configuration Various information about how the entity manager should behave.
+     */
     function __construct($configuration = null)
     {
         if (is_null($configuration)) {
@@ -73,6 +83,13 @@ class EntityManager
         };
     }
 
+    /**
+     * Includes an entity to persist on the next flush. Persisting entities will cause
+     * relations to be followed to discover other entities. Relation traversal will happen
+     * during the flush.
+     *
+     * @param object $entity Any object providing the correct Entity annotations.
+     */
     function persist($entity)
     {
         $meta = $this->getMeta($entity);
@@ -81,6 +98,11 @@ class EntityManager
         $this->entities[$hash] = $entity;
     }
 
+    /**
+     * Commit changes in the object model into the database. Relations will be traversed
+     * to discover additional entities. To include an object in the unit of work, use the
+     * persist() method.
+     */
     function flush()
     {
         $this->discoverEntities();
@@ -92,11 +114,25 @@ class EntityManager
         $this->nodes = array();
     }
 
+    /**
+     * Searches a single entity by ID for a given class name. The result will be provided
+     * as a proxy node to handle lazy loading of relations.
+     *
+     * @param string $class The fully qualified class name
+     * @param int $id The node ID
+     * @return object The entity object
+     */
     function find($class, $id)
     {
         return $this->getRepository($class)->find($id);
     }
 
+    /**
+     * Searches a single entity by ID, regardless of the class used. The result will be
+     * provided as a proxy
+     *
+     * @param int $id The node ID
+     */
     function findAny($id)
     {
         if ($node = $this->client->getNode($id)) {
@@ -106,6 +142,9 @@ class EntityManager
         return false;
     }
 
+    /**
+     * @access private
+     */
     function load($node)
     {
         if (! isset($this->loadedNodes[$node->getId()])) {
@@ -122,6 +161,12 @@ class EntityManager
         return $this->loadedNodes[$node->getId()];
     }
 
+    /**
+     * Reload an entity. Exchanges an raw entity or an invalid proxy with an initialized
+     * proxy.
+     *
+     * @param object $entity Any entity or entity proxy
+     */
     function reload($entity)
     {
         if ($entity instanceof Proxy\Entity) {
@@ -131,11 +176,20 @@ class EntityManager
         }
     }
 
+    /**
+     * Clear entity cache.
+     */
     function clear()
     {
         $this->loadedNodes = array();
     }
 
+    /**
+     * Provide a Gremlin query builder.
+     * 
+     * @param string $query Initial query fragment.
+     * @return Query\Gremlin
+     */
     function createGremlinQuery($query = null)
     {
         $q = new Query\Gremlin($this);
@@ -147,6 +201,13 @@ class EntityManager
         return $q;
     }
 
+    /**
+     * Raw gremlin query execution. Used by Query\Gremlin.
+     *
+     * @param string $string The query string.
+     * @param array $parameters The arguments to bind with the query.
+     * @return Everyman\Neo4j\Query\ResultSet
+     */
     function gremlinQuery($string, $parameters)
     {
         try {
@@ -171,11 +232,23 @@ class EntityManager
         }
     }
 
+    /**
+     * Provide a Cypher query builder.
+     *
+     * @return Query\Cypher
+     */
     function createCypherQuery()
     {
         return new Query\Cypher($this);
     }
 
+    /**
+     * Raw cypher query execution.
+     *
+     * @param string $string The query string.
+     * @param array $parameters The arguments to bind with the query.
+     * @return Everyman\Neo4j\Query\ResultSet
+     */
     function cypherQuery($string, $parameters)
     {
         try {
@@ -195,6 +268,13 @@ class EntityManager
         }
     }
 
+    /**
+     * Obtain an entity repository for a single class. The repository provides
+     * multiple methods to access nodes and can be extended per entity by
+     * specifying the correct annotation.
+     *
+     * @param string $class Fully qualified class name
+     */
     function getRepository($class)
     {
         if (! isset($this->repositories[$class])) {
@@ -212,6 +292,11 @@ class EntityManager
         return $this->repositories[$class];
     }
 
+    /**
+     * Register an event listener for a given event.
+     *
+     * @param string $eventName The event to listen, available as constants.
+     */
     function registerEvent($eventName, $callback)
     {
         $this->eventHandlers[$eventName][] = $callback;
@@ -376,7 +461,10 @@ class EntityManager
         $this->traverseRelations($entity, $addCallback, $removeCallback);
     }
 
-    /* private */ function addRelation($relation, $a, $b)
+    /**
+     * @access private
+     */
+    function addRelation($relation, $a, $b)
     {
         $a = $this->getLoadedNode($a);
         $b = $this->getLoadedNode($b);
@@ -397,7 +485,10 @@ class EntityManager
         $this->triggerEvent(self::RELATION_CREATE, $relation, $a, $b, $relationship);
     }
 
-    /* private */ function removeRelation($relation, $a, $b)
+    /**
+     * @access private
+     */
+    function removeRelation($relation, $a, $b)
     {
         $a = $this->getLoadedNode($a);
         $b = $this->getLoadedNode($b);
@@ -412,7 +503,7 @@ class EntityManager
         }
     }
 
-    function removePreviousRelations($from, $relation, $exception)
+    private function removePreviousRelations($from, $relation, $exception)
     {
         $node = $this->getLoadedNode($from);
 
@@ -496,14 +587,12 @@ class EntityManager
         return $gen();
     }
 
+    /**
+     * Alter how dates are generated. Primarily used for test cases.
+     */
     function setDateGenerator(\Closure $generator)
     {
         $this->dateGenerator = $generator;
-    }
-
-    function setProxyFactory(Proxy\Factory $factory)
-    {
-        $this->proxyFactory = $factory;
     }
 
     /**

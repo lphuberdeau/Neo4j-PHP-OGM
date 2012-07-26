@@ -92,25 +92,24 @@ $em = $this->get('hirevoice.neo4j.entity_manager');
 $repository = $em->getRepository('Entity\\User');
 
 // Find a User by a specific field
-
 $user = $repository->findOneByFullName('superman'); // Returns a User object
 
 // Find some users by a specific field
-
 $usersFromFrance = $repository->findByCountry('FR'); // Returns a collection of User object
 
 // Find one User with more than one criteria
-
 $nonActiveWithSuchEmail = $repository->findOneBy(array('status' => 'idle', 'email' => 'superman@chucknorris.com'));
 
 // Find Multiple Users with more than one criteria
-
 $activeUsersFromFrance = $repository->findBy(array('status' => 'active', 'country' => 'FR'));
 ````
 
 
 
-### Complex queries can also be made.
+### Complex queries
+
+Cypher queries can be used to obtain nodes based on arbitrary relations. The query mechanisms
+use a query builder to make parameter binding easier.
 
     $em = $this->get('hirevoice.neo4j.entity_manager');
     $john = $repo->findOneByFullName('John Doe');
@@ -152,6 +151,8 @@ The Entity annotation would need to be modified to point to the custom repositor
     /**
      * @OGM\Entity(repositoryClass="Repository\UserRepository")
      */
+
+The appropriate repository will be provided through getRepository() on the entity manager.
 
 Initialize the EntityManager
 ============================
