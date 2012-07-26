@@ -36,11 +36,13 @@ class Person
 
     /**
      * @OGM\Property
+     * @OGM\Index
      */
     protected $firstName;
 
     /**
      * @OGM\Property
+     * @OGM\Index
      */
     protected $lastName;
 

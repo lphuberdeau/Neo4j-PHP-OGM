@@ -324,5 +324,33 @@ class QueryTest extends TestCase
             'Orlando',
         ), $result->toArray());
     }
+
+    function testStartWithLuceneQuery()
+    {
+        $em = $this->getEntityManager();
+        $result = $em->createCypherQuery()
+            ->startWithQuery('person', 'HireVoice\\Neo4j\\Tests\\Entity\\Person', 'firstName:O*')
+            ->startWithNode('root', self::$root)
+            ->match('root -[:actor]-> person')
+            ->end('person')
+            ->getList();
+
+        $this->assertCount(1, $result);
+        $this->assertEquals('Bloom', $result->first()->getLastName());
+    }
+
+    function testFilterSingleKeyLookup()
+    {
+        $em = $this->getEntityManager();
+        $result = $em->createCypherQuery()
+            ->startWithLookup('person', 'HireVoice\\Neo4j\\Tests\\Entity\\Person', 'firstName', 'Orlando')
+            ->startWithNode('root', self::$root)
+            ->match('root -[:actor]-> person')
+            ->end('person')
+            ->getList();
+
+        $this->assertCount(1, $result);
+        $this->assertEquals('Bloom', $result->first()->getLastName());
+    }
 }
 

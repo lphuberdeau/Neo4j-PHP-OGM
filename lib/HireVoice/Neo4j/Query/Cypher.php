@@ -75,6 +75,21 @@ class Cypher
         return $this;
     }
 
+    function startWithQuery($name, $index, $query)
+    {
+        $this->start("$name = node:`$index`('$query')");
+
+        return $this;
+    }
+
+    function startWithLookup($name, $index, $key, $value)
+    {
+        $this->start("$name = node:`$index`($key = :{$name}_{$key})");
+        $this->set("{$name}_{$key}", $value);
+
+        return $this;
+    }
+
     function match($string)
     {
         $this->match = array_merge($this->match, func_get_args());
