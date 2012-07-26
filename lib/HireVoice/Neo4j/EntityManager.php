@@ -464,12 +464,15 @@ class EntityManager
     {
         $meta = $this->getMeta($entity);
         
+		$class = $meta->getName();
+		$index = $this->getRepository($class)->getIndex();
+		$node = $this->getLoadedNode($entity);
+		
         foreach ($meta->getIndexedProperties() as $property) {
-            $class = $meta->getName();
-            $index = $this->getRepository($class)->getIndex();
-            $node = $this->getLoadedNode($entity);
             $index->add($node, $property->getName(), $property->getValue($entity));
         }
+		
+		$index->add($node, 'class', $class);
     }
 
     private function writeIndexes()
