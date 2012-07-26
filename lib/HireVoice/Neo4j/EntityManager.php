@@ -473,6 +473,7 @@ class EntityManager
         }
 		
 		$index->add($node, 'class', $class);
+		$index->add($node, 'id', $entity->getId());
     }
 
     private function writeIndexes()
