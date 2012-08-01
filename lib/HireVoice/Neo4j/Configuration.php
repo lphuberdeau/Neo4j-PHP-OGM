@@ -23,9 +23,11 @@
 
 namespace HireVoice\Neo4j;
 use Everyman\Neo4j\Client;
+use Everyman\Neo4j\Transport;
 
 class Configuration
 {
+    private $transport = 'default';
     private $host = 'localhost';
     private $port = 7474;
     private $proxyDir = '/tmp';
@@ -34,6 +36,10 @@ class Configuration
 
     function __construct(array $configs = array())
     {
+        if (isset($configs['transport'])) {
+            $this->transport = $configs['transport'];
+        }
+
         if (isset($configs['host'])) {
             $this->host = $configs['host'];
         }
@@ -57,7 +63,13 @@ class Configuration
 
     function getClient()
     {
-        return new Client($this->host, $this->port);
+        switch ($this->transport) {
+        case 'stream':
+            return new Client(new Transport\Stream($this->host, $this->port));
+        case 'curl':
+        default:
+            return new Client($this->host, $this->port);
+        }
     }
 
     function getProxyFactory()

@@ -161,6 +161,7 @@ Ideally, this would be done through DependencyInjection in your application. Her
 procedural creation.
 
     $em = new HireVoice\Neo4j\EntityManager(array(
+		// 'transport' => 'curl', // or 'stream'
 		// 'host' => 'localhost',
 		// 'port' => 7474,
 		// 'proxy_dir' => '/tmp',

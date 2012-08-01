@@ -29,6 +29,7 @@ use HireVoice\Neo4j\Proxy\Factory;
 use HireVoice\Neo4j\Meta\Repository;
 
 use Everyman\Neo4j\Client;
+use Everyman\Neo4j\Transport;
 
 class ConfigurationTest extends \PHPUnit_Framework_TestCase
 {
@@ -97,6 +98,26 @@ class ConfigurationTest extends \PHPUnit_Framework_TestCase
         ));
 
         $this->assertEquals(new Repository($reader), $configuration->getMetaRepository());
+    }
+
+    function testSpecifyCurl()
+    {
+        $configuration = new Configuration(array(
+            'host' => 'example.com',
+            'transport' => 'curl',
+        ));;
+
+        $this->assertEquals(new Client(new Transport('example.com', 7474)), $configuration->getClient());
+    }
+
+    function testSpecifyStream()
+    {
+        $configuration = new Configuration(array(
+            'host' => 'example.com',
+            'transport' => 'stream',
+        ));;
+
+        $this->assertEquals(new Client(new Transport\Stream('example.com', 7474)), $configuration->getClient());
     }
 }
 
