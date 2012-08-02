@@ -74,20 +74,8 @@ class Factory
 
     private function initializeProperties($object, Meta $meta)
     {
-        $reflection = new \ReflectionObject($object);
-
         foreach ($meta->getManyToManyRelations() as $metaProperty) {
-            /* @var $metaProperty \HireVoice\Neo4j\Meta\Property */
-            if ($property = $reflection->getProperty($metaProperty->getOriginalName())) {
-                if (!$property->isPublic()) {
-                    $property->setAccessible(true);
-                }
-                $property->setValue($object, new ExtendedArrayCollection); // maybe it would be better idea to get
-                                                                           // property from $meta directly?
-                if (!$property->isPublic()) {
-                    $property->setAccessible(false);
-                }
-            }
+			$metaProperty->setValue($object, new ExtendedArrayCollection);
         }
 
         return $object;
