@@ -83,7 +83,7 @@ class Configuration
             return new Transport\Stream($this->host, $this->port);
         case 'curl':
         default:
-            return new Transport($this->host, $this->port);
+            return new Transport\Curl($this->host, $this->port);
         }
     }
 

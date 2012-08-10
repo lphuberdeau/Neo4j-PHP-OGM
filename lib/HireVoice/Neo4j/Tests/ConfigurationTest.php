@@ -107,7 +107,7 @@ class ConfigurationTest extends \PHPUnit_Framework_TestCase
             'transport' => 'curl',
         ));;
 
-        $this->assertEquals(new Client(new Transport('example.com', 7474)), $configuration->getClient());
+        $this->assertEquals(new Client(new Transport\Curl('example.com', 7474)), $configuration->getClient());
     }
 
     function testSpecifyStream()
@@ -127,7 +127,7 @@ class ConfigurationTest extends \PHPUnit_Framework_TestCase
             'password' => 'baz',
         ));;
 
-        $transport = new Transport;
+        $transport = new Transport\Curl;
         $transport->setAuth('foobar', 'baz');
         $this->assertEquals(new Client($transport), $configuration->getClient());
     }
