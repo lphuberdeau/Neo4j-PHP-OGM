@@ -119,5 +119,17 @@ class ConfigurationTest extends \PHPUnit_Framework_TestCase
 
         $this->assertEquals(new Client(new Transport\Stream('example.com', 7474)), $configuration->getClient());
     }
+
+    function testSpecifyCredentials()
+    {
+        $configuration = new Configuration(array(
+			'username' => 'foobar',
+			'password' => 'baz',
+        ));;
+
+		$transport = new Transport;
+		$transport->setAuth('foobar', 'baz');
+        $this->assertEquals(new Client($transport), $configuration->getClient());
+    }
 }
 
