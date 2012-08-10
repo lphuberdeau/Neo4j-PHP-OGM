@@ -161,13 +161,13 @@ Ideally, this would be done through DependencyInjection in your application. Her
 procedural creation.
 
     $em = new HireVoice\Neo4j\EntityManager(array(
-		// 'transport' => 'curl', // or 'stream'
-		// 'host' => 'localhost',
-		// 'port' => 7474,
-		// 'username' => null,
-		// 'password' => null,
-		// 'proxy_dir' => '/tmp',
-		// 'debug' => true, // Force proxy regeneration on each request
-		// 'annotation_reader' => ... // Should be a cached instance of the doctrine annotation reader in production
-	));
+        // 'transport' => 'curl', // or 'stream'
+        // 'host' => 'localhost',
+        // 'port' => 7474,
+        // 'username' => null,
+        // 'password' => null,
+        // 'proxy_dir' => '/tmp',
+        // 'debug' => true, // Force proxy regeneration on each request
+        // 'annotation_reader' => ... // Should be a cached instance of the doctrine annotation reader in production
+    ));
 

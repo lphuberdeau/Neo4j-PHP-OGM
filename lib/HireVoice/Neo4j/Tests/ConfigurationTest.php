@@ -123,12 +123,12 @@ class ConfigurationTest extends \PHPUnit_Framework_TestCase
     function testSpecifyCredentials()
     {
         $configuration = new Configuration(array(
-			'username' => 'foobar',
-			'password' => 'baz',
+            'username' => 'foobar',
+            'password' => 'baz',
         ));;
 
-		$transport = new Transport;
-		$transport->setAuth('foobar', 'baz');
+        $transport = new Transport;
+        $transport->setAuth('foobar', 'baz');
         $this->assertEquals(new Client($transport), $configuration->getClient());
     }
 }

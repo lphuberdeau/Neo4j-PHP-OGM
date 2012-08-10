@@ -33,8 +33,8 @@ class Configuration
     private $proxyDir = '/tmp';
     private $debug = false;
     private $annotationReader;
-	private $username;
-	private $password;
+    private $username;
+    private $password;
 
     function __construct(array $configs = array())
     {
@@ -62,22 +62,22 @@ class Configuration
             $this->annotationReader = $configs['annotation_reader'];
         }
 
-		if (isset($configs['username'], $configs['password'])) {
-			$this->username = $configs['username'];
-			$this->password = $configs['password'];
-		}
+        if (isset($configs['username'], $configs['password'])) {
+            $this->username = $configs['username'];
+            $this->password = $configs['password'];
+        }
     }
 
     function getClient()
     {
-		$transport = $this->getTransport();
-		$transport->setAuth($this->username, $this->password);
+        $transport = $this->getTransport();
+        $transport->setAuth($this->username, $this->password);
 
-		return new Client($transport);
-	}
+        return new Client($transport);
+    }
 
-	private function getTransport()
-	{
+    private function getTransport()
+    {
         switch ($this->transport) {
         case 'stream':
             return new Transport\Stream($this->host, $this->port);
