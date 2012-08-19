@@ -76,7 +76,7 @@ class Factory
         $className = $meta->getName();
 
         if (class_exists($proxyClass, false)) {
-            return new $proxyClass;
+            return $this->newInstance($proxyClass);
         }
 
         $targetFile = "{$this->proxyDir}/$proxyClass.php";
@@ -219,7 +219,18 @@ CONTENT;
         }
 
         require $targetFile;
-        return new $proxyClass;
+        return $this->newInstance($proxyClass);
+    }
+
+    private function newInstance($proxyClass)
+    {
+        static $prototypes = array();
+
+        if (!array_key_exists($proxyClass, $prototypes)) {
+            $prototypes[$proxyClass] = unserialize(sprintf('O:%d:"%s":0:{}', strlen($proxyClass), $proxyClass));
+        }
+
+        return clone $prototypes[$proxyClass];
     }
 
     private function methodProxy($method, $meta)
