@@ -42,6 +42,11 @@ class Movie
     protected $title;
 
     /**
+     * @OGM\Property(format="array")
+     */
+    protected $alternateTitles;
+
+    /**
      * @OGM\Property
      */
     protected $category;
@@ -79,6 +84,7 @@ class Movie
 
     function __construct()
     {
+        $this->alternateTitles = array();
         $this->actors = new ArrayCollection;
         $this->cinemas = new ArrayCollection;
         $this->movieRegistryCode = uniqid();
@@ -192,6 +198,24 @@ class Movie
     function getCategory()
     {
         return $this->category;
+    }
+
+    public function setAlternateTitles(array $alternateTitles)
+    {
+        $this->alternateTitles = array();
+        foreach ($alternateTitles as $alternateTitle) {
+            $this->addAlternateTitle($alternateTitle);
+        }
+    }
+
+    public function addAlternateTitle($alternateTitle)
+    {
+        $this->alternateTitles[] = $alternateTitle;
+    }
+
+    public function getAlternateTitles()
+    {
+        return $this->alternateTitles;
     }
 }
 

@@ -390,7 +390,10 @@ class EntityManagerTest extends TestCase
     function testStoreArray()
     {
         $movie = new Entity\Movie;
-        $movie->setTitle(array('A', 'B'));
+        $movie->setTitle('The Lord of the Rings: The Fellowship of the Ring');
+
+        $movie->addAlternateTitle('LOTR: The Fellowship of the Ring');
+        $movie->addAlternateTitle('The Fellowship of the Ring');
 
         $em = $this->getEntityManager();
         $em->persist($movie);
@@ -398,7 +401,7 @@ class EntityManagerTest extends TestCase
 
         $movie = $em->findAny($movie->getId());
 
-        $this->assertEquals(array('A', 'B'), $movie->getTitle());
+        $this->assertEquals(array('LOTR: The Fellowship of the Ring', 'The Fellowship of the Ring'), $movie->getAlternateTitles());
     }
 
     function testStoreStructure()
@@ -424,14 +427,22 @@ class EntityManagerTest extends TestCase
         $em->flush();
 
         $movie = $em->findAny($movie->getId());
-        $movie->addTitle('World');
+        $movie->addTitle('Die Hard');
 
         $em = $this->getEntityManager();
         $em->persist($movie);
         $em->flush();
 
         $movie = $em->findAny($movie->getId());
-        $this->assertEquals('World', $movie->getTitle());
+        $this->assertEquals('Die Hard', $movie->getTitle());
+
+        $movie->addTitle(' with a Vengance');
+        $em = $this->getEntityManager();
+        $em->persist($movie);
+        $em->flush();
+
+        $movie = $em->findAny($movie->getId());
+        $this->assertEquals('Die Hard with a Vengance', $movie->getTitle());
     }
 
     function testEntityRetrievedIsTheSame()
