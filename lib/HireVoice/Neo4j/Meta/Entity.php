@@ -101,6 +101,9 @@ class Entity
         return $this->indexedProperties;
     }
 
+    /**
+     * @return \HireVoice\Neo4j\Meta\Property[]
+     */
     function getProperties()
     {
         return $this->properties;
@@ -121,6 +124,12 @@ class Entity
         return $this->manyToOneRelations;
     }
 
+    /**
+     * Finds property by $name.
+     *
+     * @param string $name
+     * @return \HireVoice\Neo4j\Meta\Property|null
+     */
     function findProperty($name)
     {
         $property = Reflection::getProperty($name);

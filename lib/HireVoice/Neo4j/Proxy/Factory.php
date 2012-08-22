@@ -24,7 +24,9 @@
 namespace HireVoice\Neo4j\Proxy;
 
 use Doctrine\Common\Collections\ArrayCollection;
+use HireVoice\Neo4j\Extension\ArrayCollection as ExtendedArrayCollection;
 use HireVoice\Neo4j\Exception;
+use HireVoice\Neo4j\Meta\Entity as Meta;
 
 class Factory
 {
@@ -70,13 +72,34 @@ class Factory
         return $proxy;
     }
 
-    private function createProxy($meta)
+    private function initializeProperties($object, Meta $meta)
+    {
+        $reflection = new \ReflectionObject($object);
+
+        foreach ($meta->getManyToManyRelations() as $metaProperty) {
+            /* @var $metaProperty \HireVoice\Neo4j\Meta\Property */
+            if ($property = $reflection->getProperty($metaProperty->getOriginalName())) {
+                if (!$property->isPublic()) {
+                    $property->setAccessible(true);
+                }
+                $property->setValue($object, new ExtendedArrayCollection); // maybe it would be better idea to get
+                                                                           // property from $meta directly?
+                if (!$property->isPublic()) {
+                    $property->setAccessible(false);
+                }
+            }
+        }
+
+        return $object;
+    }
+
+    private function createProxy(Meta $meta)
     {
         $proxyClass = $meta->getProxyClass();
         $className = $meta->getName();
 
         if (class_exists($proxyClass, false)) {
-            return new $proxyClass;
+            return $this->initializeProperties($this->newInstance($proxyClass), $meta);
         }
 
         $targetFile = "{$this->proxyDir}/$proxyClass.php";
@@ -219,7 +242,18 @@ CONTENT;
         }
 
         require $targetFile;
-        return new $proxyClass;
+        return $this->initializeProperties($this->newInstance($proxyClass), $meta);
+    }
+
+    private function newInstance($proxyClass)
+    {
+        static $prototypes = array();
+
+        if (!array_key_exists($proxyClass, $prototypes)) {
+            $prototypes[$proxyClass] = unserialize(sprintf('O:%d:"%s":0:{}', strlen($proxyClass), $proxyClass));
+        }
+
+        return clone $prototypes[$proxyClass];
     }
 
     private function methodProxy($method, $meta)
