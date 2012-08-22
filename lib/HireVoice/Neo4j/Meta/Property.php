@@ -158,6 +158,11 @@ class Property
         return $this->name;
     }
 
+    function getOriginalName()
+    {
+        return $this->property->getName();
+    }
+
     function matches($names)
     {
         foreach (func_get_args() as $name) {
