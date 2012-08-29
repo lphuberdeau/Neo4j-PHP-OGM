@@ -27,11 +27,24 @@ use HireVoice\Neo4j\Query\LuceneQueryProcessor;
 
 class Repository
 {
-    /** @var Meta\Entity */
+    /**
+     * @var \HireVoice\Neo4j\Meta\Entity
+     */
     private $meta;
+
+    /**
+     * @var \Everyman\Neo4j\Index\NodeIndex
+     */
     private $index;
-    /** @var EntityManager */
+
+    /**
+     * @var \HireVoice\Neo4j\EntityManager
+     */
     private $entityManager;
+
+    /**
+     * @var string
+     */
     private $class;
 
     function __construct(EntityManager $entityManager, Meta\Entity $meta)
@@ -166,5 +179,25 @@ class Repository
     protected function getRepository($class)
     {
         return $this->entityManager->getRepository($class);
+    }
+
+    /**
+     * Retrieves entity manager.
+     *
+     * @return \HireVoice\Neo4j\EntityManager
+     */
+    public function getEntityManager()
+    {
+        return $this->entityManager;
+    }
+
+    /**
+     * Retrieves meta info.
+     *
+     * @return \HireVoice\Neo4j\Meta\Entity
+     */
+    public function getMeta()
+    {
+        return $this->meta;
     }
 }
