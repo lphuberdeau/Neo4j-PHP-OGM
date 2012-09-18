@@ -49,7 +49,7 @@ class EntityMetaTest extends \PHPUnit_Framework_TestCase
             $names[] = $property->getName();
         }
 
-        $this->assertEquals(array('title', 'category', 'releaseDate', 'movieRegistryCode', 'blob'), $names);
+        $this->assertEquals(array('title', 'alternateTitles', 'category', 'releaseDate', 'movieRegistryCode', 'blob'), $names);
     }
 
     function testManyToMany()

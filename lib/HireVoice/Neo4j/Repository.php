@@ -145,7 +145,7 @@ class Repository
     {
         if (strpos($name, 'findOneBy') === 0) {
             $property = substr($name, 9);
-            $property = Meta\Reflection::cleanProperty($property);
+            $property = Meta\Reflection::singularizeProperty($property);
 
             if ($node = $this->getIndex()->findOne($property, $arguments[0])) {
                 return $this->entityManager->load($node);
@@ -165,10 +165,10 @@ class Repository
 
     private function getSearchableProperty($property)
     {
-        $property = Meta\Reflection::cleanProperty($property);
+        $property = Meta\Reflection::singularizeProperty($property);
 
         foreach ($this->meta->getIndexedProperties() as $p) {
-            if (Meta\Reflection::cleanProperty($p->getName()) == $property) {
+            if (Meta\Reflection::singularizeProperty($p->getName()) == $property) {
                 return $property;
             }
         }

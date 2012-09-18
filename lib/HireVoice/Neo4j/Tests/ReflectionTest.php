@@ -28,17 +28,17 @@ class ReflectionTest extends \PHPUnit_Framework_TestCase
 {
     function testBasicPlural()
     {
-        $this->assertEquals('bee', Reflection::cleanProperty('bees'));
+        $this->assertEquals('bee', Reflection::singularizeProperty('bees'));
     }
 
     function testWithIes()
     {
-        $this->assertEquals('property', Reflection::cleanProperty('properties'));
+        $this->assertEquals('property', Reflection::singularizeProperty('properties'));
     }
 
     function testDoubleS()
     {
-        $this->assertEquals('access', Reflection::cleanProperty('access'));
+        $this->assertEquals('access', Reflection::singularizeProperty('access'));
     }
 }
 

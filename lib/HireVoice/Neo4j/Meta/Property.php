@@ -2,7 +2,7 @@
 /**
  * Copyright (C) 2012 Louis-Philippe Huberdeau
  *
- * Permission is hereby granted, free of charge, to any person obtaining a 
+ * Permission is hereby granted, free of charge, to any person obtaining a
  * copy of this software and associated documentation files (the "Software"),
  * to deal in the Software without restriction, including without limitation
  * the rights to use, copy, modify, merge, publish, distribute, sublicense,
@@ -30,7 +30,7 @@ class Property
     const INDEX = 'HireVoice\\Neo4j\\Annotation\\Index';
     const TO_MANY = 'HireVoice\\Neo4j\\Annotation\\ManyToMany';
     const TO_ONE = 'HireVoice\\Neo4j\\Annotation\\ManyToOne';
-    
+
     private $reader;
     private $property;
     private $name;
@@ -42,7 +42,12 @@ class Property
     {
         $this->reader = $reader;
         $this->property = $property;
-        $this->name = Reflection::cleanProperty($property->getName());
+        if ($this->isProperty() || $this->isRelation()) {
+            $this->name = $property->getName();
+        } else {
+            // as far as we know only relation list are collections with names we can 'normalize'
+            $this->name = Reflection::singularizeProperty($property->getName());
+        }
         $property->setAccessible(true);
     }
 
@@ -89,7 +94,7 @@ class Property
 
         return false;
     }
-    
+
     function isRelationList()
     {
         if ($annotation = $this->reader->getPropertyAnnotation($this->property, self::TO_MANY)) {
@@ -118,6 +123,8 @@ class Property
         case 'scalar':
         case 'relation':
             return $raw;
+        case 'array':
+            return serialize($raw);
         case 'json':
             return json_encode($raw);
         case 'date':
@@ -137,6 +144,9 @@ class Property
         case 'scalar':
         case 'relation':
             $this->property->setValue($entity, $value);
+            break;
+        case 'array':
+            $this->property->setValue($entity, unserialize($value));
             break;
         case 'json':
             $this->property->setValue($entity, json_decode($value, true));
@@ -168,7 +178,7 @@ class Property
         foreach (func_get_args() as $name) {
             if (0 === strcasecmp($name, $this->name)
                 || 0 === strcasecmp($name, $this->property->getName())
-                || 0 === strcasecmp($name, Reflection::cleanProperty($this->property->getName()))
+                || 0 === strcasecmp($name, Reflection::singularizeProperty($this->property->getName()))
             ) {
                 return true;
             }
