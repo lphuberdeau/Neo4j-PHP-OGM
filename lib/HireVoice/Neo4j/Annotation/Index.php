@@ -29,5 +29,9 @@ namespace HireVoice\Neo4j\Annotation;
  */
 class Index
 {
+    /**
+     * @var boolean
+     */
+    public $unique = false;
 }
 

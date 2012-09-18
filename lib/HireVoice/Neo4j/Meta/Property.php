@@ -66,6 +66,15 @@ class Property
         return !! $this->reader->getPropertyAnnotation($this->property, self::INDEX);
     }
 
+    function isUnique()
+    {
+        if ($annotation = $this->reader->getPropertyAnnotation($this->property, self::INDEX)) {
+            return $annotation->unique;
+        }
+
+        return false;
+    }
+
     function isTraversed()
     {
         return $this->traversed;
