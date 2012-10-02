@@ -28,10 +28,10 @@ class Reflection
     public static function getProperty($methodName)
     {
         $property = substr($methodName, 3);
-        return self::cleanProperty($property);
+        return self::singularizeProperty($property);
     }
 
-    public static function cleanProperty($property)
+    public static function singularizeProperty($property)
     {
         $property = lcfirst($property);
 
