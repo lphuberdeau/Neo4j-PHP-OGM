@@ -26,6 +26,7 @@ namespace HireVoice\Neo4j;
 use Everyman\Neo4j\Client,
     Everyman\Neo4j\Node,
     Everyman\Neo4j\Relationship,
+    Everyman\Neo4j\Index,
     Everyman\Neo4j\Index\NodeIndex,
     Everyman\Neo4j\Gremlin\Query as InternalGremlinQuery,
     Everyman\Neo4j\Cypher\Query as InternalCypherQuery;
@@ -106,9 +107,14 @@ class EntityManager
     function flush()
     {
         $this->discoverEntities();
+
+        $this->begin();
         $this->writeEntities();
         $this->writeRelations();
         $this->writeIndexes();
+        $this->commit();
+
+        $this->syncPrimaryKeys();
 
         $this->entities = array();
         $this->nodes = array();
@@ -370,14 +376,29 @@ class EntityManager
 
     private function writeEntities()
     {
-        $this->begin();
+        // start a batch if we're not already in one
+        $commit = false;
+        if (!$this->inBatch()) {
+            $this->begin();
+            $commit = true;
+        }
+
         foreach ($this->entities as $entity) {
             $hash = $this->getHash($entity);
             $this->nodes[$hash] = $this->createNode($entity)->save();
         }
-        $this->commit();
 
-        // Write the primary key
+        if ($commit) {
+            $this->commit();
+            $this->syncPrimaryKeys();
+        }
+    }
+
+    /**
+     * After writing new nodes, the node IDs need to be copied to the entities
+     */
+    private function syncPrimaryKeys()
+    {
         foreach ($this->entities as $entity) {
             $hash = $this->getHash($entity);
             $meta = $this->getMeta($entity);
@@ -424,11 +445,20 @@ class EntityManager
 
     private function writeRelations()
     {
-        $this->begin();
+        // start a batch if we're not already in one
+        $commit = false;
+        if (!$this->inBatch()) {
+            $this->begin();
+            $commit = true;
+        }
+
         foreach ($this->entities as $entity) {
             $this->writeRelationsFor($entity);
         }
-        $this->commit();
+
+        if ($commit) {
+            $this->commit();
+        }
     }
 
     private function begin()
@@ -445,6 +475,11 @@ class EntityManager
         }
 
         $this->batch = null;
+    }
+
+    private function inBatch()
+    {
+        return $this->client->inBatch();
     }
 
     private function writeRelationsFor($entity)
@@ -560,15 +595,25 @@ class EntityManager
         $node = $this->getLoadedNode($entity);
 
         foreach ($meta->getIndexedProperties() as $property) {
-            $index->add($node, $property->getName(), $property->getValue($entity), $property->isUnique());
+            if ($node->hasId()) {
+                $index->remove($node, $property->getName());
+            }
+            $index->add($node, $property->getName(), $property->getValue($entity), ($property->isUnique() ? Index::CreateOrFail : false));
         }
 
-        $index->add($node, 'id', $entity->getId(), true);
+        //$id = $entity->getId();
+        //$index->add($node, 'id', $id, $id !== null ? Index::CreateOrFail : false);
     }
 
     private function writeIndexes()
     {
-        $this->begin();
+        // start a batch if we're not already in one
+        $commit = false;
+        if (!$this->inBatch()) {
+            $this->begin();
+            $commit = true;
+        }
+
         foreach ($this->entities as $entity) {
             $this->index($entity);
         }
@@ -576,7 +621,10 @@ class EntityManager
         foreach ($this->repositories as $repository) {
             $repository->writeIndex();
         }
-        $this->commit();
+
+        if ($commit) {
+            $this->commit();
+        }
     }
 
     private function getMeta($entity)

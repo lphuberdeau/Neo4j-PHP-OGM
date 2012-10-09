@@ -81,7 +81,10 @@ class Repository
     {
         if (! $this->index) {
             $this->index = $this->entityManager->createIndex($this->class);
-            $this->index->save();
+
+            // Disabled this because it generates an unnecessary request.
+            // The server creates new indexes automatically
+            //$this->index->save();
         }
 
         return $this->index;
@@ -90,7 +93,9 @@ class Repository
     function writeIndex()
     {
         if ($this->index) {
-            $this->index->save();
+            // Disabled this because it generates an unnecessary request.
+            // The server creates new indexes automatically
+            //$this->index->save();
         }
     }
     /**
