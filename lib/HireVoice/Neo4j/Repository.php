@@ -100,8 +100,8 @@ class Repository
      */
     public function findOneBy(array $criteria)
     {
-        $query = $this->createQuery($criteria);
-        
+        $query = $this->createQuery($criteria);  
+   
         if ($node = $this->getIndex()->queryOne($query)) {
             return $this->entityManager->load($node);
         }

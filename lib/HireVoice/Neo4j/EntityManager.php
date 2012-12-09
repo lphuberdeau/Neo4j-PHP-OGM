@@ -610,5 +610,10 @@ class EntityManager
     {
         return $this->client;
     }
+
+    public function getPathFinder()
+    {
+        return new PathFinder($this);
+    }
 }
 

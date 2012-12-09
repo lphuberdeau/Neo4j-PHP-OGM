@@ -62,12 +62,17 @@ class LuceneQueryProcessor
 
     /**
      * Embed the value between "" if she contains spaces
+     * If first character is "(" it adds no quotes
      */
-    public function prepareValue($value)
+     public function prepareValue($value)
     {
         $value = trim($value);
         if(strpos($value, ' ')) {
-            return '"'.$value.'"';
+            $fl = mb_substr($value, 0, 1, 'UTF-8');
+            if ($fl != '(')
+                return '"'.$value.'"';
+            else
+                return $value;
         }
         return $value;
     }
