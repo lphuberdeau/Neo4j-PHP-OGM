@@ -47,6 +47,8 @@ class EntityManager
 
     private $entities = array();
 
+    private $entitiesToRemove = array();
+
     private $nodes = array();
     private $indexes = array();
     private $repositories = array();
@@ -98,6 +100,35 @@ class EntityManager
         $this->entities[$hash] = $entity;
     }
 
+    function remove($entity)
+    {
+        $meta = $this->getMeta($entity);
+        $hash = $this->getHash($entity);
+        $this->entitiesToRemove[$hash] = $entity;
+    }
+
+    function removeEntities()
+    {
+        $this->begin();
+        foreach ($this->entitiesToRemove as $entity){
+            $meta = $this->getMeta($entity);
+            $pk = $meta->getPrimaryKey();
+            $id = $pk->getValue($entity);
+            if ($id){
+                $node = $this->client->getNode($id);
+                
+                $relationships = $node->getRelationships();
+                foreach ($relationships as $relationship){
+                    $relationship->delete();
+                }
+                
+                $node->delete();
+            }
+        }
+
+        $this->commit();
+    }
+
     /**
      * Commit changes in the object model into the database. Relations will be traversed
      * to discover additional entities. To include an object in the unit of work, use the
@@ -109,6 +140,7 @@ class EntityManager
         $this->writeEntities();
         $this->writeRelations();
         $this->writeIndexes();
+        $this->removeEntities();
 
         $this->entities = array();
         $this->nodes = array();

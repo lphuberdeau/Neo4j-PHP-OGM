@@ -72,7 +72,12 @@ class PathFinder
 
 	protected function preparePaths()
 	{
-		$paths = $this->startNode->findPathsTo($this->endNode, 'tag');
+		if (null === $this->relationship){
+			$paths = $this->startNode->findPathsTo($this->endNode);
+		} else {
+			$paths = $this->startNode->findPathsTo($this->endNode, $this->relationship);
+		}
+
 		if ($this->maxDepth !== null) $paths->setMaxDepth($this->maxDepth);
 		if ($this->algorithm !== null) $paths->setAlgorithm($this->algorithm);
 

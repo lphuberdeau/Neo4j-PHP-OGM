@@ -67,6 +67,20 @@ class Repository
         return $entity;
     }
 
+    function findAll()
+    {
+       try{
+            $entities = $this->entityManager->createCypherQuery()
+                ->startWithQuery('entities', $this->class, 'id:*')
+                ->end('entities')
+                ->getList();
+        } catch (\Exception $e){
+                $entities = new ArrayCollection();
+        }
+
+        return $entities;
+    }
+
     protected function createGremlinQuery($string = null)
     {
         return $this->entityManager->createGremlinQuery($string);

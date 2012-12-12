@@ -154,4 +154,23 @@ class RepositoryTest extends TestCase
 
         return $uid;
     }
+
+    public function testComplexLuceneQuery()
+    {
+        $em = $this->getEntityManager();
+
+        $entity = new Entity\Movie;
+        $entity->setTitle('Game Of Thrones');
+
+        $em->persist($entity);
+        $em->flush();
+
+        $repository = $this->getRepository();
+
+        $movie = $repository->findOneBy(array(
+            'title' => '(+*am* Of +*hron*)'
+        ));
+
+        $this->assertEquals($entity->getTitle(), $movie->getTitle());
+    }
 }
