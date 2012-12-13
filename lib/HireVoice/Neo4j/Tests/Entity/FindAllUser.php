@@ -21,16 +21,79 @@
  * DEALINGS IN THE SOFTWARE.
  */
 
-namespace HireVoice\Neo4j\Annotation;
+namespace HireVoice\Neo4j\Tests\Entity;
+use HireVoice\Neo4j\Annotation as OGM;
 
 /**
- * @Annotation
- * @Target("PROPERTY")
+ * @OGM\Entity
  */
-class ManyToMany
+class FindAllUser
 {
-    public $readOnly = false;
-    public $writeOnly = false;
-    public $relation = null;
+    /**
+     * @OGM\Auto
+     */
+    protected $id;
+
+    /**
+     * @OGM\Property
+     * @OGM\Index
+     */
+    protected $firstName;
+
+    /**
+     * @OGM\Property
+     * @OGM\Index
+     */
+    protected $lastName;
+
+    /**
+     * @OGM\ManyToMany
+     */
+    protected $friends;
+
+    function __construct()
+    {
+        $this->friends = new \Doctrine\Common\Collections\ArrayCollection;
+    }
+
+    function getId()
+    {
+        return $this->id;
+    }
+
+    function setId($id)
+    {
+        $this->id = $id;
+    }
+
+    function getFirstName()
+    {
+        return $this->firstName;
+    }
+
+    function setFirstName($firstName)
+    {
+        $this->firstName = $firstName;
+    }
+
+    function getLastName()
+    {
+        return $this->lastName;
+    }
+
+    function setLastName($lastName)
+    {
+        $this->lastName = $lastName;
+    }
+
+    function getFriends()
+    {
+        return $this->friends;
+    }
+
+    function addFriend(User $friend)
+    {
+        $this->friends->add($friend);
+    }
 }
 

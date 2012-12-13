@@ -173,4 +173,33 @@ class RepositoryTest extends TestCase
 
         $this->assertEquals($entity->getTitle(), $movie->getTitle());
     }
+
+    public function testFindAll()
+    {
+        $user1 = new Entity\FindAllUser;
+        $user2 = new Entity\FindAllUser;
+        $user3 = new Entity\FindAllUser;
+
+        $user1->setFirstName('Alexsey');
+        $user2->setFirstName('Sergey');
+        $user3->setFirstName('Anatoly');
+
+        $em = $this->getEntityManager();
+
+        $em->persist($user1);
+        $em->persist($user2);
+        $em->persist($user3);
+
+        $em->flush();
+
+        $users = $em->getRepository('HireVoice\Neo4j\Tests\Entity\FindAllUser')->findAll();
+
+        foreach($users as $user){
+            $em->remove($user);
+        }
+
+        $em->flush();
+
+        $this->assertEquals(3, count($users));
+    }
 }
