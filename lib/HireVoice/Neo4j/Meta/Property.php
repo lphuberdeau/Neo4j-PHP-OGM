@@ -37,7 +37,6 @@ class Property
     private $format = 'relation';
     private $traversed = true;
     private $writeOnly = false;
-    private $keepRelationships = false;
 
     function __construct($reader, $property)
     {
