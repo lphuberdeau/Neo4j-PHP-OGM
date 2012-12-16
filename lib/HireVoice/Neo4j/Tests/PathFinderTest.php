@@ -1,7 +1,7 @@
 <?php
 namespace HireVoice\Neo4j\Tests;
 
-use Everyman\Neo4j\PathFinder;
+use Everyman\Neo4j\PathFinder\PathFinder;
 
 class PathFinderTest extends TestCase
 {
@@ -27,12 +27,7 @@ class PathFinderTest extends TestCase
 		$em->flush();
 
 		$pathFinder = $em->getPathFinder();
-		$paths = $pathFinder->setStartEntity($user1)
-		                    ->setEndEntity($user3)
-		                    ->setMaxDepth(6)
-		                    ->setAlgorithm(PathFinder::AlgoAllSimple)
-		                    ->setRelationship('friend')
-		                    ->findPaths();
+		$paths = $pathFinder->findPaths($user1, $user3);
 
 		$this->assertEquals(1, count($paths));
 

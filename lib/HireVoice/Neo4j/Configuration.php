@@ -22,8 +22,10 @@
  */
 
 namespace HireVoice\Neo4j;
+
 use Everyman\Neo4j\Client;
 use Everyman\Neo4j\Transport;
+use Everyman\Neo4j\PathFinder;
 
 class Configuration
 {
@@ -35,6 +37,9 @@ class Configuration
     private $annotationReader;
     private $username;
     private $password;
+
+    private $pathfinderAlgorithm = null;
+    private $pathfinderMaxDepth = null;
 
     function __construct(array $configs = array())
     {
@@ -66,6 +71,28 @@ class Configuration
             $this->username = $configs['username'];
             $this->password = $configs['password'];
         }
+
+        if (isset($configs['pathfinder_algorithm'])) {
+            if (!in_array($configs['pathfinder_algorithm'], array(PathFinder::AlgoShortest, PathFinder::AlgoAll, PathFinder::AlgoAllSimple, PathFinder::AlgoDijkstra))){
+                throw new Exception(sprintf("Invalid path finding algorithm \"%s\"", $configs['pathfinder_algorithm']));
+            } 
+
+            $this->pathfinderAlgorithm = $configs['pathfinder_algorithm'];
+        }
+
+        if (isset($configs['pathfinder_maxdepth'])) {
+            $this->pathfinderMaxDepth = $configs['pathfinder_maxdepth'];
+        }
+    }
+
+    function getPathFinderAlgorithm()
+    {
+        return $this->pathfinderAlgorithm;
+    }
+
+    function getPathFinderMaxDepth()
+    {
+        return $this->pathfinderMaxDepth;
     }
 
     function getClient()

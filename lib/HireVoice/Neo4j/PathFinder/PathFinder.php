@@ -21,12 +21,13 @@
  * DEALINGS IN THE SOFTWARE.
  */
 
-namespace HireVoice\Neo4j;
+namespace HireVoice\Neo4j\PathFinder;
 
 use Everyman\Neo4j\Relationship;
+use HireVoice\Neo4j\EntityManager;
 
 /**
- * Path Finder implements path finding function
+ * Path Finder implements path finding functions
  *
  * @author Alex Belyaev <lex@alexbelyaev.com>
  */
@@ -52,20 +53,6 @@ class PathFinder
 		$this->client = $entityManager->getClient();
 	}
 
-	public function setStartEntity($entity)
-	{
-		$this->startNode = $this->client->getNode($entity->getId());
-
-		return $this;
-	}
-
-	public function setEndEntity($entity)
-	{
-		$this->endNode = $this->client->getNode($entity->getId());
-
-		return $this;
-	}
-
 	public function setMaxDepth($depth)
 	{
 		$this->maxDepth = $depth;
@@ -87,8 +74,11 @@ class PathFinder
 		return $this;
 	}
 
-	public function findPaths()
+	public function findPaths($a, $b)
 	{
+		$this->setStartEntity($a);
+		$this->setEndEntity($b);
+
 		$paths = $this->preparePaths()->getPaths();
 
 		$pathObjects = array();
@@ -99,8 +89,11 @@ class PathFinder
 		return $pathObjects;
 	}
 
-	public function findSinglePath()
+	public function findSinglePath($a, $b)
 	{
+		$this->setStartEntity($a);
+		$this->setEndEntity($b);
+
 		$path = $this->preparePaths()->getSinglePath();
 
 		return new Path($path, $this->entityManager);
@@ -118,6 +111,16 @@ class PathFinder
 		if ($this->algorithm !== null) $paths->setAlgorithm($this->algorithm);
 
 		return $paths;
+	}
+
+	protected function setStartEntity($entity)
+	{
+		$this->startNode = $this->client->getNode($entity->getId());
+	}
+
+	protected function setEndEntity($entity)
+	{
+		$this->endNode = $this->client->getNode($entity->getId());
 	}
 }
 

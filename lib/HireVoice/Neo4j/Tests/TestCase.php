@@ -36,6 +36,7 @@ abstract class TestCase extends \PHPUnit_Framework_TestCase
             'port' => $GLOBALS['port'],
             'proxy_dir' => '/tmp',
             'debug' => true,
+            'pathfinder_maxdepth' => 5
         ));
     }
 }

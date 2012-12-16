@@ -21,8 +21,9 @@
  * DEALINGS IN THE SOFTWARE.
  */
 
-namespace HireVoice\Neo4j;
+namespace HireVoice\Neo4j\PathFinder;
 
+use HireVoice\Neo4j\EntityManager;
 use Everyman\Neo4j\Path as RawPath;
 use Doctrine\Common\Collections\ArrayCollection;
 

@@ -59,6 +59,10 @@ class EntityManager
 
     private $eventHandlers = array();
 
+    private $pathfinderAlgorithm;
+
+    private $pathfinderMaxDepth;
+
     /**
      * Initialize the entity manager using the provided configuration.
      * Configuration options are detailed in the Configuration class.
@@ -83,6 +87,9 @@ class EntityManager
             $currentDate = new \DateTime;
             return $currentDate->format('Y-m-d H:i:s');
         };
+
+        $this->pathfinderAlgorithm = $configuration->getPathFinderAlgorithm();
+        $this->pathfinderMaxDepth = $configuration->getPathFinderMaxdepth();
     }
 
     /**
@@ -102,12 +109,11 @@ class EntityManager
 
     function remove($entity)
     {
-        $meta = $this->getMeta($entity);
         $hash = $this->getHash($entity);
         $this->entitiesToRemove[$hash] = $entity;
     }
 
-    function removeEntities()
+    private function removeEntities()
     {
         $this->begin();
         foreach ($this->entitiesToRemove as $entity){
@@ -116,6 +122,10 @@ class EntityManager
             $id = $pk->getValue($entity);
             if ($id){
                 $node = $this->client->getNode($id);
+
+                $class = $meta->getName();
+                $index = $this->getRepository($class)->getIndex();
+                $index->remove($node);
                 
                 $relationships = $node->getRelationships();
                 foreach ($relationships as $relationship){
@@ -140,6 +150,7 @@ class EntityManager
         $this->writeEntities();
         $this->writeRelations();
         $this->writeIndexes();
+
         $this->removeEntities();
 
         $this->entities = array();
@@ -586,9 +597,6 @@ class EntityManager
     private function index($entity)
     {
         $meta = $this->getMeta($entity);
-
-        $class = $meta->getName();
-        $index = $this->getRepository($class)->getIndex();
         
 		$class = $meta->getName();
 		$index = $this->getRepository($class)->getIndex();
@@ -645,7 +653,17 @@ class EntityManager
 
     public function getPathFinder()
     {
-        return new PathFinder($this);
+        $finder = new PathFinder\PathFinder($this);
+
+        if (null !== $this->pathfinderAlgorithm){
+            $finder->setAlgorithm($this->pathfinderAlgorithm);
+        }
+
+        if (null !== $this->pathfinderMaxDepth){
+            $finder->setMaxDepth($this->pathfinderMaxDepth);
+        }
+
+        return $finder;
     }
 }
 

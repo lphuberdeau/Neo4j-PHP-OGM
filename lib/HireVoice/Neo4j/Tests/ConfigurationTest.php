@@ -30,6 +30,7 @@ use HireVoice\Neo4j\Meta\Repository;
 
 use Everyman\Neo4j\Client;
 use Everyman\Neo4j\Transport;
+use Everyman\Neo4j\PathFinder;
 
 class ConfigurationTest extends \PHPUnit_Framework_TestCase
 {
@@ -130,6 +131,17 @@ class ConfigurationTest extends \PHPUnit_Framework_TestCase
         $transport = new Transport\Curl;
         $transport->setAuth('foobar', 'baz');
         $this->assertEquals(new Client($transport), $configuration->getClient());
+    }
+
+    function testPathFinderMaxDepthAndAlgorithm()
+    {
+        $configuration = new Configuration(array(
+            'pathfinder_maxdepth' => 5,
+            'pathfinder_algorithm' => PathFinder::AlgoAllSimple,
+        ));
+
+        $this->assertEquals(PathFinder::AlgoAllSimple, $configuration->getPathFinderAlgorithm());
+        $this->assertEquals(5, $configuration->getPathFinderMaxDepth());
     }
 }
 
