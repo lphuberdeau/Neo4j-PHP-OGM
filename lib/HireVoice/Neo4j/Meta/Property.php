@@ -87,6 +87,7 @@ class Property
             if ($annotation->relation) {
                 $this->name = $annotation->relation;
             }
+
             $this->traversed = ! $annotation->readOnly;
 
             return true;
@@ -101,6 +102,7 @@ class Property
             if ($annotation->relation) {
                 $this->name = $annotation->relation;
             }
+
             $this->traversed = ! $annotation->readOnly;
             $this->writeOnly = $annotation->writeOnly;
 

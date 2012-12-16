@@ -47,6 +47,8 @@ class EntityManager
 
     private $entities = array();
 
+    private $entitiesToRemove = array();
+
     private $nodes = array();
     private $indexes = array();
     private $repositories = array();
@@ -56,6 +58,10 @@ class EntityManager
     private $dateGenerator;
 
     private $eventHandlers = array();
+
+    private $pathfinderAlgorithm;
+
+    private $pathfinderMaxDepth;
 
     /**
      * Initialize the entity manager using the provided configuration.
@@ -81,6 +87,9 @@ class EntityManager
             $currentDate = new \DateTime;
             return $currentDate->format('Y-m-d H:i:s');
         };
+
+        $this->pathfinderAlgorithm = $configuration->getPathFinderAlgorithm();
+        $this->pathfinderMaxDepth = $configuration->getPathFinderMaxdepth();
     }
 
     /**
@@ -98,6 +107,38 @@ class EntityManager
         $this->entities[$hash] = $entity;
     }
 
+    function remove($entity)
+    {
+        $hash = $this->getHash($entity);
+        $this->entitiesToRemove[$hash] = $entity;
+    }
+
+    private function removeEntities()
+    {
+        $this->begin();
+        foreach ($this->entitiesToRemove as $entity){
+            $meta = $this->getMeta($entity);
+            $pk = $meta->getPrimaryKey();
+            $id = $pk->getValue($entity);
+            if ($id){
+                $node = $this->client->getNode($id);
+
+                $class = $meta->getName();
+                $index = $this->getRepository($class)->getIndex();
+                $index->remove($node);
+                
+                $relationships = $node->getRelationships();
+                foreach ($relationships as $relationship){
+                    $relationship->delete();
+                }
+                
+                $node->delete();
+            }
+        }
+
+        $this->commit();
+    }
+
     /**
      * Commit changes in the object model into the database. Relations will be traversed
      * to discover additional entities. To include an object in the unit of work, use the
@@ -109,6 +150,8 @@ class EntityManager
         $this->writeEntities();
         $this->writeRelations();
         $this->writeIndexes();
+
+        $this->removeEntities();
 
         $this->entities = array();
         $this->nodes = array();
@@ -554,9 +597,6 @@ class EntityManager
     private function index($entity)
     {
         $meta = $this->getMeta($entity);
-
-        $class = $meta->getName();
-        $index = $this->getRepository($class)->getIndex();
         
 		$class = $meta->getName();
 		$index = $this->getRepository($class)->getIndex();
@@ -609,6 +649,21 @@ class EntityManager
     public function getClient()
     {
         return $this->client;
+    }
+
+    public function getPathFinder()
+    {
+        $finder = new PathFinder\PathFinder($this);
+
+        if (null !== $this->pathfinderAlgorithm){
+            $finder->setAlgorithm($this->pathfinderAlgorithm);
+        }
+
+        if (null !== $this->pathfinderMaxDepth){
+            $finder->setMaxDepth($this->pathfinderMaxDepth);
+        }
+
+        return $finder;
     }
 }
 

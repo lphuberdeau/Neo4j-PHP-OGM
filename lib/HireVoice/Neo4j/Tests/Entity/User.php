@@ -21,23 +21,79 @@
  * DEALINGS IN THE SOFTWARE.
  */
 
-namespace HireVoice\Neo4j\Tests;
+namespace HireVoice\Neo4j\Tests\Entity;
+use HireVoice\Neo4j\Annotation as OGM;
 
-use HireVoice\Neo4j\EntityManager;
-use HireVoice\Neo4j\Meta\Repository as MetaRepository;
-use HireVoice\Neo4j\Proxy\Factory as ProxyFactory;
-
-abstract class TestCase extends \PHPUnit_Framework_TestCase
+/**
+ * @OGM\Entity
+ */
+class User
 {
-    protected function getEntityManager()
+    /**
+     * @OGM\Auto
+     */
+    protected $id;
+
+    /**
+     * @OGM\Property
+     * @OGM\Index
+     */
+    protected $firstName;
+
+    /**
+     * @OGM\Property
+     * @OGM\Index
+     */
+    protected $lastName;
+
+    /**
+     * @OGM\ManyToMany
+     */
+    protected $friends;
+
+    function __construct()
     {
-        return new EntityManager(array(
-            'host' => $GLOBALS['host'],
-            'port' => $GLOBALS['port'],
-            'proxy_dir' => '/tmp',
-            'debug' => true,
-            'pathfinder_maxdepth' => 5
-        ));
+        $this->friends = new \Doctrine\Common\Collections\ArrayCollection;
+    }
+
+    function getId()
+    {
+        return $this->id;
+    }
+
+    function setId($id)
+    {
+        $this->id = $id;
+    }
+
+    function getFirstName()
+    {
+        return $this->firstName;
+    }
+
+    function setFirstName($firstName)
+    {
+        $this->firstName = $firstName;
+    }
+
+    function getLastName()
+    {
+        return $this->lastName;
+    }
+
+    function setLastName($lastName)
+    {
+        $this->lastName = $lastName;
+    }
+
+    function getFriends()
+    {
+        return $this->friends;
+    }
+
+    function addFriend(User $friend)
+    {
+        $this->friends->add($friend);
     }
 }
 

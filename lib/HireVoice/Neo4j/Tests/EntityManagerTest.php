@@ -562,6 +562,34 @@ class EntityManagerTest extends TestCase
 
         $this->assertCount(1, $loaded->getFriends());
     }
+
+    function testRemove()
+    {
+        $em = $this->getEntityManager();
+
+        $user1 = new Entity\User;
+        $user1->setFirstName('Alex'); 
+
+        $user2 = new Entity\User;
+        $user2->setFirstName('Ivan');
+
+        $em->persist($user1);
+        $em->persist($user2);
+        $em->flush();
+
+        $id = $user1->getId();
+
+        $em->remove($user1);
+        $em->flush();
+
+        $client = $em->getClient();
+
+        $node2 = $client->getNode($user2->getId());
+
+        $this->assertEquals(0, count($node2->getRelationships(array('friends'))));
+
+        $this->assertEquals(null, $em->find(get_class($user1), $id));
+    }
 }
 
 /**

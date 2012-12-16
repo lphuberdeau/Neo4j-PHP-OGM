@@ -67,6 +67,16 @@ class Repository
         return $entity;
     }
 
+    function findAll()
+    {
+        $collection = new ArrayCollection();
+        foreach($this->getIndex()->query('id:*') as $node){
+            $collection->add($this->entityManager->load($node));
+        }
+
+        return $collection;
+    }
+    
     protected function createGremlinQuery($string = null)
     {
         return $this->entityManager->createGremlinQuery($string);
@@ -100,8 +110,8 @@ class Repository
      */
     public function findOneBy(array $criteria)
     {
-        $query = $this->createQuery($criteria);
-        
+        $query = $this->createQuery($criteria);  
+   
         if ($node = $this->getIndex()->queryOne($query)) {
             return $this->entityManager->load($node);
         }
