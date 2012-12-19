@@ -26,6 +26,7 @@ namespace HireVoice\Neo4j\PathFinder;
 use Everyman\Neo4j\Relationship;
 use HireVoice\Neo4j\EntityManager;
 use Everyman\Neo4j\PathFinder as PathFinderImpl;
+use HireVoice\Neo4j\Proxy\Entity as Proxy;
 
 /**
  * Path Finder implements path finding functions
@@ -35,10 +36,6 @@ use Everyman\Neo4j\PathFinder as PathFinderImpl;
 class PathFinder
 {
     protected $entityManager;
-
-    protected $startNode;
-
-    protected $endNode;
 
     protected $relationship;
 
@@ -94,10 +91,7 @@ class PathFinder
 
     public function findPaths($a, $b)
     {
-        $this->setStartEntity($a);
-        $this->setEndEntity($b);
-
-        $paths = $this->preparePaths()->getPaths();
+        $paths = $this->preparePaths($a, $b)->getPaths();
 
         $pathObjects = array();
         foreach ($paths as $path){
@@ -109,36 +103,34 @@ class PathFinder
 
     public function findSinglePath($a, $b)
     {
-        $this->setStartEntity($a);
-        $this->setEndEntity($b);
-
-        $path = $this->preparePaths()->getSinglePath();
+        $path = $this->preparePaths($a, $b)->getSinglePath();
 
         return new Path($path, $this->entityManager);
     }
 
-    protected function preparePaths()
+    protected function preparePaths($a, $b)
     {
+        if (! $a instanceof Proxy) {
+            $a = $this->entityManager->reload($a);
+        }
+
+        if (! $b instanceof Proxy) {
+            $b = $this->entityManager->reload($b);
+        }
+
+        $startNode = $a->__getNode();
+        $endNode = $b->__getNode();
+
         if (null === $this->relationship){
-            $paths = $this->startNode->findPathsTo($this->endNode);
+            $paths = $startNode->findPathsTo($endNode);
         } else {
-            $paths = $this->startNode->findPathsTo($this->endNode, $this->relationship);
+            $paths = $startNode->findPathsTo($endNode, $this->relationship);
         }
 
         if ($this->maxDepth !== null) $paths->setMaxDepth($this->maxDepth);
         if ($this->algorithm !== null) $paths->setAlgorithm($this->algorithm);
 
         return $paths;
-    }
-
-    protected function setStartEntity($entity)
-    {
-        $this->startNode = $this->entityManager->getClient()->getNode($entity->getId());
-    }
-
-    protected function setEndEntity($entity)
-    {
-        $this->endNode = $this->entityManager->getClient()->getNode($entity->getId());
     }
 }
 

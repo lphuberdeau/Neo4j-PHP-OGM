@@ -154,6 +154,11 @@ class $proxyClass extends $className implements HireVoice\\Neo4j\\Proxy\\Entity
         \$this->neo4j_node = \$node;
     }
 
+    function __getNode()
+    {
+        return \$this->neo4j_node;
+    }
+
     function __setLoadCallback(\Closure \$loadCallback)
     {
         \$this->neo4j_loadCallback = \$loadCallback;

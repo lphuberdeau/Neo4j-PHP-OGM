@@ -33,6 +33,8 @@ interface Entity
 
     function __setNode($node);
 
+    function __getNode();
+
     function __setLoadCallback(\Closure $loadCallback);
 }
 
