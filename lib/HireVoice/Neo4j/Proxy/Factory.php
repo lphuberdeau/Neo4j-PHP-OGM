@@ -75,7 +75,7 @@ class Factory
     private function initializeProperties($object, Meta $meta)
     {
         foreach ($meta->getManyToManyRelations() as $metaProperty) {
-			$metaProperty->setValue($object, new ExtendedArrayCollection);
+            $metaProperty->setValue($object, new ExtendedArrayCollection);
         }
 
         return $object;

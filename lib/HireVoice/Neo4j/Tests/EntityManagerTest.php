@@ -322,7 +322,7 @@ class EntityManagerTest extends TestCase
 
         $this->assertEquals("Terminator-actor-Arnold", $code);
     }
-	
+
     function testCypherQueryRunHook()
     {
         $queryObj = null;
@@ -355,7 +355,7 @@ class EntityManagerTest extends TestCase
         $this->assertEmpty($paramsArray);
         $this->assertGreaterThan(0, $timeElapsed);
     }
-	
+
     function testGremlinQueryRunHook()
     {
         $queryObj = null;
@@ -591,10 +591,10 @@ class EntityManagerTest extends TestCase
         $this->assertEquals(null, $em->find(get_class($user1), $id));
     }
 
-	function testRemoveDoesNotLeaveIndexBehind()
-	{
+    function testRemoveDoesNotLeaveIndexBehind()
+    {
         $em = $this->getEntityManager();
-		$repo = $em->getRepository('HireVoice\\Neo4j\\Tests\\Entity\\User');
+        $repo = $em->getRepository('HireVoice\\Neo4j\\Tests\\Entity\\User');
 
         $user = new Entity\User;
         $user->setFirstName('Alex'); 
@@ -602,15 +602,15 @@ class EntityManagerTest extends TestCase
         $em->persist($user);
         $em->flush();
 
-		$lookupValue = $user->getUniqueId();
+        $lookupValue = $user->getUniqueId();
 
-		$this->assertCount(1, $repo->findByUniqueId($lookupValue));
+        $this->assertCount(1, $repo->findByUniqueId($lookupValue));
 
         $em->remove($user);
         $em->flush();
 
-		$this->assertCount(0, $repo->findByUniqueId($lookupValue));
-	}
+        $this->assertCount(0, $repo->findByUniqueId($lookupValue));
+    }
 }
 
 /**

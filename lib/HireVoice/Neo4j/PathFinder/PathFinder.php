@@ -25,6 +25,7 @@ namespace HireVoice\Neo4j\PathFinder;
 
 use Everyman\Neo4j\Relationship;
 use HireVoice\Neo4j\EntityManager;
+use Everyman\Neo4j\PathFinder as PathFinderImpl;
 
 /**
  * Path Finder implements path finding functions
@@ -33,94 +34,111 @@ use HireVoice\Neo4j\EntityManager;
  */
 class PathFinder
 {
-	protected $entityManager;
+    protected $entityManager;
 
-	protected $client;
+    protected $startNode;
 
-	protected $startNode;
+    protected $endNode;
 
-	protected $endNode;
+    protected $relationship;
 
-	protected $relationship;
+    protected $maxDepth = null;
 
-	protected $maxDepth = null;
+    protected $algorithm = null;
 
-	protected $algorithm = null;
+    public static function validateAlgorithm($name)
+    {
+        $algorithms = array(PathFinderImpl::AlgoShortest, PathFinderImpl::AlgoAll, PathFinderImpl::AlgoAllSimple, PathFinderImpl::AlgoDijkstra);
 
-	public function __construct(EntityManager $entityManager)
-	{
-		$this->entityManager = $entityManager;
-		$this->client = $entityManager->getClient();
-	}
+        if (! in_array($name, $algorithms)) {
+            throw new Exception(sprintf("Invalid path finding algorithm \"%s\"", $name));
 
-	public function setMaxDepth($depth)
-	{
-		$this->maxDepth = $depth;
+        }
+    }
 
-		return $this;
-	}
+    public function setEntityManager(EntityManager $entityManager)
+    {
+        $this->entityManager = $entityManager;
+    }
 
-	public function setAlgorithm($algorithm)
-	{
-		$this->algorithm = $algorithm;
+    public function __clone()
+    {
+        return array(
+            'entityManager',
+            'maxDepth',
+            'algorithm',
+        );
+    }
 
-		return $this;
-	}
+    public function setMaxDepth($depth)
+    {
+        $this->maxDepth = (int) $depth;
 
-	public function setRelationship($relationship)
-	{
-		$this->relationship = $relationship;
+        return $this;
+    }
 
-		return $this;
-	}
+    public function setAlgorithm($algorithm)
+    {
+        self::validateAlgorithm($algorithm);
+        $this->algorithm = $algorithm;
 
-	public function findPaths($a, $b)
-	{
-		$this->setStartEntity($a);
-		$this->setEndEntity($b);
+        return $this;
+    }
 
-		$paths = $this->preparePaths()->getPaths();
+    public function setRelationship($relationship)
+    {
+        $this->relationship = $relationship;
 
-		$pathObjects = array();
-		foreach ($paths as $path){
-			$pathObjects[] = new Path($path, $this->entityManager);
-		}
+        return $this;
+    }
 
-		return $pathObjects;
-	}
+    public function findPaths($a, $b)
+    {
+        $this->setStartEntity($a);
+        $this->setEndEntity($b);
 
-	public function findSinglePath($a, $b)
-	{
-		$this->setStartEntity($a);
-		$this->setEndEntity($b);
+        $paths = $this->preparePaths()->getPaths();
 
-		$path = $this->preparePaths()->getSinglePath();
+        $pathObjects = array();
+        foreach ($paths as $path){
+            $pathObjects[] = new Path($path, $this->entityManager);
+        }
 
-		return new Path($path, $this->entityManager);
-	}
+        return $pathObjects;
+    }
 
-	protected function preparePaths()
-	{
-		if (null === $this->relationship){
-			$paths = $this->startNode->findPathsTo($this->endNode);
-		} else {
-			$paths = $this->startNode->findPathsTo($this->endNode, $this->relationship);
-		}
+    public function findSinglePath($a, $b)
+    {
+        $this->setStartEntity($a);
+        $this->setEndEntity($b);
 
-		if ($this->maxDepth !== null) $paths->setMaxDepth($this->maxDepth);
-		if ($this->algorithm !== null) $paths->setAlgorithm($this->algorithm);
+        $path = $this->preparePaths()->getSinglePath();
 
-		return $paths;
-	}
+        return new Path($path, $this->entityManager);
+    }
 
-	protected function setStartEntity($entity)
-	{
-		$this->startNode = $this->client->getNode($entity->getId());
-	}
+    protected function preparePaths()
+    {
+        if (null === $this->relationship){
+            $paths = $this->startNode->findPathsTo($this->endNode);
+        } else {
+            $paths = $this->startNode->findPathsTo($this->endNode, $this->relationship);
+        }
 
-	protected function setEndEntity($entity)
-	{
-		$this->endNode = $this->client->getNode($entity->getId());
-	}
+        if ($this->maxDepth !== null) $paths->setMaxDepth($this->maxDepth);
+        if ($this->algorithm !== null) $paths->setAlgorithm($this->algorithm);
+
+        return $paths;
+    }
+
+    protected function setStartEntity($entity)
+    {
+        $this->startNode = $this->entityManager->getClient()->getNode($entity->getId());
+    }
+
+    protected function setEndEntity($entity)
+    {
+        $this->endNode = $this->entityManager->getClient()->getNode($entity->getId());
+    }
 }
 

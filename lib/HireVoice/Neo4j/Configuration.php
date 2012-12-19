@@ -25,7 +25,7 @@ namespace HireVoice\Neo4j;
 
 use Everyman\Neo4j\Client;
 use Everyman\Neo4j\Transport;
-use Everyman\Neo4j\PathFinder;
+use HireVoice\Neo4j\PathFinder\PathFinder;
 
 class Configuration
 {
@@ -73,26 +73,13 @@ class Configuration
         }
 
         if (isset($configs['pathfinder_algorithm'])) {
-            if (!in_array($configs['pathfinder_algorithm'], array(PathFinder::AlgoShortest, PathFinder::AlgoAll, PathFinder::AlgoAllSimple, PathFinder::AlgoDijkstra))){
-                throw new Exception(sprintf("Invalid path finding algorithm \"%s\"", $configs['pathfinder_algorithm']));
-            } 
-
+            PathFinder::validateAlgorithm($configs['pathfinder_algorithm']);
             $this->pathfinderAlgorithm = $configs['pathfinder_algorithm'];
         }
 
         if (isset($configs['pathfinder_maxdepth'])) {
-            $this->pathfinderMaxDepth = $configs['pathfinder_maxdepth'];
+            $this->pathfinderMaxDepth = (int) $configs['pathfinder_maxdepth'];
         }
-    }
-
-    function getPathFinderAlgorithm()
-    {
-        return $this->pathfinderAlgorithm;
-    }
-
-    function getPathFinderMaxDepth()
-    {
-        return $this->pathfinderMaxDepth;
     }
 
     function getClient()
@@ -122,6 +109,17 @@ class Configuration
     function getMetaRepository()
     {
         return new Meta\Repository($this->annotationReader);
+    }
+
+    function configurePathFinder(PathFinder $finder)
+    {
+        if ($this->pathfinderAlgorithm) {
+            $finder->setAlgorithm($this->pathfinderAlgorithm);
+        }
+
+        if ($this->pathfinderMaxDepth) {
+            $finder->setMaxDepth($this->pathfinderMaxDepth);
+        }
     }
 }
 

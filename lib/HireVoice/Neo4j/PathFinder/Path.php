@@ -34,21 +34,21 @@ use Doctrine\Common\Collections\ArrayCollection;
  */
 class Path
 {
-	protected $entities;
+    protected $entities;
 
-	protected $entityManager;
+    protected $entityManager;
 
-	public function __construct(RawPath $path, EntityManager $entityManager)
-	{
-		$this->entities = new ArrayCollection();
+    public function __construct(RawPath $path, EntityManager $entityManager)
+    {
+        $this->entities = new ArrayCollection();
 
-		foreach ($path as $node){
-			$this->entities->add($entityManager->load($node));
-		}
-	}
+        foreach ($path as $node){
+            $this->entities->add($entityManager->load($node));
+        }
+    }
 
-	public function getEntities()
-	{
-		return $this->entities;
-	}
+    public function getEntities()
+    {
+        return $this->entities;
+    }
 }

@@ -34,11 +34,11 @@ class User
      */
     protected $id;
 
-	/**
-	 * @OGM\Property
-	 * @OGM\Index
-	 */
-	protected $uniqueId;
+    /**
+     * @OGM\Property
+     * @OGM\Index
+     */
+    protected $uniqueId;
 
     /**
      * @OGM\Property
@@ -60,7 +60,7 @@ class User
     function __construct()
     {
         $this->friends = new \Doctrine\Common\Collections\ArrayCollection;
-		$this->uniqueId = uniqid();
+        $this->uniqueId = uniqid();
     }
 
     function getId()
@@ -73,10 +73,10 @@ class User
         $this->id = $id;
     }
 
-	function getUniqueId()
-	{
-		return $this->uniqueId;
-	}
+    function getUniqueId()
+    {
+        return $this->uniqueId;
+    }
 
     function getFirstName()
     {

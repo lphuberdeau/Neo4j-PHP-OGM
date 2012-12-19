@@ -38,8 +38,8 @@ class EntityManager
 {
     const ENTITY_CREATE = 'entity.create';
     const RELATION_CREATE = 'relation.create';
-	const QUERY_RUN = 'query.run';
-	
+    const QUERY_RUN = 'query.run';
+    
     private $client;
     private $metaRepository;
     private $proxyFactory;
@@ -59,9 +59,7 @@ class EntityManager
 
     private $eventHandlers = array();
 
-    private $pathfinderAlgorithm;
-
-    private $pathfinderMaxDepth;
+    private $pathFinder;
 
     /**
      * Initialize the entity manager using the provided configuration.
@@ -88,8 +86,9 @@ class EntityManager
             return $currentDate->format('Y-m-d H:i:s');
         };
 
-        $this->pathfinderAlgorithm = $configuration->getPathFinderAlgorithm();
-        $this->pathfinderMaxDepth = $configuration->getPathFinderMaxdepth();
+        $this->pathFinder = new PathFinder\PathFinder;
+        $this->pathFinder->setEntityManager($this);
+        $configuration->configurePathFinder($this->pathFinder);
     }
 
     /**
@@ -598,15 +597,15 @@ class EntityManager
     {
         $meta = $this->getMeta($entity);
         
-		$class = $meta->getName();
-		$index = $this->getRepository($class)->getIndex();
-		$node = $this->getLoadedNode($entity);
-		
+        $class = $meta->getName();
+        $index = $this->getRepository($class)->getIndex();
+        $node = $this->getLoadedNode($entity);
+        
         foreach ($meta->getIndexedProperties() as $property) {
             $index->add($node, $property->getName(), $property->getValue($entity));
         }
-		
-		$index->add($node, 'id', $entity->getId());
+        
+        $index->add($node, 'id', $entity->getId());
     }
 
     private function writeIndexes()
@@ -653,17 +652,7 @@ class EntityManager
 
     public function getPathFinder()
     {
-        $finder = new PathFinder\PathFinder($this);
-
-        if (null !== $this->pathfinderAlgorithm){
-            $finder->setAlgorithm($this->pathfinderAlgorithm);
-        }
-
-        if (null !== $this->pathfinderMaxDepth){
-            $finder->setMaxDepth($this->pathfinderMaxDepth);
-        }
-
-        return $finder;
+        return clone $this->pathFinder;
     }
 }
 

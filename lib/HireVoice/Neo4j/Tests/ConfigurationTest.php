@@ -27,10 +27,11 @@ namespace HireVoice\Neo4j\Tests;
 use HireVoice\Neo4j\Configuration;
 use HireVoice\Neo4j\Proxy\Factory;
 use HireVoice\Neo4j\Meta\Repository;
+use HireVoice\Neo4j\PathFinder\PathFinder;
 
 use Everyman\Neo4j\Client;
 use Everyman\Neo4j\Transport;
-use Everyman\Neo4j\PathFinder;
+use Everyman\Neo4j\PathFinder as PathFinderImpl;
 
 class ConfigurationTest extends \PHPUnit_Framework_TestCase
 {
@@ -137,11 +138,17 @@ class ConfigurationTest extends \PHPUnit_Framework_TestCase
     {
         $configuration = new Configuration(array(
             'pathfinder_maxdepth' => 5,
-            'pathfinder_algorithm' => PathFinder::AlgoAllSimple,
+            'pathfinder_algorithm' => PathFinderImpl::AlgoAllSimple,
         ));
 
-        $this->assertEquals(PathFinder::AlgoAllSimple, $configuration->getPathFinderAlgorithm());
-        $this->assertEquals(5, $configuration->getPathFinderMaxDepth());
+        $finder = new PathFinder;
+        $configuration->configurePathFinder($finder);
+
+        $expect = new PathFinder;
+        $expect->setMaxDepth(5);
+        $expect->setAlgorithm(PathFinderImpl::AlgoAllSimple);
+
+        $this->assertEquals($expect, $finder);
     }
 }
 
