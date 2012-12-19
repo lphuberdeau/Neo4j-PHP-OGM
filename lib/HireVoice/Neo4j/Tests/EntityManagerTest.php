@@ -590,6 +590,27 @@ class EntityManagerTest extends TestCase
 
         $this->assertEquals(null, $em->find(get_class($user1), $id));
     }
+
+	function testRemoveDoesNotLeaveIndexBehind()
+	{
+        $em = $this->getEntityManager();
+		$repo = $em->getRepository('HireVoice\\Neo4j\\Tests\\Entity\\User');
+
+        $user = new Entity\User;
+        $user->setFirstName('Alex'); 
+
+        $em->persist($user);
+        $em->flush();
+
+		$lookupValue = $user->getUniqueId();
+
+		$this->assertCount(1, $repo->findByUniqueId($lookupValue));
+
+        $em->remove($user);
+        $em->flush();
+
+		$this->assertCount(0, $repo->findByUniqueId($lookupValue));
+	}
 }
 
 /**
