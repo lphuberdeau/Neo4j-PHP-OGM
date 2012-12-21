@@ -45,7 +45,7 @@ class PathFinder
 
     public static function validateAlgorithm($name)
     {
-        $algorithms = array(PathFinderImpl::AlgoShortest, PathFinderImpl::AlgoAll, PathFinderImpl::AlgoAllSimple, PathFinderImpl::AlgoDijkstra);
+        $algorithms = array(PathFinderImpl::AlgoShortest, PathFinderImpl::AlgoAll, PathFinderImpl::AlgoAllSimple);
 
         if (! in_array($name, $algorithms)) {
             throw new Exception(sprintf("Invalid path finding algorithm \"%s\"", $name));
@@ -105,7 +105,9 @@ class PathFinder
     {
         $path = $this->preparePaths($a, $b)->getSinglePath();
 
-        return new Path($path, $this->entityManager);
+        if ($path) {
+            return new Path($path, $this->entityManager);
+        }
     }
 
     protected function preparePaths($a, $b)
