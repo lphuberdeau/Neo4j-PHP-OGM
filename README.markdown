@@ -84,6 +84,9 @@ If you have used Doctrine2 before, this is a very similar process.
 
     $em->persist($jane);
     $em->flush(); // Stores both Jane and John, along with the new relation
+    
+    $em->remove($john);
+    $em->flush(); // Removes John and the relation to Jane
 
 ### Fetching entities from the database
 
