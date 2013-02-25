@@ -179,6 +179,40 @@ class PathFinderTest extends TestCase
         }
     }
 
+    public function testPathObtainedFromCypher()
+    {
+        $user1 = new Entity\User;
+        $user2 = new Entity\User;
+        $user3 = new Entity\User;
+
+        $user1->setFirstName('Alex');
+        $user2->setFirstName('Sergey');
+        $user3->setFirstName('Anatoly');
+
+        $user1->addFriend($user2);
+        $user3->addFriend($user2);
+
+        $em = $this->getEntityManager();
+
+        $em->persist($user1);
+        $em->persist($user2);
+        $em->persist($user3);
+
+        $em->flush();
+
+        $paths = $em->createCypherQuery()
+            ->startWithNode('a', $user1)
+            ->startWithNode('b', $user3)
+            ->match('path = a -[*0..3]- b')
+            ->end('path')
+            ->getList();
+
+        $entities = $paths[0]->getEntities();
+        $this->assertEquals($user1->getFirstName(), $entities[0]->getFirstName());
+        $this->assertEquals($user2->getFirstName(), $entities[1]->getFirstName());
+        $this->assertEquals($user3->getFirstName(), $entities[2]->getFirstName());
+    }
+
     function algorithms()
     {
         return array(

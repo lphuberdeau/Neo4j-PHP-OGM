@@ -23,6 +23,7 @@
 
 namespace HireVoice\Neo4j\Query;
 use Everyman\Neo4j\Node;
+use Everyman\Neo4j\Path;
 use HireVoice\Neo4j\EntityManager;
 
 class Cypher
@@ -203,6 +204,8 @@ class Cypher
     {
         if ($value instanceof Node) {
             return $this->em->load($value);
+        } elseif ($value instanceof Path) {
+            return new \HireVoice\Neo4j\PathFinder\Path($value, $this->em);
         } else {
             return $value;
         }
