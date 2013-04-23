@@ -24,6 +24,7 @@
 namespace HireVoice\Neo4j\Meta;
 use Doctrine\Common\Annotations\Reader;
 use Doctrine\Common\Annotations\AnnotationReader;
+use HireVoice\Neo4j\Exception;
 
 class Repository
 {
@@ -42,10 +43,52 @@ class Repository
     function fromClass($className)
     {
         if (! isset($this->metas[$className])) {
-            $this->metas[$className] = Entity::fromClass($this->reader, $className, $this);
+            $this->metas[$className] = $this->findMeta($className, $this);
         }
 
         return $this->metas[$className];
     }
+
+	private function findMeta($className)
+    {
+        $class = new \ReflectionClass($className);
+
+        if ($class->implementsInterface('HireVoice\\Neo4j\\Proxy\\Entity')) {
+            $class = $class->getParentClass();
+        }
+
+        if ($entity = $this->reader->getClassAnnotation($class, 'HireVoice\\Neo4j\\Annotation\\Entity')) {
+			return $this->handleEntity($entity, $class);
+		} elseif ($entity = $this->reader->getClassAnnotation($class, 'HireVoice\\Neo4j\\Annotation\\Relation')) {
+			return $this->handleRelation($entity, $class);
+		} else {
+            $className = $class->getName();
+			throw new Exception("Class $className is not declared as an entity or relation.");
+        }
+	}
+
+	private function handleEntity($entity, $class)
+	{
+        $object = new Entity($class->getName());
+
+		$object->setRepositoryClass($entity->repositoryClass);
+        $object->loadProperties($this->reader, $class->getProperties());
+        $object->loadRelations($this->reader, $class->getProperties());
+        $object->validate();
+
+        return $object;
+    }
+
+	private function handleRelation($entity, $class)
+	{
+        $object = new Relation($class->getName());
+
+        $object->loadProperties($this->reader, $class->getProperties());
+		$object->loadEndPoints($this->reader, $class->getProperties());
+        $object->validate();
+
+        return $object;
+    }
+
 }
 

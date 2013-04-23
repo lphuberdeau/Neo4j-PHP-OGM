@@ -22,47 +22,62 @@
  */
 
 namespace HireVoice\Neo4j\Meta;
-use Doctrine\Common\Annotations\Reader as AnnotationReader;
 use HireVoice\Neo4j\Exception;
 
-class Entity extends GraphElement
+abstract class GraphElement
 {
-    private $repositoryClass = 'HireVoice\\Neo4j\\Repository';
-    private $manyToManyRelations = array();
-    private $manyToOneRelations = array();
+    private $className;
+    private $primaryKey;
+    private $properties = array();
+    private $indexedProperties = array();
 
-	function loadRelations($reader, $properties)
+    public function __construct($className)
+    {
+        $this->className = $className;
+    }
+
+	public function loadProperties($reader, $properties)
 	{
         foreach ($properties as $property) {
             $prop = new Property($reader, $property);
-			if ($prop->isRelationList()) {
-				$this->manyToManyRelations[] = $prop;
-			} elseif ($prop->isRelation()) {
-				$this->manyToOneRelations[] = $prop;
-			}
-		}
+            if ($prop->isPrimaryKey()) {
+                $this->setPrimaryKey($prop);
+            } elseif ($prop->isProperty($prop)) {
+                $this->properties[] = $prop;
+
+                if ($prop->isIndexed()) {
+                    $this->indexedProperties[] = $prop;
+                }
+            }
+        }
 	}
 
-	function setRepositoryClass($repositoryClass)
-	{
-		if ($repositoryClass) {
-			$this->repositoryClass = $repositoryClass;
-		}
-	}
-
-    function getRepositoryClass()
+    function getProxyClass()
     {
-        return $this->repositoryClass;
+        return 'neo4jProxy' . str_replace('\\', '_', $this->className);
     }
 
-    function getManyToManyRelations()
+    function getName()
     {
-        return $this->manyToManyRelations;
+        return $this->className;
     }
 
-    function getManyToOneRelations()
+    function getIndexedProperties()
     {
-        return $this->manyToOneRelations;
+        return $this->indexedProperties;
+    }
+
+    /**
+     * @return \HireVoice\Neo4j\Meta\Property[]
+     */
+    function getProperties()
+    {
+        return $this->properties;
+    }
+
+    function getPrimaryKey()
+    {
+        return $this->primaryKey;
     }
 
     /**
@@ -73,22 +88,29 @@ class Entity extends GraphElement
      */
     function findProperty($name)
     {
-		if ($p = parent::findProperty($name)) {
-			return $p;
-		}
-
         $property = Reflection::getProperty($name);
 
-        foreach ($this->manyToManyRelations as $p) {
+        foreach ($this->properties as $p) {
             if ($p->matches(substr($name, 3), $property)) {
                 return $p;
             }
         }
+    }
 
-        foreach ($this->manyToOneRelations as $p) {
-            if ($p->matches(substr($name, 3), $property)) {
-                return $p;
-			}
-		}
-	}
+    function setPrimaryKey(Property $property)
+    {
+        if ($this->primaryKey) {
+             throw new Exception("Class {$this->className} contains multiple targets for @Auto");
+        }
+
+        $this->primaryKey = $property;
+    }
+
+    function validate()
+    {
+        if (! $this->primaryKey) {
+             throw new Exception("Class {$this->className} contains no @Auto property");
+        }
+    }
 }
+

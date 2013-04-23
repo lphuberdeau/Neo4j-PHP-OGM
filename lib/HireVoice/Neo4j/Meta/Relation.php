@@ -25,70 +25,21 @@ namespace HireVoice\Neo4j\Meta;
 use Doctrine\Common\Annotations\Reader as AnnotationReader;
 use HireVoice\Neo4j\Exception;
 
-class Entity extends GraphElement
+class Relation extends GraphElement
 {
-    private $repositoryClass = 'HireVoice\\Neo4j\\Repository';
-    private $manyToManyRelations = array();
-    private $manyToOneRelations = array();
+    private $start;
+    private $end;
 
-	function loadRelations($reader, $properties)
+	function loadEndPoints($reader, $properties)
 	{
         foreach ($properties as $property) {
             $prop = new Property($reader, $property);
-			if ($prop->isRelationList()) {
-				$this->manyToManyRelations[] = $prop;
-			} elseif ($prop->isRelation()) {
-				$this->manyToOneRelations[] = $prop;
-			}
+			// TODO
 		}
 	}
 
-	function setRepositoryClass($repositoryClass)
-	{
-		if ($repositoryClass) {
-			$this->repositoryClass = $repositoryClass;
-		}
-	}
-
-    function getRepositoryClass()
+    function validate()
     {
-        return $this->repositoryClass;
+		parent::validate();
     }
-
-    function getManyToManyRelations()
-    {
-        return $this->manyToManyRelations;
-    }
-
-    function getManyToOneRelations()
-    {
-        return $this->manyToOneRelations;
-    }
-
-    /**
-     * Finds property by $name.
-     *
-     * @param string $name
-     * @return \HireVoice\Neo4j\Meta\Property|null
-     */
-    function findProperty($name)
-    {
-		if ($p = parent::findProperty($name)) {
-			return $p;
-		}
-
-        $property = Reflection::getProperty($name);
-
-        foreach ($this->manyToManyRelations as $p) {
-            if ($p->matches(substr($name, 3), $property)) {
-                return $p;
-            }
-        }
-
-        foreach ($this->manyToOneRelations as $p) {
-            if ($p->matches(substr($name, 3), $property)) {
-                return $p;
-			}
-		}
-	}
 }

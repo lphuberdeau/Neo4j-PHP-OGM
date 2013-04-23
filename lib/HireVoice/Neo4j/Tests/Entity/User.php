@@ -57,9 +57,20 @@ class User
      */
     protected $friends;
 
+	/**
+	 * @OGM\ManyToManyEdge(type="outgoing")
+	 */
+	protected $outgoingSiblings;
+
+	/**
+	 * @OGM\ManyToManyEdge(type="incoming")
+	 */
+	protected $incomingSiblings;
+
     function __construct()
     {
         $this->friends = new \Doctrine\Common\Collections\ArrayCollection;
+        $this->siblings = new \Doctrine\Common\Collections\ArrayCollection;
         $this->uniqueId = uniqid();
     }
 
@@ -106,6 +117,16 @@ class User
     function addFriend(User $friend)
     {
         $this->friends->add($friend);
+    }
+
+    function getOutgoingSiblings()
+    {
+        return $this->outgoingSiblings;
+    }
+
+    function getIncomingSiblings()
+    {
+        return $this->incomingSiblings;
     }
 }
 

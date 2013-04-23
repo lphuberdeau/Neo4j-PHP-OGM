@@ -321,6 +321,11 @@ class EntityManager
     {
         if (! isset($this->repositories[$class])) {
             $meta = $this->metaRepository->fromClass($class);
+
+			if (! $meta instanceof \HireVoice\Neo4j\Meta\Entity) {
+                throw new Exception("Repositories are not available for relation entities.");
+			}
+
             $repositoryClass = $meta->getRepositoryClass();
             $repository = new $repositoryClass($this, $meta);
 
@@ -381,6 +386,10 @@ class EntityManager
     private function traverseRelations($entity, $addCallback, $removeCallback = null)
     {
         $meta = $this->getMeta($entity);
+
+		if ($meta instanceof \HireVoice\Neo4j\Meta\Relation) {
+			return;
+		}
 
         foreach ($meta->getManyToManyRelations() as $property) {
             if ($property->isTraversed()) {

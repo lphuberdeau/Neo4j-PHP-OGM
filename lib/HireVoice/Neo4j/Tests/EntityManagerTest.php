@@ -611,6 +611,48 @@ class EntityManagerTest extends TestCase
 
         $this->assertCount(0, $repo->findByUniqueId($lookupValue));
     }
+
+	function testHandleCustomRelationType()
+	{
+		$this->markTestSkipped("Implementation incomplete.");
+
+		$userA = new Entity\User;
+		$userA->setFirstName('Alex');
+		$userB = new Entity\User;
+		$userB->setFirstName('Ivan');
+		$userC = new Entity\User;
+		$userC->setFirstName('Roger');
+
+		$brother = new Entity\Sibling;
+		$brother->setType('brother');
+		$brother->setFrom($userA);
+		$brother->setTo($userB);
+
+		$cousin = new Entity\Sibling;
+		$cousin->setType('cousin');
+		$cousin->setFrom($userA);
+		$cousin->setTo($userC);
+
+		$em = $this->getEntityManager();
+		$em->persist($brother);
+		$em->persist($cousin);
+		$em->flush();
+
+		$em = $this->getEntityManager();
+		$userA = $em->reload($userA);
+
+		$siblings = $userA->getOutgoingSiblings();
+		$details = array_map(function ($rel) {
+			return $rel->getFrom()->getFirstName() . ' -[' . $rel->getType() . ']-> ' . $rel->getTo()->getFirstName();
+		});
+
+		$userB = $em->reload($userB);
+
+		$this->assertEquals(array(
+			'Alex -[brother]-> Ivan',
+			'Alex -[cousin]-> Roger',
+		), $details);
+	}
 }
 
 /**
