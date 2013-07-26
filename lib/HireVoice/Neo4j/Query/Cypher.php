@@ -34,6 +34,7 @@ class Cypher
     private $return = array();
     private $where = array();
     private $order = array();
+    private $skip;
     private $limit;
     private $mode;
     private $processor;
@@ -115,6 +116,12 @@ class Cypher
         return $this;
     }
 
+    function skip($skip)
+    {
+        $this->skip = (int) $skip;
+        return $this;
+    }
+
     function limit($limit)
     {
         $this->limit = (int) $limit;
@@ -188,6 +195,10 @@ class Cypher
 
         if (count($this->order)) {
             $query .= 'order by ' . implode(', ', $this->order) . PHP_EOL;
+        }
+
+        if ($this->skip) {
+            $query .= 'skip ' . $this->skip . PHP_EOL;
         }
 
         if ($this->limit) {
