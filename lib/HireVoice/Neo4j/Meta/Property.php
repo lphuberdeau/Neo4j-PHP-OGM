@@ -37,6 +37,8 @@ class Property
     private $format = 'relation';
     private $traversed = true;
     private $writeOnly = false;
+    private $entityIndex = false;
+    private $additionalIndexes = array();
 
     function __construct($reader, $property)
     {
@@ -68,7 +70,23 @@ class Property
 
     function isIndexed()
     {
-        return !! $this->reader->getPropertyAnnotation($this->property, self::INDEX);
+        $isIndexed = false;
+        foreach ($this->reader->getPropertyAnnotations($this->property) as $annotation) {
+            if (is_a($annotation, self::INDEX)) {
+                $isIndexed = true;
+                if (!$annotation->name) {
+                    $this->entityIndex = true;
+                    continue;
+                }
+
+                $this->additionalIndexes[] = array(
+                    "name" => $annotation->name,
+                    "type" => $annotation->type,
+                    "field" => $annotation->field ? $annotation->field : $this->property->name
+                );
+            }
+        }
+        return $isIndexed;
     }
 
     function isTraversed()
@@ -115,6 +133,17 @@ class Property
     function isPrivate()
     {
         return $this->property->isPrivate();
+    }
+
+
+    function isEntityIndexed()
+    {
+        return $this->entityIndex;
+    }
+
+    function getAdditionalIndexes()
+    {
+        return $this->additionalIndexes;
     }
 
     function getValue($entity)

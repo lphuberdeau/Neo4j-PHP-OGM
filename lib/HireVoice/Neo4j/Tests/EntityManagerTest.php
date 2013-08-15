@@ -93,6 +93,87 @@ class EntityManagerTest extends TestCase
         $this->assertEquals($entity, $movies->first()->getEntity());
     }
 
+    function testAdditionalNodeIndexLookup()
+    {
+        $entity = new Entity\Movie;
+        $entity->setTitle('Return of the king');
+        $entity->setCategory('long');
+
+        $matrix = new Entity\Movie;
+        $matrix->setTitle('Matrix');
+        $matrix->setCategory('scifi');
+
+        $matrix2 = new Entity\Movie;
+        $matrix2->setTitle('Matrix2');
+        $matrix2->setCategory('scifi');
+
+        $em = $this->getEntityManager();
+        $em->persist($entity);
+        $em->persist($matrix);
+        $em->persist($matrix2);
+        $em->flush();
+
+        $movieKey = $entity->getMovieRegistryCode();
+
+        $em = $this->getEntityManager();
+
+        $movies = $em->createCypherQuery()
+            ->start('entity = node:`MovieNodeIndex`(movie_title = \'Return of the king\')')
+            ->end('entity')
+            ->getList();
+
+        foreach ($movies as $movie) {
+            $this->assertEquals('Return of the king', $movie->getTitle());
+        }
+        $movies = $em->createCypherQuery()
+            ->start('entity = node:`MovieNodeIndex`(category = \'long\')')
+            ->end('entity')
+            ->getList();
+
+        foreach ($movies as $movie) {
+            $this->assertEquals('long', $movie->getCategory());
+        }
+
+        $movies = $em->createCypherQuery()
+            ->start('entity = node:`MovieNodeIndex`(category = \'scifi\')')
+            ->end('entity')
+            ->getList();
+
+        foreach ($movies as $movie) {
+            $this->assertEquals('scifi', $movie->getCategory());
+        }
+    }
+
+    function testAdditionalFulltextIndexQuery()
+    {
+        $entity = new Entity\Movie;
+        $entity->setTitle('Return of the king');
+
+        $em = $this->getEntityManager();
+        $em->persist($entity);
+        $em->flush();
+
+        $movieKey = $entity->getMovieRegistryCode();
+
+        $em = $this->getEntityManager();
+
+        $movies = $em->createCypherQuery()
+            ->startWithQuery('entity', 'MovieFulltextIndex', 'movie_fulltext_title:return*')
+            ->end('entity')
+            ->getList();
+        foreach ($movies as $movie) {
+            $this->assertRegExp('^return.+', strtolower($movie->getTitle()));
+        }
+
+        $movies = $em->createCypherQuery()
+            ->startWithQuery('entity', 'MovieFulltextIndex', 'title:return*')
+            ->end('entity')
+            ->getList();
+        foreach ($movies as $movie) {
+            $this->assertRegExp('^return.+', strtolower($movie->getTitle()));
+        }
+    }
+
     /**
      * @expectedException HireVoice\Neo4j\Exception
      */
