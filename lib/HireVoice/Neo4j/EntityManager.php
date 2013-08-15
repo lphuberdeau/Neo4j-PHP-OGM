@@ -627,8 +627,10 @@ class EntityManager
         }
 
         $class = $meta->getName();
-        $index = $this->getRepository($class)->getIndex();
-        $index->add($node, 'id', $entity->getId());
+        if (!in_array($class, $this->indexes)) {
+            $this->indexes[$class] = $this->getRepository($class)->getIndex();
+        }
+        $this->indexes[$class]->add($node, 'id', $entity->getId());
     }
 
     private function writeIndexes()
