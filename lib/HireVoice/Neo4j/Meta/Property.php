@@ -50,6 +50,21 @@ class Property
             // as far as we know only relation list are collections with names we can 'normalize'
             $this->name = Reflection::singularizeProperty($property->getName());
         }
+
+        foreach ($this->reader->getPropertyAnnotations($this->property) as $annotation) {
+            if (is_a($annotation, self::INDEX)) {
+                if (!$annotation->name) {
+                    $this->entityIndex = true;
+                    continue;
+                }
+
+                $this->additionalIndexes[] = array(
+                    "name" => $annotation->name,
+                    "type" => $annotation->type,
+                    "field" => $annotation->field ? $annotation->field : $this->property->name
+                );
+            }
+        }
         $property->setAccessible(true);
     }
 
@@ -70,23 +85,7 @@ class Property
 
     function isIndexed()
     {
-        $isIndexed = false;
-        foreach ($this->reader->getPropertyAnnotations($this->property) as $annotation) {
-            if (is_a($annotation, self::INDEX)) {
-                $isIndexed = true;
-                if (!$annotation->name) {
-                    $this->entityIndex = true;
-                    continue;
-                }
-
-                $this->additionalIndexes[] = array(
-                    "name" => $annotation->name,
-                    "type" => $annotation->type,
-                    "field" => $annotation->field ? $annotation->field : $this->property->name
-                );
-            }
-        }
-        return $isIndexed;
+        return ($this->entityIndex || !empty($this->additionalIndexes));
     }
 
     function isTraversed()
