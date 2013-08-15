@@ -613,26 +613,21 @@ class EntityManager
     private function index($entity)
     {
         $meta = $this->getMeta($entity);
-
-
-        $class = $meta->getName();
-        $index = $this->getRepository($class)->getIndex();
         $node = $this->getLoadedNode($entity);
 
         foreach ($meta->getIndexedProperties() as $property) {
-            if ($property->isEntityIndexed()) {
-                $index->add($node, $property->getName(), $property->getValue($entity));
-            }
-            foreach ($property->getAdditionalIndexes() as $additionalIndex) {
-                if (!in_array($additionalIndex['name'], $this->indexes)) {
-                    $newIndex = $this->createIndex($additionalIndex['name'], $additionalIndex['type']);
+            foreach ($property->getIndexes() as $index) {
+                if (!in_array($index['name'], $this->indexes)) {
+                    $newIndex = $this->createIndex($index['name'], $index['type']);
                     $newIndex->save();
-                    $this->indexes[$additionalIndex['name']] = $newIndex;
+                    $this->indexes[$index['name']] = $newIndex;
                 }
-                $this->indexes[$additionalIndex['name']]->add($node, $additionalIndex['field'], $property->getValue($entity));
+                $this->indexes[$index['name']]->add($node, $index['field'], $property->getValue($entity));
             }
         }
 
+        $class = $meta->getName();
+        $index = $this->getRepository($class)->getIndex();
         $index->add($node, 'id', $entity->getId());
     }
 
@@ -641,10 +636,6 @@ class EntityManager
         $this->begin();
         foreach ($this->entities as $entity) {
             $this->index($entity);
-        }
-
-        foreach ($this->repositories as $repository) {
-            $repository->writeIndex();
         }
 
         foreach ($this->indexes as $index) {

@@ -37,8 +37,7 @@ class Property
     private $format = 'relation';
     private $traversed = true;
     private $writeOnly = false;
-    private $entityIndex = false;
-    private $additionalIndexes = array();
+    private $indexes = array();
 
     function __construct($reader, $property)
     {
@@ -51,20 +50,27 @@ class Property
             $this->name = Reflection::singularizeProperty($property->getName());
         }
 
-        foreach ($this->reader->getPropertyAnnotations($this->property) as $annotation) {
-            if (is_a($annotation, self::INDEX)) {
-                if (!$annotation->name) {
-                    $this->entityIndex = true;
-                    continue;
-                }
+        if ($this->isProperty()) {
+            foreach ($this->reader->getPropertyAnnotations($this->property) as $annotation) {
+                if (is_a($annotation, self::INDEX)) {
+                    if (!$annotation->name) {
+                        $this->indexes[] = array(
+                            'name' => $this->property->class,
+                            'type' => 'node',
+                            'field' => $this->property->name,
+                        );
+                        continue;
+                    }
 
-                $this->additionalIndexes[] = array(
-                    "name" => $annotation->name,
-                    "type" => $annotation->type,
-                    "field" => $annotation->field ? $annotation->field : $this->property->name
-                );
+                    $this->indexes[] = array(
+                        'name' => $annotation->name,
+                        'type' => $annotation->type,
+                        'field' => $annotation->field ? $annotation->field : $this->property->name
+                    );
+                }
             }
         }
+
         $property->setAccessible(true);
     }
 
@@ -85,7 +91,7 @@ class Property
 
     function isIndexed()
     {
-        return ($this->entityIndex || !empty($this->additionalIndexes));
+        return !empty($this->indexes);
     }
 
     function isTraversed()
@@ -134,15 +140,9 @@ class Property
         return $this->property->isPrivate();
     }
 
-
-    function isEntityIndexed()
+    function getIndexes()
     {
-        return $this->entityIndex;
-    }
-
-    function getAdditionalIndexes()
-    {
-        return $this->additionalIndexes;
+        return $this->indexes;
     }
 
     function getValue($entity)

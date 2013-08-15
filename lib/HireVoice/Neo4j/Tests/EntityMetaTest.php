@@ -39,21 +39,6 @@ class EntityMetaTest extends \PHPUnit_Framework_TestCase
         $this->assertEquals(array('title', 'category', 'movieRegistryCode'), $names);
     }
 
-    function testEntityIndexedProperties()
-    {
-        $repo = new MetaRepository;
-        $meta = $repo->fromClass('HireVoice\\Neo4j\\Tests\\Entity\\Movie');
-
-        $names = array();
-        foreach ($meta->getIndexedProperties() as $property) {
-            if ($property->isEntityIndexed()) {
-                $names[] = $property->getName();
-            }
-        }
-
-        $this->assertEquals(array('title', 'movieRegistryCode'), $names);
-    }
-
     function testGetProperties()
     {
         $repo = new MetaRepository;
