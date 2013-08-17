@@ -93,7 +93,7 @@ class EntityManagerTest extends TestCase
         $this->assertEquals($entity, $movies->first()->getEntity());
     }
 
-    function testAdditionalNodeIndexLookup()
+    function testNodeIndexLookup()
     {
         $entity = new Entity\Movie;
         $entity->setTitle('Return of the king');
@@ -144,7 +144,7 @@ class EntityManagerTest extends TestCase
         }
     }
 
-    function testAdditionalFulltextIndexQuery()
+    function testFulltextIndexQuery()
     {
         $entity = new Entity\Movie;
         $entity->setTitle('Return of the king');
@@ -162,7 +162,7 @@ class EntityManagerTest extends TestCase
             ->end('entity')
             ->getList();
         foreach ($movies as $movie) {
-            $this->assertRegExp('^return.+', strtolower($movie->getTitle()));
+            $this->assertRegExp('/^return.+/', strtolower($movie->getTitle()));
         }
 
         $movies = $em->createCypherQuery()
@@ -170,7 +170,7 @@ class EntityManagerTest extends TestCase
             ->end('entity')
             ->getList();
         foreach ($movies as $movie) {
-            $this->assertRegExp('^return.+', strtolower($movie->getTitle()));
+            $this->assertRegExp('/^return.+/', strtolower($movie->getTitle()));
         }
     }
 
