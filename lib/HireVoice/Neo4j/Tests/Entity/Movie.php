@@ -38,6 +38,7 @@ class Movie
     /**
      * @OGM\Property
      * @OGM\Index
+     * @OGM\Index(name="MovieNodeIndex")
      * @OGM\Index(name="MovieNodeIndex", field="movie_title")
      * @OGM\Index(name="MovieFulltextIndex", type="fulltext")
      * @OGM\Index(name="MovieFulltextIndex", type="fulltext", field="movie_fulltext_title")
@@ -51,7 +52,6 @@ class Movie
 
     /**
      * @OGM\Property
-     * @OGM\Index(name="MovieNodeIndex")
      */
     protected $category;
 

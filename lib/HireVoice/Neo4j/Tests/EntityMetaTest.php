@@ -36,7 +36,7 @@ class EntityMetaTest extends \PHPUnit_Framework_TestCase
             $names[] = $property->getName();
         }
 
-        $this->assertEquals(array('title', 'category', 'movieRegistryCode'), $names);
+        $this->assertEquals(array('title', 'movieRegistryCode'), $names);
     }
 
     function testGetProperties()

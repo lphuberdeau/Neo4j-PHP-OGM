@@ -95,6 +95,7 @@ class EntityManagerTest extends TestCase
 
     function testNodeIndexLookup()
     {
+
         $entity = new Entity\Movie;
         $entity->setTitle('Return of the king');
         $entity->setCategory('long');
@@ -125,22 +126,14 @@ class EntityManagerTest extends TestCase
         foreach ($movies as $movie) {
             $this->assertEquals('Return of the king', $movie->getTitle());
         }
+
         $movies = $em->createCypherQuery()
-            ->start('entity = node:`MovieNodeIndex`(category = \'long\')')
+            ->start('entity = node:`MovieNodeIndex`(title = \'Return of the king\')')
             ->end('entity')
             ->getList();
 
         foreach ($movies as $movie) {
-            $this->assertEquals('long', $movie->getCategory());
-        }
-
-        $movies = $em->createCypherQuery()
-            ->start('entity = node:`MovieNodeIndex`(category = \'scifi\')')
-            ->end('entity')
-            ->getList();
-
-        foreach ($movies as $movie) {
-            $this->assertEquals('scifi', $movie->getCategory());
+            $this->assertEquals('Return of the king', $movie->getTitle());
         }
     }
 
