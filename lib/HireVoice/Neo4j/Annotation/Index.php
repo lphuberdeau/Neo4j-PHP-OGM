@@ -29,5 +29,10 @@ namespace HireVoice\Neo4j\Annotation;
  */
 class Index
 {
+    public $name;
+
+    public $type = "node";
+
+    public $field;
 }
 

@@ -37,6 +37,7 @@ class Property
     private $format = 'relation';
     private $traversed = true;
     private $writeOnly = false;
+    private $indexes = array();
 
     function __construct($reader, $property)
     {
@@ -48,6 +49,28 @@ class Property
             // as far as we know only relation list are collections with names we can 'normalize'
             $this->name = Reflection::singularizeProperty($property->getName());
         }
+
+        if ($this->isProperty()) {
+            foreach ($this->reader->getPropertyAnnotations($this->property) as $annotation) {
+                if (is_a($annotation, self::INDEX)) {
+                    if (!$annotation->name) {
+                        $this->indexes[] = array(
+                            'name' => $this->property->class,
+                            'type' => 'node',
+                            'field' => $this->property->name,
+                        );
+                        continue;
+                    }
+
+                    $this->indexes[] = array(
+                        'name' => $annotation->name,
+                        'type' => $annotation->type,
+                        'field' => $annotation->field ? $annotation->field : $this->property->name
+                    );
+                }
+            }
+        }
+
         $property->setAccessible(true);
     }
 
@@ -68,7 +91,7 @@ class Property
 
     function isIndexed()
     {
-        return !! $this->reader->getPropertyAnnotation($this->property, self::INDEX);
+        return !empty($this->indexes);
     }
 
     function isTraversed()
@@ -115,6 +138,11 @@ class Property
     function isPrivate()
     {
         return $this->property->isPrivate();
+    }
+
+    function getIndexes()
+    {
+        return $this->indexes;
     }
 
     function getValue($entity)

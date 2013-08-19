@@ -29,6 +29,7 @@ use Everyman\Neo4j\Client,
     Everyman\Neo4j\Index\NodeIndex,
     Everyman\Neo4j\Gremlin\Query as InternalGremlinQuery,
     Everyman\Neo4j\Cypher\Query as InternalCypherQuery;
+use Everyman\Neo4j\Index\NodeFulltextIndex;
 
 /**
  * The entity manager handles the communication with the database server and
@@ -39,7 +40,9 @@ class EntityManager
     const ENTITY_CREATE = 'entity.create';
     const RELATION_CREATE = 'relation.create';
     const QUERY_RUN = 'query.run';
-    
+    const NODE_INDEX = 'node';
+    const FULLTEXT_INDEX = 'fulltext';
+
     private $client;
     private $metaRepository;
     private $proxyFactory;
@@ -50,8 +53,8 @@ class EntityManager
     private $entitiesToRemove = array();
 
     private $nodes = array();
-    private $indexes = array();
     private $repositories = array();
+    private $indexes = array();
 
     private $loadedNodes = array();
 
@@ -583,9 +586,20 @@ class EntityManager
         });
     }
 
-    function createIndex($className)
+    /**
+     * @param $indexName
+     * @param string $type
+     *
+     * @return NodeIndex
+     */
+    function createIndex($indexName, $type = self::NODE_INDEX)
     {
-        return new NodeIndex($this->client, $className);
+        if ($type === self::FULLTEXT_INDEX) {
+            return new NodeFulltextIndex($this->client, $indexName);
+
+        } else {
+            return new NodeIndex($this->client, $indexName);
+        }
     }
 
     private function getHash($object)
@@ -593,19 +607,30 @@ class EntityManager
         return spl_object_hash($object);
     }
 
+    /**
+     * @param $entity
+     */
     private function index($entity)
     {
         $meta = $this->getMeta($entity);
-        
-        $class = $meta->getName();
-        $index = $this->getRepository($class)->getIndex();
         $node = $this->getLoadedNode($entity);
-        
+
         foreach ($meta->getIndexedProperties() as $property) {
-            $index->add($node, $property->getName(), $property->getValue($entity));
+            foreach ($property->getIndexes() as $index) {
+                if (!in_array($index['name'], $this->indexes)) {
+                    $newIndex = $this->createIndex($index['name'], $index['type']);
+                    $newIndex->save();
+                    $this->indexes[$index['name']] = $newIndex;
+                }
+                $this->indexes[$index['name']]->add($node, $index['field'], $property->getValue($entity));
+            }
         }
-        
-        $index->add($node, 'id', $entity->getId());
+
+        $class = $meta->getName();
+        if (!in_array($class, $this->indexes)) {
+            $this->indexes[$class] = $this->getRepository($class)->getIndex();
+        }
+        $this->indexes[$class]->add($node, 'id', $entity->getId());
     }
 
     private function writeIndexes()
@@ -615,9 +640,10 @@ class EntityManager
             $this->index($entity);
         }
 
-        foreach ($this->repositories as $repository) {
-            $repository->writeIndex();
+        foreach ($this->indexes as $index) {
+            $index->save();
         }
+
         $this->commit();
     }
 
