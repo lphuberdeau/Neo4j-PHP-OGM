@@ -594,6 +594,17 @@ class EntityManager
      */
     function createIndex($indexName, $type = self::NODE_INDEX)
     {
+        if (! isset($this->indexes[$indexName])) {
+            $newIndex = $this->createIndexInstance($indexName, $type);
+            $newIndex->save();
+            $this->indexes[$indexName] = $newIndex;
+        }
+
+        return $this->indexes[$indexName];
+    }
+
+    private function createIndexInstance($indexName, $type)
+    {
         if ($type === self::FULLTEXT_INDEX) {
             return new NodeFulltextIndex($this->client, $indexName);
 
@@ -617,20 +628,14 @@ class EntityManager
 
         foreach ($meta->getIndexedProperties() as $property) {
             foreach ($property->getIndexes() as $index) {
-                if (!in_array($index['name'], $this->indexes)) {
-                    $newIndex = $this->createIndex($index['name'], $index['type']);
-                    $newIndex->save();
-                    $this->indexes[$index['name']] = $newIndex;
-                }
-                $this->indexes[$index['name']]->add($node, $index['field'], $property->getValue($entity));
+                $realIndex = $this->createIndex($index->name, $index->type);
+                $realIndex->add($node, $index->field, $property->getValue($entity));
             }
         }
 
         $class = $meta->getName();
-        if (!in_array($class, $this->indexes)) {
-            $this->indexes[$class] = $this->getRepository($class)->getIndex();
-        }
-        $this->indexes[$class]->add($node, 'id', $entity->getId());
+        $mainIndex = $this->createIndex($class);
+        $mainIndex->add($node, 'id', $entity->getId());
     }
 
     private function writeIndexes()

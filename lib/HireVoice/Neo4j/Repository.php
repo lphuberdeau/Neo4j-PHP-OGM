@@ -89,20 +89,9 @@ class Repository
 
     function getIndex()
     {
-        if (! $this->index) {
-            $this->index = $this->entityManager->createIndex($this->class);
-            $this->index->save();
-        }
-
-        return $this->index;
+        return $this->entityManager->createIndex($this->class);
     }
 
-    function writeIndex()
-    {
-        if ($this->index) {
-            $this->index->save();
-        }
-    }
     /**
      * Finds one node by a set of criteria
      *

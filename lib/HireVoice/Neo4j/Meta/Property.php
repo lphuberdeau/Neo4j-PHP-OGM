@@ -22,6 +22,7 @@
  */
 
 namespace HireVoice\Neo4j\Meta;
+use HireVoice\Neo4j\Annotation;
 
 class Property
 {
@@ -52,21 +53,12 @@ class Property
 
         if ($this->isProperty()) {
             foreach ($this->reader->getPropertyAnnotations($this->property) as $annotation) {
-                if (is_a($annotation, self::INDEX)) {
-                    if (!$annotation->name) {
-                        $this->indexes[] = array(
-                            'name' => $this->property->class,
-                            'type' => 'node',
-                            'field' => $this->property->name,
-                        );
-                        continue;
-                    }
-
-                    $this->indexes[] = array(
-                        'name' => $annotation->name,
-                        'type' => $annotation->type,
-                        'field' => $annotation->field ? $annotation->field : $this->property->name
-                    );
+                if ($annotation instanceof Annotation\Index) {
+                    $copy = clone $annotation;
+                    $copy->name = $copy->name ?: $this->property->class;
+                    $copy->field = $copy->field ?: $this->property->name;
+                    $copy->type = $copy->type ?: 'node';
+                    $this->indexes[] = $copy;
                 }
             }
         }
