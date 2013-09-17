@@ -23,7 +23,9 @@
 
 namespace HireVoice\Neo4j\Proxy;
 
-interface Entity
+use Doctrine\Common\Persistence\Proxy as BaseProxy;
+
+interface Entity extends BaseProxy
 {
     function getEntity();
 

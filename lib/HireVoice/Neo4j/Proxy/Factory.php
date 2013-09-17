@@ -122,6 +122,7 @@ class $proxyClass extends $className implements HireVoice\\Neo4j\\Proxy\\Entity
     private \$neo4j_node;
     private \$neo4j_loadCallback;
     private \$neo4j_relationships = false;
+    private \$neo4j_initialized = false;
 
     function getEntity()
     {
@@ -164,7 +165,17 @@ class $proxyClass extends $className implements HireVoice\\Neo4j\\Proxy\\Entity
         \$this->neo4j_loadCallback = \$loadCallback;
     }
 
-    private function __load(\$name, \$propertyName)
+    public function __load()
+    {
+        \$this->neo4j_initialized = true;
+    }
+
+    public function __isInitialized()
+    {
+        return \$this->neo4j_initialized;
+    }
+
+    private function __loadProperty(\$name, \$propertyName)
     {
         if (in_array(\$propertyName, \$this->neo4j_hydrated)) {
             return;
@@ -299,7 +310,7 @@ CONTENT;
 
     function {$method->getName()}($arguments)
     {
-        self::__load($name, $propertyName);
+        self::__loadProperty($name, $propertyName);
         return parent::{$method->getName()}($parts);
     }
 
