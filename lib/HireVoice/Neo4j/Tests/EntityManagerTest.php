@@ -425,8 +425,12 @@ class EntityManagerTest extends TestCase
            ->set('movie', $movie)
            ->getOne();
 
+        $expectedParams = array(
+            'movie' => $movie->getId()
+        );
+
         $this->assertInstanceOf('Everyman\Neo4j\Cypher\Query', $queryObj);
-        $this->assertEmpty($paramsArray);
+        $this->assertEquals($expectedParams, $paramsArray);
         $this->assertGreaterThan(0, $timeElapsed);
     }
 

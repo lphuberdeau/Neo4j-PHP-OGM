@@ -67,17 +67,12 @@ class ParameterProcessor
             $key = key($parameters);
             next($parameters);
 
-            if (is_numeric($value)) {
-                $string = str_replace(":$key", $value, $string);
-                return false;
+            if ($mode == 'cypher') {
+                $string = str_replace(":$key", '{' . $key . '}', $string);
             } else {
-                if ($mode == 'cypher') {
-                    $string = str_replace(":$key", '{' . $key . '}', $string);
-                } else {
-                    $string = str_replace(":$key", $key, $string);
-                }
-                return true;
+                $string = str_replace(":$key", $key, $string);
             }
+            return true;
         });
         $string = str_replace('[;;', '[:', $string);
 
