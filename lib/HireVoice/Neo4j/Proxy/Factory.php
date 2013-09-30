@@ -57,7 +57,7 @@ class Factory
         foreach ($meta->getProperties() as $property) {
             $name = $property->getName();
 
-            if ($value = $node->getProperty($name)) {
+            if (null !== $value = $node->getProperty($name)) {
                 $property->setValue($proxy, $value);
                 $proxy->__addHydrated($name);
             }
