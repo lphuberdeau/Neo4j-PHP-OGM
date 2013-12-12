@@ -2,7 +2,7 @@
 /**
  * Copyright (C) 2012 Louis-Philippe Huberdeau
  *
- * Permission is hereby granted, free of charge, to any person obtaining a 
+ * Permission is hereby granted, free of charge, to any person obtaining a
  * copy of this software and associated documentation files (the "Software"),
  * to deal in the Software without restriction, including without limitation
  * the rights to use, copy, modify, merge, publish, distribute, sublicense,
@@ -29,15 +29,9 @@ use HireVoice\Neo4j\EntityManager;
 class Cypher
 {
     private $em;
-    private $start = array();
-    private $match = array();
-    private $return = array();
-    private $where = array();
-    private $order = array();
-    private $skip;
-    private $limit;
-    private $mode;
     private $processor;
+	private $query = "";
+	private $currentClause = false;
 
     function __construct(EntityManager $em)
     {
@@ -45,16 +39,58 @@ class Cypher
         $this->processor = new ParameterProcessor(ParameterProcessor::CYPHER);
     }
 
+    function query($query)
+    {
+        $this->query = $query;
+        return $this;
+    }
+
+	function appendToQuery($clause, $args)
+	{
+		switch( $clause )
+		{
+			case 'where':
+			{
+				if( $this->currentClause !== $clause )
+					$this->query .= PHP_EOL . $clause . ' (' . implode(') AND (', $args) . ')';
+				else
+					$this->query .= ' AND (' . implode(') AND (', $args) . ')';
+				break;
+			}
+			case 'start':
+			case 'match':
+			case 'with':
+			case 'return':
+			case 'order by':
+			case 'skip':
+			case 'limit':
+			default:
+			{
+				if( $this->currentClause !== $clause )
+					$this->query .= PHP_EOL . $clause . ' ' . implode(',', $args);
+				else
+					$this->query .= ',' . implode(',', $args);
+				break;
+			}
+		}
+
+		$this->currentClause = $clause;
+		return $this;
+	}
+
     function mode($mode)
     {
-        $this->mode = $mode;
+		if( empty($this->query) )
+		{
+			$this->query = 'CYPHER ' . $mode;
+			$this->currentClause = 'mode';
+		}
         return $this;
     }
 
     function start($string)
     {
-        $this->start = array_merge($this->start, func_get_args());
-        return $this;
+		return $this->appendToQuery('start', func_get_args());
     }
 
     function startWithNode($name, $nodes)
@@ -73,7 +109,7 @@ class Cypher
 
         $parts = implode(', ', $parts);
         $this->start("$name = node($parts)");
-        
+
         return $this;
     }
 
@@ -94,38 +130,37 @@ class Cypher
 
     function match($string)
     {
-        $this->match = array_merge($this->match, func_get_args());
-        return $this;
+		return $this->appendToQuery('match', func_get_args());
     }
 
     function end($string)
     {
-        $this->return = array_merge($this->return, func_get_args());
-        return $this;
+		return $this->appendToQuery('return', func_get_args());
     }
 
     function where($string)
     {
-        $this->where = array_merge($this->where, func_get_args());
-        return $this;
+       return $this->appendToQuery('where', func_get_args());
+    }
+
+    function with($string)
+    {
+       return $this->appendToQuery('with', func_get_args());
     }
 
     function order($string)
     {
-        $this->order = array_merge($this->order, func_get_args());
-        return $this;
+        return $this->appendToQuery('order by', func_get_args());
     }
 
     function skip($skip)
     {
-        $this->skip = (int) $skip;
-        return $this;
+		return $this->appendToQuery('skip', func_get_args());
     }
 
     function limit($limit)
     {
-        $this->limit = (int) $limit;
-        return $this;
+		return $this->appendToQuery('limit', func_get_args());
     }
 
     function set($name, $value)
@@ -175,37 +210,7 @@ class Cypher
 
     private function execute()
     {
-        $query = '';
-
-        if ($this->mode) {
-        $query .= 'CYPHER ' . $this->mode . PHP_EOL;
-        }
-
-        $query .= 'start ' . implode(', ', $this->start) . PHP_EOL;
-
-        if (count($this->match)) {
-            $query .= 'match ' . implode(', ', $this->match) . PHP_EOL;
-        }
-
-        if (count($this->where)) {
-            $query .= 'where (' . implode(') AND (', $this->where) . ')' . PHP_EOL;
-        }
-
-        $query .= 'return ' . implode(', ', $this->return) . PHP_EOL;
-
-        if (count($this->order)) {
-            $query .= 'order by ' . implode(', ', $this->order) . PHP_EOL;
-        }
-
-        if ($this->skip) {
-            $query .= 'skip ' . $this->skip . PHP_EOL;
-        }
-
-        if ($this->limit) {
-            $query .= 'limit ' . $this->limit . PHP_EOL;
-        }
-
-        $this->processor->setQuery($query);
+        $this->processor->setQuery($this->query);
         $parameters = $this->processor->process();
 
         return $this->em->cypherQuery($this->processor->getQuery(), $parameters);
