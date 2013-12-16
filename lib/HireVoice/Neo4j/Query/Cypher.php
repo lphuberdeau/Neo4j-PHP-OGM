@@ -57,8 +57,19 @@ class Cypher
 					$this->query .= ' AND (' . implode(') AND (', $args) . ')';
 				break;
 			}
+			case 'using':
+			{
+				$this->query .= PHP_EOL . $clause . ' ' . implode(PHP_EOL . $clause . ' ', $args);
+				break;
+			}
+			case 'union':
+			{
+				$this->query .= PHP_EOL . $clause . ( $args === true ? " all" : "");
+				break;
+			}
 			case 'start':
 			case 'match':
+			case 'optional match':
 			case 'with':
 			case 'return':
 			case 'order by':
@@ -133,6 +144,11 @@ class Cypher
 		return $this->appendToQuery('match', func_get_args());
     }
 
+    function optionalMatch($string)
+    {
+		return $this->appendToQuery('optional match', func_get_args());
+    }
+
     function end($string)
     {
 		return $this->appendToQuery('return', func_get_args());
@@ -162,6 +178,16 @@ class Cypher
     {
 		return $this->appendToQuery('limit', func_get_args());
     }
+
+    function using($string)
+    {
+		return $this->appendToQuery('using', func_get_args());
+    }
+
+	function union($all)
+	{
+		return $this->appendToQuery('union', $all);
+	}
 
     function set($name, $value)
     {
