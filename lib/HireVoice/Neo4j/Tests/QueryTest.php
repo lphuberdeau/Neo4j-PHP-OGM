@@ -325,6 +325,24 @@ class QueryTest extends TestCase
         ), $result->toArray());
     }
 
+    function testSearchOnPropertyMultipleWhere()
+    {
+        $em = $this->getEntityManager();
+        $result = $em->createCypherQuery()
+            ->startWithNode('movie', self::$root)
+            ->match('(movie) -[:actor]-> (actor)')
+            ->where('actor.firstName = :firstname')
+            ->where('actor.lastName = :name')
+            ->end('actor.firstName')
+            ->set('firstname', 'Orlando')
+            ->set('name', 'Bloom')
+            ->getList();
+
+        $this->assertEquals(array(
+            'Orlando',
+        ), $result->toArray());
+    }
+
     function testStartWithLuceneQuery()
     {
         $em = $this->getEntityManager();
@@ -352,5 +370,53 @@ class QueryTest extends TestCase
         $this->assertCount(1, $result);
         $this->assertEquals('Bloom', $result->first()->getLastName());
     }
-}
 
+    function testCypherLimiting()
+    {
+        $em = $this->getEntityManager();
+        $result = $em->createCypherQuery()
+            ->startWithNode('movie', self::$root)
+            ->match('(movie) -[:actor]-> (actor)')
+            ->end('actor.firstName, count(*)')
+            ->order('count(*), actor.firstName')
+            ->limit(1)
+            ->getList();
+
+        $this->assertEquals(array(
+            'Orlando',
+        ), $result->toArray());
+    }
+
+    function testCypherSkiping()
+    {
+        $em = $this->getEntityManager();
+        $result = $em->createCypherQuery()
+            ->startWithNode('movie', self::$root)
+            ->match('(movie) -[:actor]-> (actor)')
+            ->end('actor.firstName, count(*)')
+            ->order('count(*), actor.firstName')
+            ->skip(1)
+            ->getList();
+
+        $this->assertEquals(array(
+            'Viggo',
+        ), $result->toArray());
+    }
+
+    /**
+     * @group neo4j-v2
+     */
+    function testCypherOptionalMatch()
+    {
+        $em = $this->getEntityManager();
+        $result = $em->createCypherQuery()
+            ->optionalMatch('(movie) -[:actor]-> (actor)')
+            ->optionalMatch('(actor) --> (x)')
+            ->end('x')
+            ->getList();
+
+        $this->assertEquals(array(
+            null,
+        ), $result->toArray());
+    }
+}
