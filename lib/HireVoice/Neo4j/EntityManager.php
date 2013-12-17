@@ -434,13 +434,13 @@ class EntityManager
                 $pk->setValue($entity, $nodeId);
                 $this->triggerEvent(self::ENTITY_CREATE, $entity);
 
-				if( $meta->getLabels() ) {
-					$labels = array();
-					foreach( $meta->getLabels() as $label )
-						$labels[] = new Label($this->client, $label);
+                if( $meta->getLabels() ) {
+                    $labels = array();
+                    foreach( $meta->getLabels() as $label )
+                        $labels[] = new Label($this->client, $label);
 
-					$this->client->addLabels($this->nodes[$hash], $labels);
-				}
+                    $this->client->addLabels($this->nodes[$hash], $labels);
+                }
             }
         }
     }

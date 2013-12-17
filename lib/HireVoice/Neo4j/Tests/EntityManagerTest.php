@@ -689,6 +689,29 @@ class EntityManagerTest extends TestCase
 
         $this->assertCount(0, $repo->findByUniqueId($lookupValue));
     }
+
+    /**
+     * @group neo4j-v2
+     */
+    function testStoreLabeledEntity()
+    {
+        $entity = new Entity\City;
+        $entity->setName('Montpellier');
+
+        $em = $this->getEntityManager();
+        $em->persist($entity);
+        $em->flush();
+
+        $em = $this->getEntityManager();
+        $city = $em->createCypherQuery()
+                ->startWithNode('a', $entity)
+                ->end('labels(a)')
+                ->getOne();
+
+        $this->assertEquals(2, $city->count());
+        $this->assertEquals("Location", $city->offsetGet(0));
+        $this->assertEquals("City", $city->offsetGet(1));
+    }
 }
 
 /**
