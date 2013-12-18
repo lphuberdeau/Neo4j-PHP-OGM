@@ -30,8 +30,8 @@ class Cypher
 {
     private $em;
     private $processor;
-	private $query = "";
-	private $currentClause = false;
+    private $query = "";
+    private $currentClause = false;
 
     function __construct(EntityManager $em)
     {
@@ -45,63 +45,57 @@ class Cypher
         return $this;
     }
 
-	function appendToQuery($clause, $args)
-	{
-		switch( $clause )
-		{
-			case 'where':
-			{
-				if( $this->currentClause !== $clause )
-					$this->query .= PHP_EOL . $clause . ' (' . implode(') AND (', $args) . ')';
-				else
-					$this->query .= ' AND (' . implode(') AND (', $args) . ')';
-				break;
-			}
-			case 'using':
-			{
-				$this->query .= PHP_EOL . $clause . ' ' . implode(PHP_EOL . $clause . ' ', $args);
-				break;
-			}
-			case 'union':
-			{
-				$this->query .= PHP_EOL . $clause . ( $args === true ? " all" : "");
-				break;
-			}
-			case 'start':
-			case 'match':
-			case 'optional match':
-			case 'with':
-			case 'return':
-			case 'order by':
-			case 'skip':
-			case 'limit':
-			default:
-			{
-				if( $this->currentClause !== $clause )
-					$this->query .= PHP_EOL . $clause . ' ' . implode(',', $args);
-				else
-					$this->query .= ',' . implode(',', $args);
-				break;
-			}
-		}
+    protected function appendToQuery($clause, $args)
+    {
+        switch( $clause )
+        {
+        case 'where':
+            if( $this->currentClause !== $clause ) {
+                $this->query .= PHP_EOL . $clause . ' (' . implode(') AND (', $args) . ')';
+            } else {
+                $this->query .= ' AND (' . implode(') AND (', $args) . ')';
+            }
+            break;
+        case 'using':
+            $this->query .= PHP_EOL . $clause . ' ' . implode(PHP_EOL . $clause . ' ', $args);
+            break;
+        case 'union':
+            $this->query .= PHP_EOL . $clause . ( $args === true ? " all" : "");
+            break;
+        case 'start':
+        case 'match':
+        case 'optional match':
+        case 'with':
+        case 'return':
+        case 'order by':
+        case 'skip':
+        case 'limit':
+        default:
+            if( $this->currentClause !== $clause ) {
+                $this->query .= PHP_EOL . $clause . ' ' . implode(',', $args);
+            } else {
+                $this->query .= ',' . implode(',', $args);
+            }
+            break;
+        }
 
-		$this->currentClause = $clause;
-		return $this;
-	}
+        $this->currentClause = $clause;
+        return $this;
+    }
 
     function mode($mode)
     {
-		if( empty($this->query) )
-		{
-			$this->query = 'CYPHER ' . $mode;
-			$this->currentClause = 'mode';
-		}
+        if( empty($this->query) )
+        {
+            $this->query = 'CYPHER ' . $mode;
+            $this->currentClause = 'mode';
+        }
         return $this;
     }
 
     function start($string)
     {
-		return $this->appendToQuery('start', func_get_args());
+        return $this->appendToQuery('start', func_get_args());
     }
 
     function startWithNode($name, $nodes)
@@ -141,17 +135,17 @@ class Cypher
 
     function match($string)
     {
-		return $this->appendToQuery('match', func_get_args());
+        return $this->appendToQuery('match', func_get_args());
     }
 
     function optionalMatch($string)
     {
-		return $this->appendToQuery('optional match', func_get_args());
+        return $this->appendToQuery('optional match', func_get_args());
     }
 
     function end($string)
     {
-		return $this->appendToQuery('return', func_get_args());
+        return $this->appendToQuery('return', func_get_args());
     }
 
     function where($string)
@@ -171,23 +165,23 @@ class Cypher
 
     function skip($skip)
     {
-		return $this->appendToQuery('skip', func_get_args());
+        return $this->appendToQuery('skip', func_get_args());
     }
 
     function limit($limit)
     {
-		return $this->appendToQuery('limit', func_get_args());
+        return $this->appendToQuery('limit', func_get_args());
     }
 
     function using($string)
     {
-		return $this->appendToQuery('using', func_get_args());
+        return $this->appendToQuery('using', func_get_args());
     }
 
-	function union($all)
-	{
-		return $this->appendToQuery('union', $all);
-	}
+    function union($all)
+    {
+        return $this->appendToQuery('union', $all);
+    }
 
     function set($name, $value)
     {
