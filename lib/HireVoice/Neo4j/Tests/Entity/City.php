@@ -21,15 +21,43 @@
  * DEALINGS IN THE SOFTWARE.
  */
 
-namespace HireVoice\Neo4j\Annotation;
+namespace HireVoice\Neo4j\Tests\Entity;
+use HireVoice\Neo4j\Annotation as OGM;
 
 /**
- * @Annotation
- * @Target("CLASS")
+ * @OGM\Entity(labels="Location,City")
  */
-class Entity
+class City
 {
-    public $repositoryClass;
-    public $labels;
+    /**
+     * @OGM\Auto
+     */
+    protected $id;
+
+    /**
+     * @OGM\Property
+     * @OGM\Index
+     */
+    protected $name;
+
+    function getId()
+    {
+        return $this->id;
+    }
+
+    function setId($id)
+    {
+        $this->id = $id;
+    }
+
+    function getName()
+    {
+        return $this->name;
+    }
+
+    function setName($name)
+    {
+        $this->name = $name;
+    }
 }
 

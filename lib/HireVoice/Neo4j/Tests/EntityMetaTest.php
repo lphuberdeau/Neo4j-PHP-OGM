@@ -77,5 +77,18 @@ class EntityMetaTest extends \PHPUnit_Framework_TestCase
 
         $this->assertEquals(array('mainActor'), $names);
     }
+
+    /**
+     * @group neo4j-v2
+     */
+    function testObtainLabels()
+    {
+        $repo = new MetaRepository;
+        $meta = $repo->fromClass('HireVoice\\Neo4j\\Tests\\Entity\\City');
+
+        $names = $meta->getLabels();
+
+        $this->assertEquals(array('Location', 'City'), $names);
+    }
 }
 

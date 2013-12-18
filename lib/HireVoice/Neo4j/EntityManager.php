@@ -2,7 +2,7 @@
 /**
  * Copyright (C) 2012 Louis-Philippe Huberdeau
  *
- * Permission is hereby granted, free of charge, to any person obtaining a 
+ * Permission is hereby granted, free of charge, to any person obtaining a
  * copy of this software and associated documentation files (the "Software"),
  * to deal in the Software without restriction, including without limitation
  * the rights to use, copy, modify, merge, publish, distribute, sublicense,
@@ -26,6 +26,7 @@ namespace HireVoice\Neo4j;
 use Everyman\Neo4j\Client,
     Everyman\Neo4j\Node,
     Everyman\Neo4j\Relationship,
+    Everyman\Neo4j\Label,
     Everyman\Neo4j\Index\NodeIndex,
     Everyman\Neo4j\Gremlin\Query as InternalGremlinQuery,
     Everyman\Neo4j\Cypher\Query as InternalCypherQuery;
@@ -67,7 +68,7 @@ class EntityManager
     /**
      * Initialize the entity manager using the provided configuration.
      * Configuration options are detailed in the Configuration class.
-     * 
+     *
      * @param Configuration|array $configuration Various information about how the entity manager should behave.
      */
     function __construct($configuration = null)
@@ -128,12 +129,12 @@ class EntityManager
                 $class = $meta->getName();
                 $index = $this->getRepository($class)->getIndex();
                 $index->remove($node);
-                
+
                 $relationships = $node->getRelationships();
                 foreach ($relationships as $relationship){
                     $relationship->delete();
                 }
-                
+
                 $node->delete();
             }
         }
@@ -231,7 +232,7 @@ class EntityManager
 
     /**
      * Provide a Gremlin query builder.
-     * 
+     *
      * @param string $query Initial query fragment.
      * @return Query\Gremlin
      */
@@ -364,7 +365,7 @@ class EntityManager
     {
         do {
             $entities = $this->entities;
-            
+
             foreach ($entities as $entity) {
                 $this->discoverEntitiesOn($entity);
             }
@@ -432,6 +433,14 @@ class EntityManager
             if ($pk->getValue($entity) != $nodeId) {
                 $pk->setValue($entity, $nodeId);
                 $this->triggerEvent(self::ENTITY_CREATE, $entity);
+
+                if( $meta->getLabels() ) {
+                    $labels = array();
+                    foreach( $meta->getLabels() as $label )
+                        $labels[] = new Label($this->client, $label);
+
+                    $this->client->addLabels($this->nodes[$hash], $labels);
+                }
             }
         }
     }

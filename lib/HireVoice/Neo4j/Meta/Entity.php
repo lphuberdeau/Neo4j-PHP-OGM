@@ -2,7 +2,7 @@
 /**
  * Copyright (C) 2012 Louis-Philippe Huberdeau
  *
- * Permission is hereby granted, free of charge, to any person obtaining a 
+ * Permission is hereby granted, free of charge, to any person obtaining a
  * copy of this software and associated documentation files (the "Software"),
  * to deal in the Software without restriction, including without limitation
  * the rights to use, copy, modify, merge, publish, distribute, sublicense,
@@ -28,6 +28,7 @@ use HireVoice\Neo4j\Exception;
 class Entity
 {
     private $repositoryClass = 'HireVoice\\Neo4j\\Repository';
+    private $labels = array();
     private $className;
     private $primaryKey;
     private $properties = array();
@@ -52,6 +53,9 @@ class Entity
 
         if ($entity->repositoryClass) {
             $object->repositoryClass = $entity->repositoryClass;
+        }
+        if ($entity->labels) {
+            $object->labels = explode(",", $entity->labels);
         }
 
         foreach ($class->getProperties() as $property) {
@@ -84,6 +88,11 @@ class Entity
     function getRepositoryClass()
     {
         return $this->repositoryClass;
+    }
+
+    function getLabels()
+    {
+        return $this->labels;
     }
 
     function getProxyClass()
