@@ -410,8 +410,7 @@ class QueryTest extends TestCase
     {
         $em = $this->getEntityManager();
         $result = $em->createCypherQuery()
-            ->optionalMatch('(movie) -[:actor]-> (actor)')
-            ->optionalMatch('(actor) --> (x)')
+            ->optionalMatch('(movie) -[:actor]-> (actor) --> (x)')
             ->end('x')
             ->getList();
 
