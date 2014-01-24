@@ -712,6 +712,33 @@ class EntityManagerTest extends TestCase
         $this->assertEquals("Location", $city->offsetGet(0));
         $this->assertEquals("City", $city->offsetGet(1));
     }
+
+    /**
+     * Check the fix of issue #54. 
+     */
+    function testRemoveEntity()
+    {
+        $entity = new Entity\Movie;
+        $entity->setTitle('Jules et Jim');
+
+        $em = $this->getEntityManager();
+        $em->persist($entity);
+        $em->flush();
+
+        $em->remove($entity);
+        $em->flush();
+
+        $entity2 = new Entity\Movie;
+        $entity2->setTitle('Rois et reine');
+        $em->persist($entity2);
+        $em->flush();
+
+        // one only checks that a second flush
+        // after a remove does not throw an exception
+        // if not the test is ok.
+
+        $this->assertTrue(true);
+    }
 }
 
 /**
