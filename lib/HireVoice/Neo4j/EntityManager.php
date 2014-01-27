@@ -126,18 +126,22 @@ class EntityManager
             if ($id){
                 $node = $this->client->getNode($id);
 
-                $class = $meta->getName();
-                $index = $this->getRepository($class)->getIndex();
-                $index->remove($node);
+                if($node){
+                    $class = $meta->getName();
+                    $index = $this->getRepository($class)->getIndex();
+                    $index->remove($node);
 
-                $relationships = $node->getRelationships();
-                foreach ($relationships as $relationship){
-                    $relationship->delete();
+                    $relationships = $node->getRelationships();
+                    foreach ($relationships as $relationship){
+                        $relationship->delete();
+                    }
+
+                    $node->delete();
                 }
-
-                $node->delete();
             }
         }
+
+        $this->entitiesToRemove = Array();
 
         $this->commit();
     }
