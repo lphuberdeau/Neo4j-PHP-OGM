@@ -32,5 +32,7 @@ class ManyToMany
     public $readOnly = false;
     public $writeOnly = false;
     public $relation = null;
+    public $direction = 'from';
+
 }
 

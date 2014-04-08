@@ -21,16 +21,29 @@
  * DEALINGS IN THE SOFTWARE.
  */
 
-namespace HireVoice\Neo4j\Annotation;
+namespace HireVoice\Neo4j\Tests\Entity;
+use Doctrine\Common\Collections\ArrayCollection;
+use HireVoice\Neo4j\Annotation as OGM;
 
 /**
- * @Annotation
- * @Target("PROPERTY")
+ * @OGM\Entity
  */
-class ManyToOne
+class Multiplex extends Cinema
 {
-    public $readOnly = false;
-    public $relation = null;
-    public $direction = 'from';
+    /**
+     * @OGM\Property
+     */
+    protected $rooms;
+
+    public function setRooms($rooms)
+    {
+        $this->rooms = $rooms;
+    }
+
+    public function getRooms()
+    {
+        return $this->rooms;
+    }
+
 }
 

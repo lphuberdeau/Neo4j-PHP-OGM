@@ -21,16 +21,13 @@
  * DEALINGS IN THE SOFTWARE.
  */
 
-namespace HireVoice\Neo4j\Annotation;
+namespace HireVoice\Neo4j\Tests;
 
-/**
- * @Annotation
- * @Target("PROPERTY")
- */
-class ManyToOne
+class ArcInversionTest extends TestCase
 {
-    public $readOnly = false;
-    public $relation = null;
-    public $direction = 'from';
+    function testArcInversion()
+    {
+        //TODO
+    }
 }
 

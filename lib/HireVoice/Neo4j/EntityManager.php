@@ -389,13 +389,12 @@ class EntityManager
     private function traverseRelations($entity, $addCallback, $removeCallback = null)
     {
         $meta = $this->getMeta($entity);
-
         foreach ($meta->getManyToManyRelations() as $property) {
             if ($property->isTraversed()) {
                 $list = $property->getValue($entity);
 
                 foreach ($list as $entry) {
-                    $addCallback($entry, $property->getName());
+                    $addCallback($entry, $property->getName(), $property->getDirection());
                 }
 
                 if ($removeCallback && $list instanceof Extension\ArrayCollection) {
@@ -412,7 +411,7 @@ class EntityManager
                     if ($removeCallback) {
                         $this->removePreviousRelations($entity, $property->getName(), $entry);
                     }
-                    $addCallback($entry, $property->getName());
+                    $addCallback($entry, $property->getName(), $property->getDirection());
                 }
             }
         }
@@ -509,9 +508,8 @@ class EntityManager
     private function writeRelationsFor($entity)
     {
         $em = $this;
-
-        $addCallback = function ($entry, $relation) use ($entity, $em) {
-            $em->addRelation($relation, $entity, $entry);
+        $addCallback = function ($entry, $relation, $direction) use ($entity, $em) {
+            $em->addRelation($relation, $entity, $entry, $direction);
         };
         $removeCallback = function ($entry, $relation) use ($entity, $em) {
             $em->removeRelation($relation, $entity, $entry);
@@ -523,7 +521,7 @@ class EntityManager
     /**
      * @access private
      */
-    function addRelation($relation, $a, $b)
+    function addRelation($relation, $a, $b, $direction)
     {
         $a = $this->getLoadedNode($a);
         $b = $this->getLoadedNode($b);
@@ -536,12 +534,21 @@ class EntityManager
             }
         }
 
-        $relationship = $a->relateTo($b, $relation)
-            ->setProperty('creationDate', $this->getCurrentDate())
-            ->save();
-
-        list($relation, $a, $b) = func_get_args();
-        $this->triggerEvent(self::RELATION_CREATE, $relation, $a, $b, $relationship);
+        if(strtolower($direction) == 'to'){
+            $relationship = $b->relateTo($a, $relation)
+                ->setProperty('creationDate', $this->getCurrentDate())
+                ->save();
+                
+            list($relation, $b, $a) = func_get_args();
+            $this->triggerEvent(self::RELATION_CREATE, $relation, $b, $a, $relationship);
+        }else{
+            $relationship = $a->relateTo($b, $relation)
+                ->setProperty('creationDate', $this->getCurrentDate())
+                ->save();
+                
+            list($relation, $a, $b) = func_get_args();
+            $this->triggerEvent(self::RELATION_CREATE, $relation, $a, $b, $relationship);    
+        }
     }
 
     /**

@@ -50,7 +50,6 @@ class Entity
         }
 
         $object = new self($class->getName());
-
         if ($entity->repositoryClass) {
             $object->repositoryClass = $entity->repositoryClass;
         }
@@ -58,8 +57,8 @@ class Entity
             $object->labels = explode(",", $entity->labels);
         }
 
-        foreach ($class->getProperties() as $property) {
-            $prop = new Property($reader, $property);
+        foreach (self::getClassProperties($class->getName()) as $prop) {
+            $prop = new Property($reader, $prop);
             if ($prop->isPrimaryKey()) {
                 $object->setPrimaryKey($prop);
             } elseif ($prop->isProperty($prop)) {
@@ -80,6 +79,28 @@ class Entity
         return $object;
     }
 
+    /**
+    * Recursive function to get an associative array of class properties by property name => ReflectionProperty() object 
+    * including inherited ones from extended classes 
+    * @param string $className Class name 
+    * @return array 
+    */
+    private static function getClassProperties($className){ 
+        $ref = new \ReflectionClass($className); 
+        $props = $ref->getProperties(); 
+        $props_arr = array(); 
+        foreach($props as $prop){ 
+            $f = $prop->getName(); 
+            $props_arr[$f] = $prop; 
+        } 
+        if($parentClass = $ref->getParentClass()){ 
+            $parent_props_arr = self::getClassProperties($parentClass->getName()); 
+            if(count($parent_props_arr) > 0) 
+                $props_arr = array_merge($parent_props_arr, $props_arr); 
+        } 
+        return $props_arr; 
+    } 
+    
     public function __construct($className)
     {
         $this->className = $className;
