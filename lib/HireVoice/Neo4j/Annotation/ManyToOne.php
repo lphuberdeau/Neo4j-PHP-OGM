@@ -31,5 +31,6 @@ class ManyToOne
 {
     public $readOnly = false;
     public $relation = null;
+    public $direction = 'from';
 }
 

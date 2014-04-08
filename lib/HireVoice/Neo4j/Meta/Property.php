@@ -36,6 +36,7 @@ class Property
     private $property;
     private $name;
     private $format = 'relation';
+    private $direction = 'direction';
     private $traversed = true;
     private $writeOnly = false;
     private $indexes = array();
@@ -102,7 +103,11 @@ class Property
             if ($annotation->relation) {
                 $this->name = $annotation->relation;
             }
-
+            
+            if ($annotation->direction) {
+                $this->direction = $annotation->direction;
+            }
+            
             $this->traversed = ! $annotation->readOnly;
 
             return true;
@@ -117,7 +122,11 @@ class Property
             if ($annotation->relation) {
                 $this->name = $annotation->relation;
             }
-
+            
+            if ($annotation->direction) {
+                $this->direction = $annotation->direction;
+            }
+            
             $this->traversed = ! $annotation->readOnly;
             $this->writeOnly = $annotation->writeOnly;
 
@@ -190,6 +199,11 @@ class Property
         return $this->name;
     }
 
+    function getDirection()
+    {
+        return $this->direction;
+    }
+    
     function getOriginalName()
     {
         return $this->property->getName();
