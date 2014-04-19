@@ -23,6 +23,7 @@
 
 namespace HireVoice\Neo4j;
 
+use Doctrine\Common\EventManager;
 use Everyman\Neo4j\Client,
     Everyman\Neo4j\Node,
     Everyman\Neo4j\Relationship,
@@ -31,6 +32,10 @@ use Everyman\Neo4j\Client,
     Everyman\Neo4j\Gremlin\Query as InternalGremlinQuery,
     Everyman\Neo4j\Cypher\Query as InternalCypherQuery;
 use Everyman\Neo4j\Index\NodeFulltextIndex;
+use HireVoice\Neo4j\Event\EntityCreateEvent;
+use HireVoice\Neo4j\Event\Event;
+use HireVoice\Neo4j\Event\QueryRunEvent;
+use HireVoice\Neo4j\Event\RelationCreateEvent;
 
 /**
  * The entity manager handles the communication with the database server and
@@ -38,9 +43,6 @@ use Everyman\Neo4j\Index\NodeFulltextIndex;
  */
 class EntityManager
 {
-    const ENTITY_CREATE = 'entity.create';
-    const RELATION_CREATE = 'relation.create';
-    const QUERY_RUN = 'query.run';
     const NODE_INDEX = 'node';
     const FULLTEXT_INDEX = 'fulltext';
 
@@ -61,7 +63,10 @@ class EntityManager
 
     private $dateGenerator;
 
-    private $eventHandlers = array();
+    /**
+     * @var EventManager
+     */
+    private $eventManager;
 
     private $pathFinder;
 
@@ -77,7 +82,7 @@ class EntityManager
             $configuration = new Configuration;
         } elseif (is_array($configuration)) {
             $configuration = new Configuration($configuration);
-        } elseif (! $configuration instanceof Configuration) {
+        } elseif (!$configuration instanceof Configuration) {
             throw new Exception('Provided argument must be a Configuration object or an array.');
         }
 
@@ -87,12 +92,21 @@ class EntityManager
 
         $this->dateGenerator = function () {
             $currentDate = new \DateTime;
+
             return $currentDate->format('Y-m-d H:i:s');
         };
 
         $this->pathFinder = new PathFinder\PathFinder;
         $this->pathFinder->setEntityManager($this);
         $configuration->configurePathFinder($this->pathFinder);
+    }
+
+    /**
+     * @param EventManager $eventManager
+     */
+    public function setEventManager(EventManager $eventManager)
+    {
+        $this->eventManager = $eventManager;
     }
 
     /**
@@ -267,7 +281,7 @@ class EntityManager
             $rs = $query->getResultSet();
 
             $time = microtime(true) - $start;
-            $this->triggerEvent(self::QUERY_RUN, $query, $parameters, $time);
+            $this->dispatchEvent(new QueryRunEvent($query, $parameters, $time));
 
             if (count($rs) === 1
                 && is_string($rs[0][0])
@@ -308,7 +322,7 @@ class EntityManager
             $rs = $query->getResultSet();
 
             $time = microtime(true) - $start;
-            $this->triggerEvent(self::QUERY_RUN, $query, $parameters, $time);
+            $this->dispatchEvent(new QueryRunEvent($query, $parameters, $time));
 
             return $rs;
         } catch (\Everyman\Neo4j\Exception $e) {
@@ -346,22 +360,28 @@ class EntityManager
      * Register an event listener for a given event.
      *
      * @param string $eventName The event to listen, available as constants.
+     * @deprecated
      */
     function registerEvent($eventName, $callback)
     {
+        trigger_error(
+            'Function HireVoice\Neo4j\EntityManager::registerEvent is deprecated. Use the Doctrine EventManager to register listeners.',
+            E_DEPRECATED
+        );
         $this->eventHandlers[$eventName][] = $callback;
     }
 
-    private function triggerEvent($eventName, $data)
+    /**
+     * Dispatches a doctrine event
+     *
+     * @see \Doctrine\Common\EventManager::dispatchEvent
+     * @param Event $event
+     * @throws \RuntimeException
+     */
+    private function dispatchEvent(Event $event)
     {
-        if (isset($this->eventHandlers[$eventName])) {
-            $args = func_get_args();
-            array_shift($args);
-
-            foreach ($this->eventHandlers[$eventName] as $callback) {
-                $clone = $args;
-                call_user_func_array($callback, $clone);
-            }
+        if ($this->eventManager instanceof EventManager) {
+            $this->eventManager->dispatchEvent($event->getName(), $event);
         }
     }
 
@@ -436,7 +456,7 @@ class EntityManager
             $nodeId = $this->nodes[$hash]->getId();
             if ($pk->getValue($entity) != $nodeId) {
                 $pk->setValue($entity, $nodeId);
-                $this->triggerEvent(self::ENTITY_CREATE, $entity);
+                $this->dispatchEvent(new EntityCreateEvent($entity));
 
                 if ($meta->getLabels()) {
                     $labels = array();
@@ -541,7 +561,7 @@ class EntityManager
             ->save();
 
         list($relation, $a, $b) = func_get_args();
-        $this->triggerEvent(self::RELATION_CREATE, $relation, $a, $b, $relationship);
+        $this->dispatchEvent(new RelationCreateEvent($a, $b, $relation, $relationship));
     }
 
     /**
