@@ -57,6 +57,7 @@ class Cypher
             }
             break;
         case 'using':
+        case 'optional match':
             $this->query .= PHP_EOL . $clause . ' ' . implode(PHP_EOL . $clause . ' ', $args);
             break;
         case 'union':
@@ -64,7 +65,6 @@ class Cypher
             break;
         case 'start':
         case 'match':
-        case 'optional match':
         case 'with':
         case 'return':
         case 'order by':
