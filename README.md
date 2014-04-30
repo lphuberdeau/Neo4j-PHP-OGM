@@ -1,5 +1,4 @@
-About
-=====
+## About
 
 The Neo4j PHP Object Graph Mapper is an object management layer built on top of everyman/neo4jphp.
 It allows manipulation of data inside the Neo4j graph database through the REST connectors.
@@ -12,15 +11,13 @@ Released under the MIT Licence.
 Created by Louis-Philippe Huberdeau for HireVoice Inc., the library was extracted from the project's
 codebase into its own Open Source project. Feel free to use, comment and participate.
 
-Running tests
-=============
+## Running tests
 
 * Dependencies must be loaded with Composer
 * A running instance of neo4j must be running on localhost:7474
 * Use PHPUnit.
 
-Basic Usage
-===========
+## Basic Usage
 
 In order to store and retrieve information using the library, you must declare your entities.
 If you have used Doctrine2 before, this is a very similar process.
@@ -69,7 +66,22 @@ class User
 }
 ```
 
+### Node Labels
+
+For adding labels to nodes, use the constructor of the ```@OGM\Entity``` annotation:
+
+```php
+/**
+ * @OGM\Entity(labels="Location,City")
+ */
+class User
+{
+    //...
+}
+```
+
 ### Storing entities into the graph database
+
 ```php
 // Let's assume the entity manager is initialized. More on this later.
 $em = $this->get('hirevoice.neo4j.entity_manager');
@@ -89,6 +101,7 @@ $em->flush(); // Stores both Jane and John, along with the new relation
 $em->remove($john);
 $em->flush(); // Removes John and the relation to Jane
 ```
+
 ### Fetching entities from the database
 
 ```php
@@ -107,8 +120,6 @@ $nonActiveWithSuchEmail = $repository->findOneBy(array('status' => 'idle', 'emai
 // Find Multiple Users with more than one criteria
 $activeUsersFromFrance = $repository->findBy(array('status' => 'active', 'country' => 'FR'));
 ```
-
-
 
 ### Complex queries
 
@@ -160,8 +171,7 @@ The Entity annotation would need to be modified to point to the custom repositor
 
 The appropriate repository will be provided through getRepository() on the entity manager.
 
-Initialize the EntityManager
-============================
+## Initialize the EntityManager
 
 Ideally, this would be done through DependencyInjection in your application. Here is the
 procedural creation.
