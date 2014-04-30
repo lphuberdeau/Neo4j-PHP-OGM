@@ -313,7 +313,7 @@ class EntityManager
      * @param array $parameters The arguments to bind with the query.
      * @return Everyman\Neo4j\Query\ResultSet
      */
-    function cypherQuery($string, $parameters)
+    function cypherQuery($string, array $parameters = array())
     {
         try {
             $start = microtime(true);
