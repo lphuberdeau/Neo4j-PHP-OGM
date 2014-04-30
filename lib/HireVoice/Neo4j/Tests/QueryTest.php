@@ -40,6 +40,7 @@ class QueryTest extends TestCase
             $legolas = new Entity\Person;
             $legolas->setFirstName('Orlando');
             $legolas->setLastName('Bloom');
+            $legolas->addFriend($aragorn);
 
             $root = new Entity\Movie;
             $root->setTitle('Return of the king');
@@ -406,17 +407,67 @@ class QueryTest extends TestCase
     /**
      * @group neo4j-v2
      */
-    function testCypherOptionalMatch()
+    function testCypherOptionalMatchWithFullPath()
     {
         $em = $this->getEntityManager();
         $result = $em->createCypherQuery()
-            ->optionalMatch('(movie) -[:actor]-> (actor)')
-            ->optionalMatch('(actor) --> (x)')
-            ->end('x')
-            ->getList();
+            ->startWithNode('movie', self::$root)
+            ->optionalMatch('(movie) -[:actor]-> (actor) -[:friend]-> (x)')
+            ->end('actor.firstName as n1,x.firstName as n2')
+            ->getResult();
+
+		$this->assertEquals(array(
+            array(
+                "n1" => "Orlando",
+                "n2" => "Viggo"
+            )
+        ), $result->toArray());
+    }
+
+    /**
+     * @group neo4j-v2
+     */
+    function testCypherOptionalMatchConcatened()
+    {
+        $em = $this->getEntityManager();
+        $result = $em->createCypherQuery()
+            ->startWithNode('movie', self::$root)
+            ->optionalMatch('(movie) -[:actor]-> (actor), (actor) -[:friend]-> (x)')
+            ->end('actor.firstName as n1,x.firstName as n2')
+            ->getResult();
 
         $this->assertEquals(array(
-            null,
+            array(
+                "n1" => "Orlando",
+                "n2" => "Viggo"
+            )
+        ), $result->toArray());
+    }
+
+    /**
+     * @group neo4j-v2
+     */
+    function testCypherMultipleOptionalMatchClauses()
+    {
+        $em = $this->getEntityManager();
+        $result = $em->createCypherQuery()
+            ->startWithNode('movie', self::$root)
+            ->optionalMatch('(movie) -[:actor]-> (actor)')
+            ->optionalMatch('(actor) -[:friend]-> (x)')
+            ->end('actor.firstName as n1,x.firstName as n2')
+            ->getResult();
+
+         $this->assertEquals(array(
+            //Viggo has no friend but he's returned
+            array(
+                "n1" => "Viggo",
+                "n2" => null,
+            ),
+            //Orlando with his friend Viggo
+            array(
+                "n1" => "Orlando",
+                "n2" => "Viggo"
+            )
         ), $result->toArray());
     }
 }
