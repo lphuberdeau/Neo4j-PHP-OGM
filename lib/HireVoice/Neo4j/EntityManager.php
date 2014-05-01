@@ -32,10 +32,8 @@ use Everyman\Neo4j\Client,
     Everyman\Neo4j\Gremlin\Query as InternalGremlinQuery,
     Everyman\Neo4j\Cypher\Query as InternalCypherQuery;
 use Everyman\Neo4j\Index\NodeFulltextIndex;
-use HireVoice\Neo4j\Event\EntityCreateEvent;
+use HireVoice\Neo4j\Event as Events;
 use HireVoice\Neo4j\Event\Event;
-use HireVoice\Neo4j\Event\QueryRunEvent;
-use HireVoice\Neo4j\Event\RelationCreateEvent;
 
 /**
  * The entity manager handles the communication with the database server and
@@ -134,6 +132,7 @@ class EntityManager
     {
         $this->begin();
         foreach ($this->entitiesToRemove as $entity){
+            $this->dispatchEvent(new Events\PreRemove($entity));
             $meta = $this->getMeta($entity);
             $pk = $meta->getPrimaryKey();
             $id = $pk->getValue($entity);
@@ -153,6 +152,7 @@ class EntityManager
                     $node->delete();
                 }
             }
+            $this->dispatchEvent(new Events\PostRemove($entity));
         }
 
         $this->entitiesToRemove = Array();
@@ -270,7 +270,7 @@ class EntityManager
      *
      * @param string $string The query string.
      * @param array $parameters The arguments to bind with the query.
-     * @return Everyman\Neo4j\Query\ResultSet
+     * @return \Everyman\Neo4j\Query\ResultSet
      */
     function gremlinQuery($string, $parameters)
     {
@@ -278,10 +278,11 @@ class EntityManager
             $start = microtime(true);
 
             $query = new InternalGremlinQuery($this->client, $string, $parameters);
+            $this->dispatchEvent(new Events\PreStmtExecute($query, $parameters));
             $rs = $query->getResultSet();
 
             $time = microtime(true) - $start;
-            $this->dispatchEvent(new QueryRunEvent($query, $parameters, $time));
+            $this->dispatchEvent(new Events\PostStmtExecute($query, $parameters, $time));
 
             if (count($rs) === 1
                 && is_string($rs[0][0])
@@ -311,7 +312,7 @@ class EntityManager
      *
      * @param string $string The query string.
      * @param array $parameters The arguments to bind with the query.
-     * @return Everyman\Neo4j\Query\ResultSet
+     * @return \Everyman\Neo4j\Query\ResultSet
      */
     function cypherQuery($string, array $parameters = array())
     {
@@ -319,10 +320,11 @@ class EntityManager
             $start = microtime(true);
 
             $query = new InternalCypherQuery($this->client, $string, $parameters);
+            $this->dispatchEvent(new Events\PreStmtExecute($query, $parameters));
             $rs = $query->getResultSet();
 
             $time = microtime(true) - $start;
-            $this->dispatchEvent(new QueryRunEvent($query, $parameters, $time));
+            $this->dispatchEvent(new Events\PostStmtExecute($query, $parameters, $time));
 
             return $rs;
         } catch (\Everyman\Neo4j\Exception $e) {
@@ -368,7 +370,6 @@ class EntityManager
             'Function HireVoice\Neo4j\EntityManager::registerEvent is deprecated. Use the Doctrine EventManager to register listeners.',
             E_DEPRECATED
         );
-        $this->eventHandlers[$eventName][] = $callback;
     }
 
     /**
@@ -381,7 +382,7 @@ class EntityManager
     private function dispatchEvent(Event $event)
     {
         if ($this->eventManager instanceof EventManager) {
-            $this->eventManager->dispatchEvent($event->getName(), $event);
+            $this->eventManager->dispatchEvent($event->getEventName(), $event);
         }
     }
 
@@ -442,8 +443,10 @@ class EntityManager
     {
         $this->begin();
         foreach ($this->entities as $entity) {
+            $this->dispatchEvent(new Events\PrePersist($entity));
             $hash = $this->getHash($entity);
             $this->nodes[$hash] = $this->createNode($entity)->save();
+            $this->dispatchEvent(new Events\PostPersist($entity));
         }
         $this->commit();
 
@@ -456,7 +459,6 @@ class EntityManager
             $nodeId = $this->nodes[$hash]->getId();
             if ($pk->getValue($entity) != $nodeId) {
                 $pk->setValue($entity, $nodeId);
-                $this->dispatchEvent(new EntityCreateEvent($entity));
 
                 if ($meta->getLabels()) {
                     $labels = array();
@@ -543,12 +545,14 @@ class EntityManager
     /**
      * @access private
      */
-    function addRelation($relation, $a, $b)
+    function addRelation($name, $a, $b)
     {
         $a = $this->getLoadedNode($a);
         $b = $this->getLoadedNode($b);
 
-        $existing = $this->getRelationsFrom($a, $relation);
+        $this->dispatchEvent(new Events\PreRelationCreate($a, $b, $name));
+
+        $existing = $this->getRelationsFrom($a, $name);
 
         foreach ($existing as $r) {
             if (basename($r['end']) == $b->getId()) {
@@ -556,27 +560,30 @@ class EntityManager
             }
         }
 
-        $relationship = $a->relateTo($b, $relation)
+        $relationship = $a->relateTo($b, $name)
             ->setProperty('creationDate', $this->getCurrentDate())
             ->save();
 
-        list($relation, $a, $b) = func_get_args();
-        $this->dispatchEvent(new RelationCreateEvent($a, $b, $relation, $relationship));
+        list($name, $a, $b) = func_get_args();
+        $this->dispatchEvent(new Events\PostRelationCreate($a, $b, $name, $relationship));
     }
 
     /**
      * @access private
      */
-    function removeRelation($relation, $a, $b)
+    function removeRelation($name, $a, $b)
     {
         $a = $this->getLoadedNode($a);
         $b = $this->getLoadedNode($b);
 
-        $existing = $this->getRelationsFrom($a, $relation);
+        $this->dispatchEvent(new Events\PreRelationRemove($a, $b, $name));
+
+        $existing = $this->getRelationsFrom($a, $name);
 
         foreach ($existing as $r) {
             if (basename($r['end']) == $b->getId()) {
                 $this->deleteRelationship($r);
+                $this->dispatchEvent(new Events\PostRelationRemove($a, $b, $name));
                 return;
             }
         }
@@ -708,7 +715,7 @@ class EntityManager
     /**
      * Returns the Client
      *
-     * @return Everyman\Neo4j\Client
+     * @return \Everyman\Neo4j\Client
      */
     public function getClient()
     {

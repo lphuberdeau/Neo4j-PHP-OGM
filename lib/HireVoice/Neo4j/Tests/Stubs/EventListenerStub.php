@@ -9,17 +9,52 @@ use HireVoice\Neo4j\Event\Event;
  */
 class EventListenerStub
 {
-    public function onEntityCreate(Event $event)
+    public function prePersist(Event $event)
     {
         return null;
     }
 
-    public function onRelationCreate(Event $event)
+    public function postPersist(Event $event)
     {
         return null;
     }
 
-    public function onQueryRun(Event $event)
+    public function preRelationCreate(Event $event)
+    {
+        return null;
+    }
+
+    public function postRelationCreate(Event $event)
+    {
+        return null;
+    }
+
+    public function preStmtExecute(Event $event)
+    {
+        return null;
+    }
+
+    public function postStmtExecute(Event $event)
+    {
+        return null;
+    }
+
+    public function preRemove(Event $event)
+    {
+        return null;
+    }
+
+    public function postRemove(Event $event)
+    {
+        return null;
+    }
+
+    public function preRelationRemove(Event $event)
+    {
+        return null;
+    }
+
+    public function postRelationRemove(Event $event)
     {
         return null;
     }
