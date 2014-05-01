@@ -173,20 +173,20 @@ The appropriate repository will be provided through getRepository() on the entit
 
 ### Events
 
-As known from the Doctrine ORM project, this library makes also use of the Doctrine Events. THe following events are available:
+As known from the Doctrine ORM project, this library makes also use of the Doctrine Events. The following events are available:
 
-*EntityCreateEvent* - Fires, whenever an entity is created. It provies the following data:
+**[EntityCreateEvent](lib/HireVoice/Neo4j/Event/EntityCreateEvent.php)** - Fires, whenever an entity is created. It provies the following data:
 
 * ```$entity``` THe entity instance which was created
 
-*RelationCreateEvent* - Fires, whenever a relation between entities is created. It provies the following data:
+**[RelationCreateEvent](lib/HireVoice/Neo4j/Event/RelationCreateEvent.php)** - Fires, whenever a relation between entities is created. It provies the following data:
 
 * ```$a``` The origin entity of the relation 
 * ```$b``` The destination entity of the relation
 * ```$relation``` The name of the relation
 * ```$relationship``` The node relationship
 
-*QueryRunEvent* - Fires, whenever a query was executed. It provies the following data:
+**[QueryRunEvent](lib/HireVoice/Neo4j/Event/QueryRunEvent.php)** - Fires, whenever a query was executed. It provies the following data:
 
 * ```$query``` Query object of type [InternalGremlinQuery]() or [InternalCypherQuery]() depending on the query executed
 * ```$parameters``` The parameters array of the executed query
