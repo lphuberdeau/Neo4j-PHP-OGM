@@ -17,7 +17,7 @@ As known from the Doctrine ORM project, this library makes use of Events.
 ## Usage
 
 The usage of those events is quiet simple. First you have to create an EventListener. This is a class containing
-functions names after the events. If you want to listen for ```prePersist``` for example, your listener looks like this:
+functions, named after the events. If you want to listen for ```prePersist``` for example, your listener looks like this:
 
 ```php
 use HireVoice\Neo4j\Event as Events;
@@ -33,7 +33,7 @@ class PrePersistListener
 }
 ```
 
-Of course, you can listen to more then one event. See the [full example](#full-event-listener-example).
+Of course, you can listen to more then one event. See the [full example](#full-eventlistener-example) below.
 
 In a second step, the listener must be passed to an EventManager instance. After the listener was added, inject the
 EventManager into the EntityManager:
@@ -64,55 +64,58 @@ More documentation there...
 
 ## Full EventListener example
 ```php
+use HireVoice\Neo4j\Event as Events;
+
 class ExampleEventListener
 {
-    public function prePersist(Event $event)
+    public function prePersist(Events\PrePersist $event)
     {
         return null;
     }
 
-    public function postPersist(Event $event)
+    public function postPersist(Events\PostPersist $event)
     {
         return null;
     }
 
-    public function preRelationCreate(Event $event)
+    public function preRelationCreate(Events\PreRelationCreate $event)
     {
         return null;
     }
 
-    public function postRelationCreate(Event $event)
+    public function postRelationCreate(Events\PostRelationCreate $event)
     {
         return null;
     }
 
-    public function preStmtExecute(Event $event)
+    public function preStmtExecute(Events\PreStmtExecute $event)
     {
         return null;
     }
 
-    public function postStmtExecute(Event $event)
+    public function postStmtExecute(Events\PostStmtExecute $event)
     {
         return null;
     }
 
-    public function preRemove(Event $event)
+    public function preRemove(Events\PreRemove $event)
     {
         return null;
     }
 
-    public function postRemove(Event $event)
+    public function postRemove(Events\PostRemove $event)
     {
         return null;
     }
 
-    public function preRelationRemove(Event $event)
+    public function preRelationRemove(Events\PreRelationRemove $event)
     {
         return null;
     }
 
-    public function postRelationRemove(Event $event)
+    public function postRelationRemove(Events\PostRelationRemove $event)
     {
         return null;
     }
-}```
+} 
+```
