@@ -24,9 +24,9 @@
 namespace HireVoice\Neo4j\Tests;
 use Doctrine\Common\EventManager;
 use HireVoice\Neo4j\EntityManager;
-use HireVoice\Neo4j\Event\EntityCreateEvent;
-use HireVoice\Neo4j\Event\QueryRunEvent;
-use HireVoice\Neo4j\Event\RelationCreateEvent;
+use HireVoice\Neo4j\Event\PostPersist;
+use HireVoice\Neo4j\Event\QueryAwareEvent;
+use HireVoice\Neo4j\Event\RelationAwareEvent;
 
 class EntityManagerTest extends TestCase
 {
@@ -172,7 +172,7 @@ class EntityManagerTest extends TestCase
     }
 
     /**
-     * @expectedException HireVoice\Neo4j\Exception
+     * @expectedException \HireVoice\Neo4j\Exception
      */
     function testSearchMissingProperty()
     {
@@ -183,7 +183,7 @@ class EntityManagerTest extends TestCase
     }
 
     /**
-     * @expectedException HireVoice\Neo4j\Exception
+     * @expectedException \HireVoice\Neo4j\Exception
      */
     function testSearchUnindexedProperty()
     {
@@ -242,7 +242,7 @@ class EntityManagerTest extends TestCase
     }
 
     /**
-     * @expectedException HireVoice\Neo4j\Exception
+     * @expectedException \HireVoice\Neo4j\Exception
      */
     function testPersistNonEntity()
     {
@@ -251,7 +251,7 @@ class EntityManagerTest extends TestCase
     }
 
     /**
-     * @expectedException HireVoice\Neo4j\Exception
+     * @expectedException \HireVoice\Neo4j\Exception
      */
     function testPersistEntityWithoutPersistableId()
     {
@@ -362,138 +362,6 @@ class EntityManagerTest extends TestCase
 
         $this->assertEquals('foobar', $result['creationDate']);
         $this->assertEquals('baz', $result['updateDate']);
-    }
-
-    function testEntityCreationHook()
-    {
-        $title = null;
-
-        $movie = new Entity\Movie;
-        $movie->setTitle('Terminator');
-        $em = $this->getEntityManager();
-
-        $eventManager = new EventManager();
-        $event = new EntityCreateEvent();
-
-        $listener = $this->getMock('HireVoice\Neo4j\Tests\Stubs\EventListenerStub');
-
-        $listener->expects($this->once())
-            ->method($event->getName())
-            ->will($this->returnValue(true));
-
-        $eventManager->addEventListener(array($event->getName()), $listener);
-
-        $em->setEventManager($eventManager);
-
-        $em->persist($movie);
-        $em->flush();
-
-    }
-
-    function testRelationCreationHook()
-    {
-        $code = null;
-        $em = $this->getEntityManager();
-
-        $eventManager = new EventManager();
-        $event = new RelationCreateEvent();
-
-        $listener = $this->getMock('HireVoice\Neo4j\Tests\Stubs\EventListenerStub');
-
-        $listener->expects($this->once())
-            ->method($event->getName())
-            //->with($event->getA(), $event->getB(), $event->getRelation(), $event->getRelationship())
-            ->will($this->returnValue(true));
-
-        $eventManager->addEventListener(array($event->getName()), $listener);
-
-        $em->setEventManager($eventManager);
-
-        $movie = new Entity\Movie;
-        $movie->setTitle('Terminator');
-        $actor = new Entity\Person;
-        $actor->setFirstName('Arnold');
-        $movie->addActor($actor);
-
-        $em->persist($movie);
-        $em->flush();
-
-    }
-
-    function testCypherQueryRunHook()
-    {
-        $queryObj = null;
-        $timeElapsed = null;
-        $paramsArray = null;
-        $em = $this->getEntityManager();
-
-        $eventManager = new EventManager();
-        $event = new QueryRunEvent();
-
-        $listener = $this->getMock('HireVoice\Neo4j\Tests\Stubs\EventListenerStub');
-
-        $listener->expects($this->once())
-            ->method($event->getName())
-            //->with($event->getA(), $event->getB(), $event->getRelation(), $event->getRelationship())
-            ->will($this->returnValue(true));
-
-        $eventManager->addEventListener(array($event->getName()), $listener);
-
-        $em->setEventManager($eventManager);
-
-        $movie = new Entity\Movie;
-        $movie->setTitle('Terminator');
-        $actor = new Entity\Person;
-        $actor->setFirstName('Arnold');
-        $movie->addActor($actor);
-
-        $em->persist($movie);
-        $em->flush();
-
-        $em->createCypherQuery()
-           ->start('movie = node(:movie)')
-           ->end('movie')
-           ->set('movie', $movie)
-           ->getOne();
-    }
-
-    function testGremlinQueryRunHook()
-    {
-        $queryObj = null;
-        $timeElapsed = null;
-        $paramsArray = null;
-        $em = $this->getEntityManager();
-
-        $eventManager = new EventManager();
-        $event = new QueryRunEvent();
-
-        $listener = $this->getMock('HireVoice\Neo4j\Tests\Stubs\EventListenerStub');
-
-        $listener->expects($this->once())
-            ->method($event->getName())
-            //->with($event->getA(), $event->getB(), $event->getRelation(), $event->getRelationship())
-            ->will($this->returnValue(true));
-
-        $eventManager->addEventListener(array($event->getName()), $listener);
-
-        $em->setEventManager($eventManager);
-
-        $movie = new Entity\Movie;
-        $movie->setTitle('Terminator');
-        $actor = new Entity\Person;
-        $actor->setFirstName('Arnold');
-        $movie->addActor($actor);
-
-        $em->persist($movie);
-        $em->flush();
-
-        $em->createGremlinQuery("g.v(:movie).out('actor')")
-           ->set('movie', $movie)
-           ->getList();
-
-        $this->assertInstanceOf('Everyman\Neo4j\Gremlin\Query', $queryObj);
-        $this->assertEmpty($paramsArray);
-        $this->assertGreaterThan(0, $timeElapsed);
     }
 
     function testStoreArray()

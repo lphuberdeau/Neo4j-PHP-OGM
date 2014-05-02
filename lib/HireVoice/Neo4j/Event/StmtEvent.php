@@ -2,59 +2,38 @@
 
 namespace HireVoice\Neo4j\Event;
 
-use \Everyman\Neo4j\Query;
+use Everyman\Neo4j\Query;
 
 /**
- * Event onQueryRun
+ * Abstract class used for all statement events
  */
-class QueryRunEvent extends Event
+abstract class StmtEvent extends Event
 {
     /**
      * @var Query
      */
-    private $query;
+    protected $query;
 
     /**
      * @var array
      */
-    private $parameters;
+    protected $parameters;
 
     /**
      * @var float
      */
-    private $time;
+    protected $time;
 
+    /**
+     * @param Query $query
+     * @param array $parameters
+     * @param float|null $time
+     */
     function __construct(Query $query = null, array $parameters = null, $time = null)
     {
         $this->query = $query;
         $this->parameters = $parameters;
         $this->time = $time;
-    }
-
-    /**
-     * Returns the events name
-     *
-     * @return string
-     */
-    public function getName()
-    {
-        return 'onQueryRun';
-    }
-
-    /**
-     * @param mixed $parameters
-     */
-    public function setParameters($parameters)
-    {
-        $this->parameters = $parameters;
-    }
-
-    /**
-     * @return mixed
-     */
-    public function getParameters()
-    {
-        return $this->parameters;
     }
 
     /**
@@ -71,6 +50,22 @@ class QueryRunEvent extends Event
     public function getQuery()
     {
         return $this->query;
+    }
+
+    /**
+     * @param array $parameters
+     */
+    public function setParameters(array $parameters)
+    {
+        $this->parameters = $parameters;
+    }
+
+    /**
+     * @return array
+     */
+    public function getParameters()
+    {
+        return $this->parameters;
     }
 
     /**

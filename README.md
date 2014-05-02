@@ -11,12 +11,6 @@ Released under the MIT Licence.
 Created by Louis-Philippe Huberdeau for HireVoice Inc., the library was extracted from the project's
 codebase into its own Open Source project. Feel free to use, comment and participate.
 
-## Running tests
-
-* Dependencies must be loaded with Composer
-* A running instance of neo4j must be running on localhost:7474
-* Use PHPUnit.
-
 ## Basic Usage
 
 In order to store and retrieve information using the library, you must declare your entities.
@@ -66,20 +60,6 @@ class User
 }
 ```
 
-### Node Labels
-
-For adding labels to nodes, use the constructor of the ```@OGM\Entity``` annotation:
-
-```php
-/**
- * @OGM\Entity(labels="Location,City")
- */
-class User
-{
-    //...
-}
-```
-
 ### Storing entities into the graph database
 
 ```php
@@ -121,56 +101,6 @@ $nonActiveWithSuchEmail = $repository->findOneBy(array('status' => 'idle', 'emai
 $activeUsersFromFrance = $repository->findBy(array('status' => 'active', 'country' => 'FR'));
 ```
 
-### Complex queries
-
-Cypher queries can be used to obtain nodes based on arbitrary relations. The query mechanisms
-use a query builder to make parameter binding easier.
-```php
-$em = $this->get('hirevoice.neo4j.entity_manager');
-$john = $repo->findOneByFullName('John Doe');
-
-$list = $em->createCypherQuery()
-    ->startWithNode('john', $john)
-    ->match('john -[:follow]-> followedBy <-[:follow]- similarInterest')
-    ->match('similarInterest -[:follow]-> potentialMatch')
-    ->end('potentialMatch', 'count(*)')
-    ->order('count(*) DESC')
-    ->limit(10)
-    ->getList();
-
-// $list is a collection of User objects
-```
-Just as in Doctrine, it would be better to move this query to a repository.
-```php
-<?php
-namespace Repository;
-use HireVoice\Neo4j\Repository as BaseRepository;
-
-class UserRepository extends BaseRepository
-{
-    function findRecommendations(User $user)
-    {
-        return $em->createCypherQuery()
-            ->startWithNode('user', $user)
-            ->match('user -[:follow]-> followedBy <-[:follow]- similarInterest')
-            ->match('similarInterest -[:follow]-> potentialMatch')
-            ->end('potentialMatch', 'count(*)')
-            ->order('count(*) DESC')
-            ->limit(10)
-            ->getList();
-    }
-}
-```
-
-The Entity annotation would need to be modified to point to the custom repository classs:
-```php
-/**
- * @OGM\Entity(repositoryClass="Repository\UserRepository")
- */
-```
-
-The appropriate repository will be provided through getRepository() on the entity manager.
-
 ## Initialize the EntityManager
 
 Ideally, this would be done through DependencyInjection in your application. Here is the
@@ -187,4 +117,8 @@ $em = new HireVoice\Neo4j\EntityManager(array(
     // 'annotation_reader' => ... // Should be a cached instance of the doctrine annotation reader in production
 ));
 ```
+
+## Full Documentation
+
+To get the full documentation, see the [doc directory](doc/index.md)
 

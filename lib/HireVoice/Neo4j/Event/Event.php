@@ -5,7 +5,7 @@ namespace HireVoice\Neo4j\Event;
 use Doctrine\Common\EventArgs;
 
 /**
- * Abstract class used for passing event arguments
+ * Abstract Event class
  */
 abstract class Event extends EventArgs
 {
@@ -14,5 +14,5 @@ abstract class Event extends EventArgs
      *
      * @return string
      */
-    abstract public function getName();
-} 
+    abstract public function getEventName();
+}
