@@ -66,20 +66,6 @@ class User
 }
 ```
 
-### Node Labels
-
-For adding labels to nodes, use the constructor of the ```@OGM\Entity``` annotation:
-
-```php
-/**
- * @OGM\Entity(labels="Location,City")
- */
-class User
-{
-    //...
-}
-```
-
 ### Storing entities into the graph database
 
 ```php
@@ -162,7 +148,7 @@ class UserRepository extends BaseRepository
 }
 ```
 
-The Entity annotation would need to be modified to point to the custom repository classs:
+The Entity annotation would need to be modified to point to the custom repository class:
 ```php
 /**
  * @OGM\Entity(repositoryClass="Repository\UserRepository")
@@ -170,27 +156,6 @@ The Entity annotation would need to be modified to point to the custom repositor
 ```
 
 The appropriate repository will be provided through getRepository() on the entity manager.
-
-### Events
-
-As known from the Doctrine ORM project, this library makes also use of the Doctrine Events. The following events are available:
-
-**[EntityCreateEvent](lib/HireVoice/Neo4j/Event/EntityCreateEvent.php)** - Fires, whenever an entity is created. It provies the following data:
-
-* ```$entity``` THe entity instance which was created
-
-**[RelationCreateEvent](lib/HireVoice/Neo4j/Event/RelationCreateEvent.php)** - Fires, whenever a relation between entities is created. It provies the following data:
-
-* ```$a``` The origin entity of the relation 
-* ```$b``` The destination entity of the relation
-* ```$relation``` The name of the relation
-* ```$relationship``` The node relationship
-
-**[QueryRunEvent](lib/HireVoice/Neo4j/Event/QueryRunEvent.php)** - Fires, whenever a query was executed. It provies the following data:
-
-* ```$query``` Query object of type [InternalGremlinQuery]() or [InternalCypherQuery]() depending on the query executed
-* ```$parameters``` The parameters array of the executed query
-* ```$time``` The execution time
 
 ## Initialize the EntityManager
 
@@ -208,4 +173,8 @@ $em = new HireVoice\Neo4j\EntityManager(array(
     // 'annotation_reader' => ... // Should be a cached instance of the doctrine annotation reader in production
 ));
 ```
+
+## Full Documentation
+
+To get the full documentation, see the [doc directory](doc/index.md)
 
