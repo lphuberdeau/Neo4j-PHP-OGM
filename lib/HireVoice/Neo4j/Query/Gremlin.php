@@ -97,11 +97,8 @@ class Gremlin
         $out = array();
         if (isset($result[0])) {
             $result = $result[0][0];
-            $result = substr($result, 1, -1);
 
-            foreach (array_filter(explode(', ', $result)) as $entry) {
-                list($key, $value) = explode('=', $entry);
-
+            foreach ($result as $key => $value) {
                 $out[$key] = $this->convertValue($value);
             }
         } else {
