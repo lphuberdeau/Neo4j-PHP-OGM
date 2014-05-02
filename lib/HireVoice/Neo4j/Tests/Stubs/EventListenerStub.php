@@ -2,59 +2,59 @@
 
 namespace HireVoice\Neo4j\Tests\Stubs;
 
-use HireVoice\Neo4j\Event\Event;
+use HireVoice\Neo4j\Event as Events;
 
 /**
  * Stub object for testing event listeners
  */
 class EventListenerStub
 {
-    public function prePersist(Event $event)
+    public function prePersist(Events\PrePersist $event)
     {
         return null;
     }
 
-    public function postPersist(Event $event)
+    public function postPersist(Events\PostPersist $event)
     {
         return null;
     }
 
-    public function preRelationCreate(Event $event)
+    public function preRelationCreate(Events\PreRelationCreate $event)
     {
         return null;
     }
 
-    public function postRelationCreate(Event $event)
+    public function postRelationCreate(Events\PostRelationCreate $event)
     {
         return null;
     }
 
-    public function preStmtExecute(Event $event)
+    public function preStmtExecute(Events\PreStmtExecute $event)
     {
         return null;
     }
 
-    public function postStmtExecute(Event $event)
+    public function postStmtExecute(Events\PostStmtExecute $event)
     {
         return null;
     }
 
-    public function preRemove(Event $event)
+    public function preRemove(Events\PreRemove $event)
     {
         return null;
     }
 
-    public function postRemove(Event $event)
+    public function postRemove(Events\PostRemove $event)
     {
         return null;
     }
 
-    public function preRelationRemove(Event $event)
+    public function preRelationRemove(Events\PreRelationRemove $event)
     {
         return null;
     }
 
-    public function postRelationRemove(Event $event)
+    public function postRelationRemove(Events\PostRelationRemove $event)
     {
         return null;
     }
