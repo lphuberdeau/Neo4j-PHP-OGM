@@ -1,0 +1,19 @@
+language: php
+
+php:
+    - 5.3
+    - 5.4
+    - 5.5
+
+before_install:
+    - sudo wget -O - http://debian.neo4j.org/neotechnology.gpg.key| sudo apt-key add - # Import  signing key
+    - echo 'deb http://debian.neo4j.org/repo stable/' | sudo tee -a /etc/apt/sources.list.d/neo4j.list # Create an Apt sources.list file
+    - sudo apt-get update -qq
+    - sudo apt-get install -qq neo4j
+    - sudo unzip util/contrib/neo4j-gremlin-plugin-2.0-SNAPSHOT-server-plugin.zip -d /usr/share/neo4j/plugins/gremlin-plugin
+    - sudo /etc/init.d/neo4j-service restart
+
+before_script:
+  - composer install
+
+script: vendor/bin/phpunit --coverage-text
