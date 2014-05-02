@@ -16,4 +16,4 @@ before_install:
 before_script:
   - composer install
 
-script: phpunit --coverage-text
+script: vendor/bin/phpunit --coverage-text
