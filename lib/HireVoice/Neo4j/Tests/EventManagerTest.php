@@ -168,7 +168,10 @@ class EventManagerTest extends TestCase
         $this->em->persist($movie);
         $this->em->flush();
 
+        $movie = $this->em->find(get_class($movie), $movie->getId());
+        $actor = $movie->getActors()->first();
         $movie->removeActor($actor);
+
         $this->em->persist($movie);
         $this->em->flush();
     }
