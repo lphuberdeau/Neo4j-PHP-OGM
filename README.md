@@ -1,3 +1,5 @@
+[![Build Status](https://travis-ci.org/lphuberdeau/Neo4j-PHP-OGM.svg?branch=master)](https://travis-ci.org/lphuberdeau/Neo4j-PHP-OGM)
+
 ## About
 
 The Neo4j PHP Object Graph Mapper is an object management layer built on top of everyman/neo4jphp.
