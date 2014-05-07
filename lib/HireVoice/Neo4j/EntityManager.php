@@ -457,7 +457,7 @@ class EntityManager
             $pk = $meta->getPrimaryKey();
 
             $nodeId = $this->nodes[$hash]->getId();
-            if ($pk->getValue($entity) != $nodeId) {
+            if ($pk->getValue($entity) !== $nodeId) {
                 $pk->setValue($entity, $nodeId);
 
                 if ($meta->getLabels()) {
