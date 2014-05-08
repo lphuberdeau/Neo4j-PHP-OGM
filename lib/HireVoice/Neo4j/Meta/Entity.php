@@ -95,8 +95,9 @@ class Entity
         } 
         if($parentClass = $ref->getParentClass()){ 
             $parent_props_arr = self::getClassProperties($parentClass->getName()); 
-            if(count($parent_props_arr) > 0) 
-                $props_arr = array_merge($parent_props_arr, $props_arr); 
+            if(count($parent_props_arr) > 0){
+				$props_arr = array_merge($parent_props_arr, $props_arr);
+            } 
         } 
         return $props_arr; 
     } 
