@@ -52,7 +52,7 @@ class Repository
 
     /**
      * @param $className
-     * @return
+     * @return Entity
      */
     function fromClass($className)
     {

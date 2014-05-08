@@ -25,6 +25,7 @@ namespace HireVoice\Neo4j\Meta;
 
 use Doctrine\Common\Annotations\Reader as AnnotationReader;
 use HireVoice\Neo4j\Exception;
+use ReflectionProperty;
 
 class Entity
 {
@@ -175,7 +176,7 @@ class Entity
     }
 
     /**
-     * @return int
+     * @return \HireVoice\Neo4j\Meta\Property
      */
     public function getPrimaryKey()
     {
@@ -183,7 +184,7 @@ class Entity
     }
 
     /**
-     * @return array
+     * @return Property[]
      */
     public function getManyToManyRelations()
     {
@@ -191,7 +192,7 @@ class Entity
     }
 
     /**
-     * @return array
+     * @return Property[]
      */
     public function getManyToOneRelations()
     {
