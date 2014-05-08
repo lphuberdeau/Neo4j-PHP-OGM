@@ -27,6 +27,7 @@ use Everyman\Neo4j\Relationship;
 use HireVoice\Neo4j\EntityManager;
 use Everyman\Neo4j\PathFinder as PathFinderImpl;
 use HireVoice\Neo4j\Proxy\Entity as Proxy;
+use HireVoice\Neo4j\Exception;
 
 /**
  * Path Finder implements path finding functions
@@ -35,14 +36,42 @@ use HireVoice\Neo4j\Proxy\Entity as Proxy;
  */
 class PathFinder
 {
+    /**
+     * @var EntityManager
+     */
     protected $entityManager;
 
+    /**
+     * @var Relationship
+     */
     protected $relationship;
 
+    /**
+     * @var int|null
+     */
     protected $maxDepth = null;
 
+    /**
+     * @var int|null
+     */
     protected $algorithm = null;
 
+    /**
+     * @return array
+     */
+    public function __clone()
+    {
+        return array(
+            'entityManager',
+            'maxDepth',
+            'algorithm',
+        );
+    }
+
+    /**
+     * @param $name
+     * @throws Exception
+     */
     public static function validateAlgorithm($name)
     {
         $algorithms = array(PathFinderImpl::AlgoShortest, PathFinderImpl::AlgoAll, PathFinderImpl::AlgoAllSimple);
@@ -53,20 +82,21 @@ class PathFinder
         }
     }
 
+    /**
+     * @param EntityManager $entityManager
+     * @return PathFinder
+     */
     public function setEntityManager(EntityManager $entityManager)
     {
         $this->entityManager = $entityManager;
+
+        return $this;
     }
 
-    public function __clone()
-    {
-        return array(
-            'entityManager',
-            'maxDepth',
-            'algorithm',
-        );
-    }
-
+    /**
+     * @param int $depth
+     * @return PathFinder
+     */
     public function setMaxDepth($depth)
     {
         $this->maxDepth = (int) $depth;
@@ -74,6 +104,10 @@ class PathFinder
         return $this;
     }
 
+    /**
+     * @param string $algorithm
+     * @return PathFinder
+     */
     public function setAlgorithm($algorithm)
     {
         self::validateAlgorithm($algorithm);
@@ -82,13 +116,22 @@ class PathFinder
         return $this;
     }
 
-    public function setRelationship($relationship)
+    /**
+     * @param Relationship $relationship
+     * @return PathFinder
+     */
+    public function setRelationship(Relationship $relationship)
     {
         $this->relationship = $relationship;
 
         return $this;
     }
 
+    /**
+     * @param Object|Proxy $a
+     * @param Object|Proxy $b
+     * @return array
+     */
     public function findPaths($a, $b)
     {
         $paths = $this->preparePaths($a, $b)->getPaths();
@@ -101,6 +144,11 @@ class PathFinder
         return $pathObjects;
     }
 
+    /**
+     * @param Object|Proxy $a
+     * @param Object|Proxy $b
+     * @return Path
+     */
     public function findSinglePath($a, $b)
     {
         $path = $this->preparePaths($a, $b)->getSinglePath();
@@ -108,8 +156,15 @@ class PathFinder
         if ($path) {
             return new Path($path, $this->entityManager);
         }
+
+        return null;
     }
 
+    /**
+     * @param Object|Proxy $a
+     * @param Object|Proxy $b
+     * @return mixed
+     */
     protected function preparePaths($a, $b)
     {
         if (! $a instanceof Proxy) {
