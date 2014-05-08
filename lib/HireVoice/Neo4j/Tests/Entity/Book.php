@@ -21,13 +21,52 @@
  * DEALINGS IN THE SOFTWARE.
  */
 
-namespace HireVoice\Neo4j\Tests;
+namespace HireVoice\Neo4j\Tests\Entity;
+use Doctrine\Common\Collections\ArrayCollection;
+use HireVoice\Neo4j\Annotation as OGM;
 
-class ArcInversionTest extends TestCase
+/**
+ * @OGM\Entity
+ */
+class Book
 {
-    function testArcInversion()
+    /**
+     * @OGM\Auto
+     */
+    protected $id;
+    
+    /**
+     * @OGM\Property
+     */
+    protected $name;
+
+    function getId()
     {
-        //TODO
+        return $this->id;
     }
+
+    function setId($id)
+    {
+        $this->id = $id;
+    }
+    
+    /**
+     * @param mixed $name
+     *
+     * @return Book 
+     */
+    public function setName($name)
+    {
+        $this->name = $name;
+    }
+
+    /**
+     * @return mixed 
+     */
+    public function getName()
+    {
+        return $this->name;
+    }
+
 }
 
