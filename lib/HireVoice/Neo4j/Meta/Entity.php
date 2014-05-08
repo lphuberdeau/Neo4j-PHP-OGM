@@ -85,22 +85,23 @@ class Entity
     * @param string $className Class name 
     * @return array 
     */
-    private static function getClassProperties($className){ 
-        $ref = new \ReflectionClass($className); 
-        $props = $ref->getProperties(); 
-        $props_arr = array(); 
-        foreach($props as $prop){ 
-            $f = $prop->getName(); 
-            $props_arr[$f] = $prop; 
+    private static function getClassProperties($className){
+        $ref = new \ReflectionClass($className);
+        $props = $ref->getProperties();
+        $props_arr = array();
+        foreach($props as $prop){
+            $f = $prop->getName();
+            $props_arr[$f] = $prop;
+        }
+        if($parentClass = $ref->getParentClass()){
+            $parent_props_arr = self::getClassProperties($parentClass->getName());
+            if(count($parent_props_arr) > 0){
+                $props_arr = array_merge($parent_props_arr, $props_arr);
+            }
         } 
-        if($parentClass = $ref->getParentClass()){ 
-            $parent_props_arr = self::getClassProperties($parentClass->getName()); 
-            if(count($parent_props_arr) > 0) 
-                $props_arr = array_merge($parent_props_arr, $props_arr); 
-        } 
-        return $props_arr; 
-    } 
-    
+        return $props_arr;
+    }
+
     public function __construct($className)
     {
         $this->className = $className;
