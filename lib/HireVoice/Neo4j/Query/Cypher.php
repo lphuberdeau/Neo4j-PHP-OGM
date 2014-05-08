@@ -27,7 +27,7 @@ use Everyman\Neo4j\Node;
 use Everyman\Neo4j\Path;
 use HireVoice\Neo4j\EntityManager;
 
-class Cypher
+class Cypher extends Query
 {
     const CLAUSE_WHERE = 'where';
 
@@ -52,16 +52,6 @@ class Cypher
     const CLAUSE_LIMIT = 'limit';
 
     /**
-     * @var \HireVoice\Neo4j\EntityManager
-     */
-    private $em;
-
-    /**
-     * @var ParameterProcessor
-     */
-    private $processor;
-
-    /**
      * @var string
      */
     private $query = "";
@@ -76,8 +66,7 @@ class Cypher
      */
     public function __construct(EntityManager $em)
     {
-        $this->em = $em;
-        $this->processor = new ParameterProcessor(ParameterProcessor::CYPHER);
+        parent::__construct($em, 'cypher');
     }
 
     /**
@@ -133,64 +122,12 @@ class Cypher
 
     /**
      * @api
-     * @param $name
-     * @param $value
-     * @return $this
-     */
-    public function set($name, $value)
-    {
-        $this->processor->setParameter($name, $value);
-
-        return $this;
-    }
-
-    /**
-     * @api
      * @param string $string
      * @return Cypher
      */
     public function start($string)
     {
         return $this->appendToQuery(self::CLAUSE_START, func_get_args());
-    }
-
-    /**
-     * @param string $clause
-     * @param array $args
-     * @return Cypher
-     */
-    protected function appendToQuery($clause, $args)
-    {
-        switch ($clause) {
-            case self::CLAUSE_WHERE:
-                if ($this->currentClause !== $clause) {
-                    $this->query .= PHP_EOL . $clause . ' (' . implode(') AND (', $args) . ')';
-                } else {
-                    $this->query .= ' AND (' . implode(') AND (', $args) . ')';
-                }
-                break;
-
-            case self::CLAUSE_USING:
-            case self::CLAUSE_OPTIONAL_MATCH:
-                $this->query .= PHP_EOL . $clause . ' ' . implode(PHP_EOL . $clause . ' ', $args);
-                break;
-
-            case self::CLAUSE_UNION:
-                $this->query .= PHP_EOL . $clause . ($args === true ? " all" : "");
-                break;
-
-            default:
-                if ($this->currentClause !== $clause) {
-                    $this->query .= PHP_EOL . $clause . ' ' . implode(',', $args);
-                } else {
-                    $this->query .= ',' . implode(',', $args);
-                }
-                break;
-        }
-
-        $this->currentClause = $clause;
-
-        return $this;
     }
 
     /**
@@ -207,32 +144,6 @@ class Cypher
         }
 
         return $list;
-    }
-
-    /**
-     * @return \Everyman\Neo4j\Query\ResultSet
-     */
-    private function execute()
-    {
-        $this->processor->setQuery($this->query);
-        $parameters = $this->processor->process();
-
-        return $this->em->cypherQuery($this->processor->getQuery(), $parameters);
-    }
-
-    /**
-     * @param mixed $value
-     * @return Node|\HireVoice\Neo4j\PathFinder\Path
-     */
-    private function convertValue($value)
-    {
-        if ($value instanceof Node) {
-            return $this->em->load($value);
-        } elseif ($value instanceof Path) {
-            return new \HireVoice\Neo4j\PathFinder\Path($value, $this->em);
-        } else {
-            return $value;
-        }
     }
 
     /**
@@ -399,5 +310,70 @@ class Cypher
         }
 
         return null;
+    }
+
+    /**
+     * @param string $clause
+     * @param array $args
+     * @return Cypher
+     */
+    protected function appendToQuery($clause, $args)
+    {
+        switch ($clause) {
+            case self::CLAUSE_WHERE:
+                if ($this->currentClause !== $clause) {
+                    $this->query .= PHP_EOL . $clause . ' (' . implode(') AND (', $args) . ')';
+                } else {
+                    $this->query .= ' AND (' . implode(') AND (', $args) . ')';
+                }
+                break;
+
+            case self::CLAUSE_USING:
+            case self::CLAUSE_OPTIONAL_MATCH:
+                $this->query .= PHP_EOL . $clause . ' ' . implode(PHP_EOL . $clause . ' ', $args);
+                break;
+
+            case self::CLAUSE_UNION:
+                $this->query .= PHP_EOL . $clause . ($args === true ? " all" : "");
+                break;
+
+            default:
+                if ($this->currentClause !== $clause) {
+                    $this->query .= PHP_EOL . $clause . ' ' . implode(',', $args);
+                } else {
+                    $this->query .= ',' . implode(',', $args);
+                }
+                break;
+        }
+
+        $this->currentClause = $clause;
+
+        return $this;
+    }
+
+    /**
+     * @return \Everyman\Neo4j\Query\ResultSet
+     */
+    private function execute()
+    {
+        $this->processor->setQuery($this->query);
+        $parameters = $this->processor->process();
+
+        return $this->em->cypherQuery($this->processor->getQuery(), $parameters);
+    }
+
+    /**
+     * @param mixed $value
+     * @return Node|\HireVoice\Neo4j\PathFinder\Path
+     */
+    private function convertValue($value)
+    {
+        if ($value instanceof Node) {
+            return $this->em->load($value);
+        } elseif ($value instanceof Path) {
+            return new \HireVoice\Neo4j\PathFinder\Path($value, $this->em);
+        } else {
+            return $value;
+        }
     }
 }
