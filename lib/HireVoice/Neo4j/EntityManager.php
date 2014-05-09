@@ -450,6 +450,29 @@ class EntityManager
     }
 
     /**
+     * @param string $name
+     * @param Object $a
+     * @param Object $b
+     */
+    public function removeRelation($name, $a, $b)
+    {
+        $a = $this->getLoadedNode($a);
+        $b = $this->getLoadedNode($b);
+
+        $this->dispatchEvent(new Events\PreRelationRemove($a, $b, $name));
+
+        $existing = $this->getRelationsFrom($a, $name);
+
+        foreach ($existing as $r) {
+            if (basename($r['end']) == $b->getId()) {
+                $this->deleteRelationship($r);
+                $this->dispatchEvent(new Events\PostRelationRemove($a, $b, $name));
+                return;
+            }
+        }
+    }
+
+    /**
      * Dispatches a doctrine event
      *
      * @see \Doctrine\Common\EventManager::dispatchEvent
@@ -632,29 +655,6 @@ class EntityManager
         };
 
         $this->traverseRelations($entity, $addCallback, $removeCallback);
-    }
-
-    /**
-     * @param string $name
-     * @param Object $a
-     * @param Object $b
-     */
-    private function removeRelation($name, $a, $b)
-    {
-        $a = $this->getLoadedNode($a);
-        $b = $this->getLoadedNode($b);
-
-        $this->dispatchEvent(new Events\PreRelationRemove($a, $b, $name));
-
-        $existing = $this->getRelationsFrom($a, $name);
-
-        foreach ($existing as $r) {
-            if (basename($r['end']) == $b->getId()) {
-                $this->deleteRelationship($r);
-                $this->dispatchEvent(new Events\PostRelationRemove($a, $b, $name));
-                return;
-            }
-        }
     }
 
     /**
