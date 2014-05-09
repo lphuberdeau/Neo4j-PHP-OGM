@@ -25,6 +25,7 @@ namespace HireVoice\Neo4j;
 
 use Doctrine\Common\Collections\ArrayCollection;
 use HireVoice\Neo4j\Query\LuceneQueryProcessor;
+use InvalidArgumentException;
 
 class Repository
 {
@@ -63,6 +64,7 @@ class Repository
      * @magic
      * @param string $name
      * @param array $arguments
+     * @throws InvalidArgumentException
      * @return ArrayCollection|\Everyman\Neo4j\Node
      */
     public function __call($name, $arguments)
@@ -84,6 +86,8 @@ class Repository
 
             return $collection;
         }
+
+        throw new InvalidArgumentException('Method name must begin with "findBy" or "findOneBy"!');
     }
 
     /**
@@ -167,7 +171,7 @@ class Repository
      *
      * @api
      * @param array $criteria An array of search criterias
-     * @throws \InvalidArgumentException
+     * @throws InvalidArgumentException
      * @return string
      */
     public function createQuery(array $criteria = array())
@@ -180,7 +184,7 @@ class Repository
 
             return $queryProcessor->getQuery();
         }
-        throw new \InvalidArgumentException('The criteria passed to the find** method can not be empty');
+        throw new InvalidArgumentException('The criteria passed to the find** method can not be empty');
     }
 
     /**
@@ -240,11 +244,17 @@ class Repository
     }
 
     /**
+     * @deprecated
      * @param string $class
      * @return Repository
      */
     protected function getRepository($class)
     {
+        trigger_error(
+            'Function HireVoice\Neo4j\Repository::getRepository is deprecated. Use HireVoice\Neo4j\EntityManager::getRepository instead!',
+            E_USER_DEPRECATED
+        );
+
         return $this->entityManager->getRepository($class);
     }
 }
