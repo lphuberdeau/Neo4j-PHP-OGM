@@ -422,6 +422,34 @@ class EntityManager
     }
 
     /**
+     * @param string $name
+     * @param Object $a
+     * @param Object $b
+     */
+    public function addRelation($name, $a, $b)
+    {
+        $a = $this->getLoadedNode($a);
+        $b = $this->getLoadedNode($b);
+
+        $this->dispatchEvent(new Events\PreRelationCreate($a, $b, $name));
+
+        $existing = $this->getRelationsFrom($a, $name);
+
+        foreach ($existing as $r) {
+            if (basename($r['end']) == $b->getId()) {
+                return;
+            }
+        }
+
+        $relationship = $a->relateTo($b, $name)
+            ->setProperty('creationDate', $this->getCurrentDate())
+            ->save();
+
+        list($name, $a, $b) = func_get_args();
+        $this->dispatchEvent(new Events\PostRelationCreate($a, $b, $name, $relationship));
+    }
+
+    /**
      * Dispatches a doctrine event
      *
      * @see \Doctrine\Common\EventManager::dispatchEvent
@@ -604,34 +632,6 @@ class EntityManager
         };
 
         $this->traverseRelations($entity, $addCallback, $removeCallback);
-    }
-
-    /**
-     * @param string $name
-     * @param Object $a
-     * @param Object $b
-     */
-    private function addRelation($name, $a, $b)
-    {
-        $a = $this->getLoadedNode($a);
-        $b = $this->getLoadedNode($b);
-
-        $this->dispatchEvent(new Events\PreRelationCreate($a, $b, $name));
-
-        $existing = $this->getRelationsFrom($a, $name);
-
-        foreach ($existing as $r) {
-            if (basename($r['end']) == $b->getId()) {
-                return;
-            }
-        }
-
-        $relationship = $a->relateTo($b, $name)
-            ->setProperty('creationDate', $this->getCurrentDate())
-            ->save();
-
-        list($name, $a, $b) = func_get_args();
-        $this->dispatchEvent(new Events\PostRelationCreate($a, $b, $name, $relationship));
     }
 
     /**
