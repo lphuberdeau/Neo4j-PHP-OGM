@@ -136,7 +136,7 @@ class EntityManager
             $meta = $this->getMeta($entity);
             $pk = $meta->getPrimaryKey();
             $id = $pk->getValue($entity);
-            if ($id){
+            if ($id !== null){
                 $node = $this->client->getNode($id);
 
                 if($node){
@@ -479,7 +479,7 @@ class EntityManager
         $pk = $meta->getPrimaryKey();
         $id = $pk->getValue($entity);
 
-        if ($id) {
+        if ($id !== null) {
             $node = $this->client->getNode($id);
         } else {
             $node = $this->client->makeNode()
@@ -494,7 +494,7 @@ class EntityManager
 
         $currentDate = $this->getCurrentDate();
 
-        if (! $id) {
+        if ($id === null) {
             $node->setProperty('creationDate', $currentDate);
         }
 
