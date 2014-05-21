@@ -24,8 +24,9 @@
 namespace HireVoice\Neo4j;
 use Doctrine\Common\Collections\ArrayCollection;
 use HireVoice\Neo4j\Query\LuceneQueryProcessor;
+use Doctrine\Common\Persistence\ObjectRepository;
 
-class Repository
+class Repository implements ObjectRepository
 {
     /**
      * @var \HireVoice\Neo4j\Meta\Entity
@@ -96,6 +97,7 @@ class Repository
      * Finds one node by a set of criteria
      *
      * @param array $criteria An array of search criteria
+     * @return null|object
      */
     public function findOneBy(array $criteria)
     {
@@ -111,9 +113,17 @@ class Repository
      * Finds all node matching the search criteria
      *
      * @param array $criteria An array of search criteria
+     * @param array $orderBy
+     * @param null $limit
+     * @param null $offset
+     * @return \Doctrine\Common\Collections\ArrayCollection
      */
-    public function findBy(array $criteria)
+    public function findBy(array $criteria, array $orderBy = null, $limit = null, $offset = null)
     {
+        if ($orderBy !== null || $limit !== null || $offset !== null) {
+            throw new \InvalidArgumentException('$orderBy, $limit and $offset are currently not supported');
+        }
+
         $query = $this->createQuery($criteria);
         $collection = new ArrayCollection();
 
@@ -199,4 +209,14 @@ class Repository
     {
         return $this->meta;
     }
+
+    /**
+     * Returns the class name of the object managed by the repository.
+     *
+     * @return string
+     */
+    public function getClassName()
+    {
+        return $this->class;
+    }    
 }
