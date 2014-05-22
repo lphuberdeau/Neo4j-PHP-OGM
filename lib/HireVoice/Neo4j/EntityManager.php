@@ -693,7 +693,7 @@ class EntityManager
         $this->commit();
     }
 
-    private function getMeta($entity)
+    public function getMeta($entity)
     {
         return $this->metaRepository->fromClass(get_class($entity));
     }
