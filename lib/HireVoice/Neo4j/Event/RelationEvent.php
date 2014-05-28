@@ -2,8 +2,6 @@
 
 namespace HireVoice\Neo4j\Event;
 
-use Everyman\Neo4j\Query;
-
 /**
  * Abstract class used for all relation events
  */
