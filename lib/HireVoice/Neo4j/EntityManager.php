@@ -42,23 +42,62 @@ use HireVoice\Neo4j\Event\Event;
 class EntityManager
 {
     const NODE_INDEX = 'node';
+
     const FULLTEXT_INDEX = 'fulltext';
 
+    /**
+     * @var \Everyman\Neo4j\Client
+     */
     private $client;
+
+    /**
+     * @var Meta\Repository
+     */
     private $metaRepository;
+
+    /**
+     * @var Proxy\Factory
+     */
     private $proxyFactory;
+
+    /**
+     * @var \Everyman\Neo4j\Batch
+     */
     private $batch;
 
+    /**
+     * @var array
+     */
     private $entities = array();
 
+    /**
+     * @var array
+     */
     private $entitiesToRemove = array();
 
+    /**
+     * @var array
+     */
     private $nodes = array();
+
+    /**
+     * @var array
+     */
     private $repositories = array();
+
+    /**
+     * @var array
+     */
     private $indexes = array();
 
+    /**
+     * @var array
+     */
     private $loadedNodes = array();
 
+    /**
+     * @var callable
+     */
     private $dateGenerator;
 
     /**
@@ -66,6 +105,9 @@ class EntityManager
      */
     private $eventManager;
 
+    /**
+     * @var PathFinder\PathFinder
+     */
     private $pathFinder;
 
     /**
@@ -73,8 +115,9 @@ class EntityManager
      * Configuration options are detailed in the Configuration class.
      *
      * @param Configuration|array $configuration Various information about how the entity manager should behave.
+     * @throws Exception
      */
-    function __construct($configuration = null)
+    public function __construct($configuration = null)
     {
         if (is_null($configuration)) {
             $configuration = new Configuration;
@@ -100,6 +143,7 @@ class EntityManager
     }
 
     /**
+     * @api
      * @param EventManager $eventManager
      */
     public function setEventManager(EventManager $eventManager)
@@ -112,9 +156,10 @@ class EntityManager
      * relations to be followed to discover other entities. Relation traversal will happen
      * during the flush.
      *
+     * @api
      * @param object $entity Any object providing the correct Entity annotations.
      */
-    function persist($entity)
+    public function persist($entity)
     {
         $meta = $this->getMeta($entity);
 
@@ -122,7 +167,11 @@ class EntityManager
         $this->entities[$hash] = $entity;
     }
 
-    function remove($entity)
+    /**
+     * @api
+     * @param Object $entity
+     */
+    public function remove($entity)
     {
         $hash = $this->getHash($entity);
         $this->entitiesToRemove[$hash] = $entity;
@@ -164,8 +213,10 @@ class EntityManager
      * Commit changes in the object model into the database. Relations will be traversed
      * to discover additional entities. To include an object in the unit of work, use the
      * persist() method.
+     *
+     * @api
      */
-    function flush()
+    public function flush()
     {
         $this->discoverEntities();
         $this->writeEntities();
@@ -182,11 +233,12 @@ class EntityManager
      * Searches a single entity by ID for a given class name. The result will be provided
      * as a proxy node to handle lazy loading of relations.
      *
+     * @api
      * @param string $class The fully qualified class name
      * @param int $id The node ID
-     * @return object The entity object
+     * @return Object The entity object
      */
-    function find($class, $id)
+    public function find($class, $id)
     {
         return $this->getRepository($class)->find($id);
     }
@@ -196,6 +248,7 @@ class EntityManager
      * provided as a proxy
      *
      * @param int $id The node ID
+     * @return bool|Node
      */
     function findAny($id)
     {
@@ -207,9 +260,10 @@ class EntityManager
     }
 
     /**
-     * @access private
+     * @param Node $node
+     * @return Node
      */
-    function load($node)
+    public function load($node)
     {
         if (! isset($this->loadedNodes[$node->getId()])) {
             $em = $this;
@@ -229,9 +283,11 @@ class EntityManager
      * Reload an entity. Exchanges an raw entity or an invalid proxy with an initialized
      * proxy.
      *
+     * @api
      * @param object $entity Any entity or entity proxy
+     * @return \Everyman\Neo4j\Node|object
      */
-    function reload($entity)
+    public function reload($entity)
     {
         if ($entity instanceof Proxy\Entity) {
             return $this->load($this->findAny($entity->getId()));
@@ -242,8 +298,10 @@ class EntityManager
 
     /**
      * Clear entity cache.
+     *
+     * @api
      */
-    function clear()
+    public function clear()
     {
         $this->loadedNodes = array();
     }
@@ -251,10 +309,11 @@ class EntityManager
     /**
      * Provide a Gremlin query builder.
      *
+     * @api
      * @param string $query Initial query fragment.
      * @return Query\Gremlin
      */
-    function createGremlinQuery($query = null)
+    public function createGremlinQuery($query = null)
     {
         $q = new Query\Gremlin($this);
 
@@ -270,6 +329,7 @@ class EntityManager
      *
      * @param string $string The query string.
      * @param array $parameters The arguments to bind with the query.
+     * @throws Exception
      * @return \Everyman\Neo4j\Query\ResultSet
      */
     function gremlinQuery($string, $parameters)
@@ -312,6 +372,7 @@ class EntityManager
      *
      * @param string $string The query string.
      * @param array $parameters The arguments to bind with the query.
+     * @throws Exception
      * @return \Everyman\Neo4j\Query\ResultSet
      */
     function cypherQuery($string, array $parameters = array())
@@ -340,8 +401,10 @@ class EntityManager
      * specifying the correct annotation.
      *
      * @param string $class Fully qualified class name
+     * @throws Exception
+     * @return Repository
      */
-    function getRepository($class)
+    public function getRepository($class)
     {
         if (! isset($this->repositories[$class])) {
             $meta = $this->metaRepository->fromClass($class);
@@ -359,17 +422,54 @@ class EntityManager
     }
 
     /**
-     * Register an event listener for a given event.
-     *
-     * @param string $eventName The event to listen, available as constants.
-     * @deprecated
+     * @param string $name
+     * @param Object $a
+     * @param Object $b
      */
-    function registerEvent($eventName, $callback)
+    public function addRelation($name, $a, $b)
     {
-        trigger_error(
-            'Function HireVoice\Neo4j\EntityManager::registerEvent is deprecated. Use the Doctrine EventManager to register listeners.',
-            E_DEPRECATED
-        );
+        $a = $this->getLoadedNode($a);
+        $b = $this->getLoadedNode($b);
+
+        $this->dispatchEvent(new Events\PreRelationCreate($a, $b, $name));
+
+        $existing = $this->getRelationsFrom($a, $name);
+
+        foreach ($existing as $r) {
+            if (basename($r['end']) == $b->getId()) {
+                return;
+            }
+        }
+
+        $relationship = $a->relateTo($b, $name)
+            ->setProperty('creationDate', $this->getCurrentDate())
+            ->save();
+
+        list($name, $a, $b) = func_get_args();
+        $this->dispatchEvent(new Events\PostRelationCreate($a, $b, $name, $relationship));
+    }
+
+    /**
+     * @param string $name
+     * @param Object $a
+     * @param Object $b
+     */
+    public function removeRelation($name, $a, $b)
+    {
+        $a = $this->getLoadedNode($a);
+        $b = $this->getLoadedNode($b);
+
+        $this->dispatchEvent(new Events\PreRelationRemove($a, $b, $name));
+
+        $existing = $this->getRelationsFrom($a, $name);
+
+        foreach ($existing as $r) {
+            if (basename($r['end']) == $b->getId()) {
+                $this->deleteRelationship($r);
+                $this->dispatchEvent(new Events\PostRelationRemove($a, $b, $name));
+                return;
+            }
+        }
     }
 
     /**
@@ -398,6 +498,9 @@ class EntityManager
         } while (count($this->entities) != count($entities));
     }
 
+    /**
+     * @param Object $entity
+     */
     private function discoverEntitiesOn($entity)
     {
         $em = $this;
@@ -407,6 +510,11 @@ class EntityManager
         });
     }
 
+    /**
+     * @param Object $entity
+     * @param callable $addCallback
+     * @param callable|null $removeCallback
+     */
     private function traverseRelations($entity, $addCallback, $removeCallback = null)
     {
         $meta = $this->getMeta($entity);
@@ -472,6 +580,10 @@ class EntityManager
         }
     }
 
+    /**
+     * @param $entity
+     * @return Node|\Everyman\Neo4j\PropertyContainer
+     */
     private function createNode($entity)
     {
         $meta = $this->getMeta($entity);
@@ -528,6 +640,9 @@ class EntityManager
         $this->batch = null;
     }
 
+    /**
+     * @param Object $entity
+     */
     private function writeRelationsFor($entity)
     {
         $em = $this;
@@ -543,52 +658,10 @@ class EntityManager
     }
 
     /**
-     * @access private
+     * @param $from
+     * @param $relation
+     * @param $exception
      */
-    function addRelation($name, $a, $b)
-    {
-        $a = $this->getLoadedNode($a);
-        $b = $this->getLoadedNode($b);
-
-        $this->dispatchEvent(new Events\PreRelationCreate($a, $b, $name));
-
-        $existing = $this->getRelationsFrom($a, $name);
-
-        foreach ($existing as $r) {
-            if (basename($r['end']) == $b->getId()) {
-                return;
-            }
-        }
-
-        $relationship = $a->relateTo($b, $name)
-            ->setProperty('creationDate', $this->getCurrentDate())
-            ->save();
-
-        list($name, $a, $b) = func_get_args();
-        $this->dispatchEvent(new Events\PostRelationCreate($a, $b, $name, $relationship));
-    }
-
-    /**
-     * @access private
-     */
-    function removeRelation($name, $a, $b)
-    {
-        $a = $this->getLoadedNode($a);
-        $b = $this->getLoadedNode($b);
-
-        $this->dispatchEvent(new Events\PreRelationRemove($a, $b, $name));
-
-        $existing = $this->getRelationsFrom($a, $name);
-
-        foreach ($existing as $r) {
-            if (basename($r['end']) == $b->getId()) {
-                $this->deleteRelationship($r);
-                $this->dispatchEvent(new Events\PostRelationRemove($a, $b, $name));
-                return;
-            }
-        }
-    }
-
     private function removePreviousRelations($from, $relation, $exception)
     {
         $node = $this->getLoadedNode($from);
@@ -600,6 +673,9 @@ class EntityManager
         }
     }
 
+    /**
+     * @param array $r
+     */
     private function deleteRelationship($r)
     {
         if ($relationship = $this->client->getRelationship(basename($r['self'])))  {
@@ -607,11 +683,20 @@ class EntityManager
         }
     }
 
+    /**
+     * @param Object $entity
+     * @return Object
+     */
     private function getLoadedNode($entity)
     {
         return $this->nodes[$this->getHash($entity)];
     }
 
+    /**
+     * @param Node $node
+     * @param $relation
+     * @return array
+     */
     private function getRelationsFrom($node, $relation)
     {
         // Cache sequential calls for the same element
@@ -628,12 +713,12 @@ class EntityManager
     }
 
     /**
-     * @param $indexName
+     * @param string $indexName
      * @param string $type
      *
      * @return NodeIndex
      */
-    function createIndex($indexName, $type = self::NODE_INDEX)
+    public function createIndex($indexName, $type = self::NODE_INDEX)
     {
         if (! isset($this->indexes[$indexName])) {
             $newIndex = $this->createIndexInstance($indexName, $type);
@@ -644,6 +729,11 @@ class EntityManager
         return $this->indexes[$indexName];
     }
 
+    /**
+     * @param string $indexName
+     * @param string $type
+     * @return NodeFulltextIndex|NodeIndex
+     */
     private function createIndexInstance($indexName, $type)
     {
         if ($type === self::FULLTEXT_INDEX) {
@@ -654,13 +744,17 @@ class EntityManager
         }
     }
 
+    /**
+     * @param Object $object
+     * @return string
+     */
     private function getHash($object)
     {
         return spl_object_hash($object);
     }
 
     /**
-     * @param $entity
+     * @param Object $entity
      */
     private function index($entity)
     {
@@ -693,11 +787,18 @@ class EntityManager
         $this->commit();
     }
 
-    public function getMeta($entity)
+    /**
+     * @param $entity
+     * @return Meta\Entity
+     */
+    private function getMeta($entity)
     {
         return $this->metaRepository->fromClass(get_class($entity));
     }
 
+    /**
+     * @return string
+     */
     private function getCurrentDate()
     {
         $gen = $this->dateGenerator;
@@ -706,6 +807,8 @@ class EntityManager
 
     /**
      * Alter how dates are generated. Primarily used for test cases.
+     *
+     * @param callable $generator
      */
     function setDateGenerator(\Closure $generator)
     {
@@ -722,9 +825,11 @@ class EntityManager
         return $this->client;
     }
 
+    /**
+     * @return PathFinder\PathFinder
+     */
     public function getPathFinder()
     {
         return clone $this->pathFinder;
     }
 }
-

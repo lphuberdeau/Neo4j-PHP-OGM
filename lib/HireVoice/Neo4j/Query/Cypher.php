@@ -22,91 +22,93 @@
  */
 
 namespace HireVoice\Neo4j\Query;
+
 use Everyman\Neo4j\Node;
 use Everyman\Neo4j\Path;
 use HireVoice\Neo4j\EntityManager;
 
-class Cypher
+class Cypher extends Query
 {
-    private $em;
-    private $processor;
+    const CLAUSE_WHERE = 'where';
+
+    const CLAUSE_USING = 'using';
+
+    const CLAUSE_OPTIONAL_MATCH = 'optional match';
+
+    const CLAUSE_UNION = 'union';
+
+    const CLAUSE_START = 'start';
+
+    const CLAUSE_MATCH = 'match';
+
+    const CLAUSE_WITH = 'with';
+
+    const CLAUSE_RETURN = 'return';
+
+    const CLAUSE_ORDER_BY = 'order by';
+
+    const CLAUSE_SKIP = 'skip';
+
+    const CLAUSE_LIMIT = 'limit';
+
+    /**
+     * @var string
+     */
     private $query = "";
+
+    /**
+     * @var bool
+     */
     private $currentClause = false;
 
-    function __construct(EntityManager $em)
+    /**
+     * @param EntityManager $em
+     */
+    public function __construct(EntityManager $em)
     {
-        $this->em = $em;
-        $this->processor = new ParameterProcessor(ParameterProcessor::CYPHER);
+        parent::__construct($em, 'cypher');
     }
 
-    function query($query)
+    /**
+     * @api
+     * @param string $query
+     * @return Cypher
+     */
+    public function query($query)
     {
         $this->query = $query;
+
         return $this;
     }
 
-    protected function appendToQuery($clause, $args)
+    /**
+     * @param string $mode
+     * @return Cypher
+     */
+    public function mode($mode)
     {
-        switch( $clause )
-        {
-        case 'where':
-            if( $this->currentClause !== $clause ) {
-                $this->query .= PHP_EOL . $clause . ' (' . implode(') AND (', $args) . ')';
-            } else {
-                $this->query .= ' AND (' . implode(') AND (', $args) . ')';
-            }
-            break;
-        case 'using':
-        case 'optional match':
-            $this->query .= PHP_EOL . $clause . ' ' . implode(PHP_EOL . $clause . ' ', $args);
-            break;
-        case 'union':
-            $this->query .= PHP_EOL . $clause . ( $args === true ? " all" : "");
-            break;
-        case 'start':
-        case 'match':
-        case 'with':
-        case 'return':
-        case 'order by':
-        case 'skip':
-        case 'limit':
-        default:
-            if( $this->currentClause !== $clause ) {
-                $this->query .= PHP_EOL . $clause . ' ' . implode(',', $args);
-            } else {
-                $this->query .= ',' . implode(',', $args);
-            }
-            break;
-        }
-
-        $this->currentClause = $clause;
-        return $this;
-    }
-
-    function mode($mode)
-    {
-        if( empty($this->query) )
-        {
+        if (empty($this->query)) {
             $this->query = 'CYPHER ' . $mode;
             $this->currentClause = 'mode';
         }
+
         return $this;
     }
 
-    function start($string)
+    /**
+     * @param string $name
+     * @param array $nodes
+     * @return Cypher
+     */
+    public function startWithNode($name, $nodes)
     {
-        return $this->appendToQuery('start', func_get_args());
-    }
-
-    function startWithNode($name, $nodes)
-    {
-        if (! is_array($nodes)) {
+        if (!is_array($nodes)) {
             $nodes = array($nodes);
         }
 
         $parts = array();
         foreach ($nodes as $key => $node) {
-            $fullKey = $name . '_' .$key;
+            $fullKey = $name . '_' . $key;
 
             $parts[] = ":$fullKey";
             $this->set($fullKey, $node);
@@ -118,87 +120,21 @@ class Cypher
         return $this;
     }
 
-    function startWithQuery($name, $index, $query)
+    /**
+     * @api
+     * @param string $string
+     * @return Cypher
+     */
+    public function start($string)
     {
-        $this->start("$name = node:`$index`('$query')");
-
-        return $this;
+        return $this->appendToQuery(self::CLAUSE_START, func_get_args());
     }
 
-    function startWithLookup($name, $index, $key, $value)
-    {
-        $this->start("$name = node:`$index`($key = :{$name}_{$key})");
-        $this->set("{$name}_{$key}", $value);
-
-        return $this;
-    }
-
-    function match($string)
-    {
-        return $this->appendToQuery('match', func_get_args());
-    }
-
-    function optionalMatch($string)
-    {
-        return $this->appendToQuery('optional match', func_get_args());
-    }
-
-    function end($string)
-    {
-        return $this->appendToQuery('return', func_get_args());
-    }
-
-    function where($string)
-    {
-       return $this->appendToQuery('where', func_get_args());
-    }
-
-    function with($string)
-    {
-       return $this->appendToQuery('with', func_get_args());
-    }
-
-    function order($string)
-    {
-        return $this->appendToQuery('order by', func_get_args());
-    }
-
-    function skip($skip)
-    {
-        return $this->appendToQuery('skip', func_get_args());
-    }
-
-    function limit($limit)
-    {
-        return $this->appendToQuery('limit', func_get_args());
-    }
-
-    function using($string)
-    {
-        return $this->appendToQuery('using', func_get_args());
-    }
-
-    function union($all)
-    {
-        return $this->appendToQuery('union', $all);
-    }
-
-    function set($name, $value)
-    {
-        $this->processor->setParameter($name, $value);
-
-        return $this;
-    }
-
-    function getOne()
-    {
-        $result = $this->execute();
-        if (isset($result[0])) {
-            return $this->convertValue($result[0][0]);
-        }
-    }
-
-    function getList()
+    /**
+     * @api
+     * @return \Doctrine\Common\Collections\ArrayCollection
+     */
+    public function getList()
     {
         $result = $this->execute();
         $list = new \Doctrine\Common\Collections\ArrayCollection;
@@ -210,7 +146,11 @@ class Cypher
         return $list;
     }
 
-    function getResult()
+    /**
+     * @api
+     * @return \Doctrine\Common\Collections\ArrayCollection
+     */
+    public function getResult()
     {
         $result = $this->execute();
         $list = new \Doctrine\Common\Collections\ArrayCollection;
@@ -228,6 +168,192 @@ class Cypher
         return $list;
     }
 
+    /**
+     * @api
+     * @param string $name
+     * @param string $index
+     * @param string $query
+     * @return Cypher
+     */
+    public function startWithQuery($name, $index, $query)
+    {
+        $this->start("$name = node:`$index`('$query')");
+
+        return $this;
+    }
+
+    /**
+     * @api
+     * @param string $name
+     * @param string $index
+     * @param string $key
+     * @param mixed $value
+     * @return Cypher
+     */
+    public function startWithLookup($name, $index, $key, $value)
+    {
+        $this->start("$name = node:`$index`($key = :{$name}_{$key})");
+        $this->set("{$name}_{$key}", $value);
+
+        return $this;
+    }
+
+    /**
+     * @api
+     * @param string $string
+     * @return Cypher
+     */
+    public function match($string)
+    {
+        return $this->appendToQuery(self::CLAUSE_MATCH, func_get_args());
+    }
+
+    /**
+     * @api
+     * @param string $string
+     * @return Cypher
+     */
+    function optionalMatch($string)
+    {
+        return $this->appendToQuery(self::CLAUSE_OPTIONAL_MATCH, func_get_args());
+    }
+
+    /**
+     * @api
+     * @param $string
+     * @return Cypher
+     */
+    public function end($string)
+    {
+        return $this->appendToQuery(self::CLAUSE_RETURN, func_get_args());
+    }
+
+    /**
+     * @api
+     * @param string $string
+     * @return Cypher
+     */
+    public function where($string)
+    {
+        return $this->appendToQuery(self::CLAUSE_WHERE, func_get_args());
+    }
+
+    /**
+     * @api
+     * @param string $string
+     * @return Cypher
+     */
+    public function with($string)
+    {
+        return $this->appendToQuery(self::CLAUSE_WITH, func_get_args());
+    }
+
+    /**
+     * @api
+     * @param string $string
+     * @return Cypher
+     */
+    public function order($string)
+    {
+        return $this->appendToQuery(self::CLAUSE_ORDER_BY, func_get_args());
+    }
+
+    /**
+     * @api
+     * @param string $skip
+     * @return Cypher
+     */
+    public function skip($skip)
+    {
+        return $this->appendToQuery(self::CLAUSE_SKIP, func_get_args());
+    }
+
+    /**
+     * @api
+     * @param int $limit
+     * @return Cypher
+     */
+    public function limit($limit)
+    {
+        return $this->appendToQuery(self::CLAUSE_LIMIT, func_get_args());
+    }
+
+    /**
+     * @api
+     * @param string $string
+     * @return Cypher
+     */
+    public function using($string)
+    {
+        return $this->appendToQuery(self::CLAUSE_USING, func_get_args());
+    }
+
+    /**
+     * @api
+     * @param mixed $all
+     * @return Cypher
+     */
+    public function union($all)
+    {
+        return $this->appendToQuery(self::CLAUSE_UNION, $all);
+    }
+
+    /**
+     * @api
+     * @return Node|\HireVoice\Neo4j\PathFinder\Path|null
+     */
+    public function getOne()
+    {
+        $result = $this->execute();
+        if (isset($result[0])) {
+            return $this->convertValue($result[0][0]);
+        }
+
+        return null;
+    }
+
+    /**
+     * @param string $clause
+     * @param array $args
+     * @return Cypher
+     */
+    protected function appendToQuery($clause, $args)
+    {
+        switch ($clause) {
+            case self::CLAUSE_WHERE:
+                if ($this->currentClause !== $clause) {
+                    $this->query .= PHP_EOL . $clause . ' (' . implode(') AND (', $args) . ')';
+                } else {
+                    $this->query .= ' AND (' . implode(') AND (', $args) . ')';
+                }
+                break;
+
+            case self::CLAUSE_USING:
+            case self::CLAUSE_OPTIONAL_MATCH:
+                $this->query .= PHP_EOL . $clause . ' ' . implode(PHP_EOL . $clause . ' ', $args);
+                break;
+
+            case self::CLAUSE_UNION:
+                $this->query .= PHP_EOL . $clause . ($args === true ? " all" : "");
+                break;
+
+            default:
+                if ($this->currentClause !== $clause) {
+                    $this->query .= PHP_EOL . $clause . ' ' . implode(',', $args);
+                } else {
+                    $this->query .= ',' . implode(',', $args);
+                }
+                break;
+        }
+
+        $this->currentClause = $clause;
+
+        return $this;
+    }
+
+    /**
+     * @return \Everyman\Neo4j\Query\ResultSet
+     */
     private function execute()
     {
         $this->processor->setQuery($this->query);
@@ -236,6 +362,10 @@ class Cypher
         return $this->em->cypherQuery($this->processor->getQuery(), $parameters);
     }
 
+    /**
+     * @param mixed $value
+     * @return Node|\HireVoice\Neo4j\PathFinder\Path
+     */
     private function convertValue($value)
     {
         if ($value instanceof Node) {

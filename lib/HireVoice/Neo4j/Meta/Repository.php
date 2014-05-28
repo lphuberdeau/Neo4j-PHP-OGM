@@ -2,7 +2,7 @@
 /**
  * Copyright (C) 2012 Louis-Philippe Huberdeau
  *
- * Permission is hereby granted, free of charge, to any person obtaining a 
+ * Permission is hereby granted, free of charge, to any person obtaining a
  * copy of this software and associated documentation files (the "Software"),
  * to deal in the Software without restriction, including without limitation
  * the rights to use, copy, modify, merge, publish, distribute, sublicense,
@@ -22,15 +22,26 @@
  */
 
 namespace HireVoice\Neo4j\Meta;
-use Doctrine\Common\Annotations\Reader;
+
 use Doctrine\Common\Annotations\AnnotationReader;
+use Doctrine\Common\Annotations\Reader;
 
 class Repository
 {
+    /**
+     * @var \Doctrine\Common\Annotations\AnnotationReader
+     */
     private $reader;
+
+    /**
+     * @var array
+     */
     private $metas = array();
 
-    function __construct($annotationReader = null)
+    /**
+     * @param Reader $annotationReader
+     */
+    function __construct(Reader $annotationReader = null)
     {
         if ($annotationReader instanceof Reader) {
             $this->reader = $annotationReader;
@@ -39,9 +50,13 @@ class Repository
         }
     }
 
+    /**
+     * @param $className
+     * @return Entity
+     */
     function fromClass($className)
     {
-        if (! isset($this->metas[$className])) {
+        if (!isset($this->metas[$className])) {
             $this->metas[$className] = Entity::fromClass($this->reader, $className, $this);
         }
 

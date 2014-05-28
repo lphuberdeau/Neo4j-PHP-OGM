@@ -2,7 +2,7 @@
 /**
  * Copyright (C) 2012 Louis-Philippe Huberdeau
  *
- * Permission is hereby granted, free of charge, to any person obtaining a 
+ * Permission is hereby granted, free of charge, to any person obtaining a
  * copy of this software and associated documentation files (the "Software"),
  * to deal in the Software without restriction, including without limitation
  * the rights to use, copy, modify, merge, publish, distribute, sublicense,
@@ -26,45 +26,41 @@ namespace HireVoice\Neo4j\Query;
 use Doctrine\Common\Collections\ArrayCollection;
 use Everyman\Neo4j\Node;
 use HireVoice\Neo4j\EntityManager;
+use HireVoice\Neo4j\Exception;
 
-class Gremlin
+class Gremlin extends Query
 {
-    private $em;
+    /**
+     * @var array
+     */
     private $parts = array();
-    private $processor;
 
-    function __construct(EntityManager $em)
+    /**
+     * @param EntityManager $em
+     */
+    public function __construct(EntityManager $em)
     {
-        $this->em = $em;
-        $this->processor = new ParameterProcessor;
+        parent::__construct($em, 'gremlin');
     }
 
-    function add($query)
+    /**
+     * @api
+     * @param string $query
+     * @return Gremlin
+     */
+    public function add($query)
     {
         $this->parts[] = $query;
-        return $this;
-    }
-
-    function set($name, $value)
-    {
-        $this->processor->setParameter($name, $value);
 
         return $this;
     }
 
-    private function execute()
-    {
-        $string = implode(";", $this->parts);
-
-        $this->processor->setQuery($string);
-        $parameters = $this->processor->process();
-
-        $rs = $this->em->gremlinQuery($this->processor->getQuery(), $parameters);
-        
-        return $rs;
-    }
-
-    function getList()
+    /**
+     * @api
+     * @return ArrayCollection
+     * @throws Exception
+     */
+    public function getList()
     {
         $result = new ArrayCollection;
 
@@ -79,7 +75,11 @@ class Gremlin
         return $result;
     }
 
-    function getKeyList()
+    /**
+     * @api
+     * @return ArrayCollection
+     */
+    public function getKeyList()
     {
         $out = new ArrayCollection;
 
@@ -90,7 +90,10 @@ class Gremlin
         return $out;
     }
 
-    function getMap()
+    /**
+     * @return array
+     */
+    public function getMap()
     {
         $result = $this->execute();
 
@@ -114,10 +117,14 @@ class Gremlin
                 $out[$key] = $this->convertValue($value);
             }
         }
+
         return $out;
     }
 
-    function getEntityMap()
+    /**
+     * @return array
+     */
+    public function getEntityMap()
     {
         $out = array();
 
@@ -131,13 +138,37 @@ class Gremlin
         return $out;
     }
 
-    function getOne()
+    /**
+     * @api
+     * @return bool|Node
+     */
+    public function getOne()
     {
         $result = $this->execute();
 
         return $this->convertValue($result[0][0]);
     }
 
+    /**
+     * @api
+     * @return \Everyman\Neo4j\Query\ResultSet
+     */
+    private function execute()
+    {
+        $string = implode(";", $this->parts);
+
+        $this->processor->setQuery($string);
+        $parameters = $this->processor->process();
+
+        $rs = $this->em->gremlinQuery($this->processor->getQuery(), $parameters);
+
+        return $rs;
+    }
+
+    /**
+     * @param mixed $value
+     * @return bool|Node
+     */
     private function convertValue($value)
     {
         if (preg_match('/^v\[(\d+)\]$/', $value, $parts)) {

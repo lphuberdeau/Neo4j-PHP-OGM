@@ -22,25 +22,73 @@
  */
 
 namespace HireVoice\Neo4j\Meta;
+
+use Doctrine\Common\Annotations\Reader;
 use HireVoice\Neo4j\Annotation;
+use ReflectionProperty;
 
 class Property
 {
     const AUTO = 'HireVoice\\Neo4j\\Annotation\\Auto';
+
     const PROPERTY = 'HireVoice\\Neo4j\\Annotation\\Property';
+
     const INDEX = 'HireVoice\\Neo4j\\Annotation\\Index';
+
     const TO_MANY = 'HireVoice\\Neo4j\\Annotation\\ManyToMany';
+
     const TO_ONE = 'HireVoice\\Neo4j\\Annotation\\ManyToOne';
 
+    const FORMAT_SCALAR = 'scalar';
+
+    const FORMAT_RELATION = 'relation';
+
+    const FORMAT_ARRAY = 'array';
+
+    const FORMAT_JSON = 'json';
+
+    const FORMAT_DATE = 'date';
+
+    /**
+     * @var Reader
+     */
     private $reader;
+
+    /**
+     * @var ReflectionProperty
+     */
     private $property;
+
+    /**
+     * @var string
+     */
     private $name;
+
+    /**
+     * @var string
+     */
     private $format = 'relation';
+
+    /**
+     * @var bool
+     */
     private $traversed = true;
+
+    /**
+     * @var bool
+     */
     private $writeOnly = false;
+
+    /**
+     * @var array
+     */
     private $indexes = array();
 
-    function __construct($reader, $property)
+    /**
+     * @param Reader $reader
+     * @param ReflectionProperty $property
+     */
+    function __construct(Reader $reader, ReflectionProperty $property)
     {
         $this->reader = $reader;
         $this->property = $property;
@@ -55,9 +103,9 @@ class Property
             foreach ($this->reader->getPropertyAnnotations($this->property) as $annotation) {
                 if ($annotation instanceof Annotation\Index) {
                     $copy = clone $annotation;
-                    $copy->name = $copy->name ?: $this->property->class;
-                    $copy->field = $copy->field ?: $this->property->name;
-                    $copy->type = $copy->type ?: 'node';
+                    $copy->name = $copy->name ? : $this->property->class;
+                    $copy->field = $copy->field ? : $this->property->name;
+                    $copy->type = $copy->type ? : 'node';
                     $this->indexes[] = $copy;
                 }
             }
@@ -66,36 +114,23 @@ class Property
         $property->setAccessible(true);
     }
 
-    function isPrimaryKey()
-    {
-        return !! $this->reader->getPropertyAnnotation($this->property, self::AUTO);
-    }
-
+    /**
+     * @return bool
+     */
     function isProperty()
     {
         if ($annotation = $this->reader->getPropertyAnnotation($this->property, self::PROPERTY)) {
             $this->format = $annotation->format;
+
             return true;
         } else {
             return false;
         }
     }
 
-    function isIndexed()
-    {
-        return !empty($this->indexes);
-    }
-
-    function isTraversed()
-    {
-        return $this->traversed;
-    }
-
-    function isWriteOnly()
-    {
-        return $this->writeOnly;
-    }
-
+    /**
+     * @return bool
+     */
     function isRelation()
     {
         if ($annotation = $this->reader->getPropertyAnnotation($this->property, self::TO_ONE)) {
@@ -103,7 +138,7 @@ class Property
                 $this->name = $annotation->relation;
             }
 
-            $this->traversed = ! $annotation->readOnly;
+            $this->traversed = !$annotation->readOnly;
 
             return true;
         }
@@ -111,6 +146,41 @@ class Property
         return false;
     }
 
+    /**
+     * @return bool
+     */
+    function isPrimaryKey()
+    {
+        return !!$this->reader->getPropertyAnnotation($this->property, self::AUTO);
+    }
+
+    /**
+     * @return bool
+     */
+    function isIndexed()
+    {
+        return !empty($this->indexes);
+    }
+
+    /**
+     * @return bool
+     */
+    function isTraversed()
+    {
+        return $this->traversed;
+    }
+
+    /**
+     * @return bool
+     */
+    function isWriteOnly()
+    {
+        return $this->writeOnly;
+    }
+
+    /**
+     * @return bool
+     */
     function isRelationList()
     {
         if ($annotation = $this->reader->getPropertyAnnotation($this->property, self::TO_MANY)) {
@@ -118,7 +188,7 @@ class Property
                 $this->name = $annotation->relation;
             }
 
-            $this->traversed = ! $annotation->readOnly;
+            $this->traversed = !$annotation->readOnly;
             $this->writeOnly = $annotation->writeOnly;
 
             return true;
@@ -127,74 +197,111 @@ class Property
         return false;
     }
 
+    /**
+     * @return bool
+     */
     function isPrivate()
     {
         return $this->property->isPrivate();
     }
 
+    /**
+     * @return array
+     */
     function getIndexes()
     {
         return $this->indexes;
     }
 
+    /**
+     * @param Object $entity
+     * @return mixed|null|string
+     */
     function getValue($entity)
     {
         $raw = $this->property->getValue($entity);
 
         switch ($this->format) {
-        case 'scalar':
-        case 'relation':
-            return $raw;
-        case 'array':
-            return serialize($raw);
-        case 'json':
-            return json_encode($raw);
-        case 'date':
-            if ($raw) {
-                $value = clone $raw;
-                $value->setTimezone(new \DateTimeZone('UTC'));
-                return $value->format('Y-m-d H:i:s');
-            } else {
-                return null;
-            }
+            case self::FORMAT_SCALAR:
+            case self::FORMAT_RELATION:
+                return $raw;
+
+            case self::FORMAT_ARRAY:
+                return serialize($raw);
+
+            case self::FORMAT_JSON:
+                return json_encode($raw);
+
+            case self::FORMAT_DATE:
+                if ($raw) {
+                    $value = clone $raw;
+                    $value->setTimezone(new \DateTimeZone('UTC'));
+
+                    return $value->format('Y-m-d H:i:s');
+                } else {
+                    return null;
+                }
+
+            default:
+                return $raw;
         }
     }
 
+    /**
+     * @param Object $entity
+     * @param mixed $value
+     */
     function setValue($entity, $value)
     {
         switch ($this->format) {
-        case 'scalar':
-        case 'relation':
-            $this->property->setValue($entity, $value);
-            break;
-        case 'array':
-            $this->property->setValue($entity, unserialize($value));
-            break;
-        case 'json':
-            $this->property->setValue($entity, json_decode($value, true));
-            break;
-        case 'date':
-            $date = null;
-            if ($value) {
-                $date = new \DateTime($value . ' UTC');
-                $date->setTimezone(new \DateTimeZone(date_default_timezone_get()));
-            }
+            case self::FORMAT_SCALAR:
+            case self::FORMAT_RELATION:
+                $this->property->setValue($entity, $value);
+                break;
 
-            $this->property->setValue($entity, $date);
-            break;
+            case self::FORMAT_ARRAY:
+                $this->property->setValue($entity, unserialize($value));
+                break;
+
+            case self::FORMAT_JSON:
+                $this->property->setValue($entity, json_decode($value, true));
+                break;
+
+            case self::FORMAT_DATE:
+                $date = null;
+                if ($value) {
+                    $date = new \DateTime($value . ' UTC');
+                    $date->setTimezone(new \DateTimeZone(date_default_timezone_get()));
+                }
+
+                $this->property->setValue($entity, $date);
+                break;
+
+            default:
+                $this->property->setValue($entity, $value);
         }
     }
 
+    /**
+     * @return string
+     */
     function getName()
     {
         return $this->name;
     }
 
+    /**
+     * @return string
+     */
     function getOriginalName()
     {
         return $this->property->getName();
     }
 
+    /**
+     * @param $names
+     * @return bool
+     */
     function matches($names)
     {
         foreach (func_get_args() as $name) {
