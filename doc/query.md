@@ -32,7 +32,7 @@ class UserRepository extends BaseRepository
 {
     function findRecommendations(User $user)
     {
-        return $em->createCypherQuery()
+        return $this->getEntityManager()->createCypherQuery()
             ->startWithNode('user', $user)
             ->match('user -[:follow]-> followedBy <-[:follow]- similarInterest')
             ->match('similarInterest -[:follow]-> potentialMatch')
