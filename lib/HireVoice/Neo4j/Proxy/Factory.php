@@ -203,7 +203,7 @@ class $proxyClass extends $className implements HireVoice\\Neo4j\\Proxy\\Entity
             if (\$relation['type'] == \$propertyName) {
                 // Read-only relations read the start node instead
                 if (\$property->isTraversed()) {
-                    if( \$this->neo4j_meta->getManyToOneRelation(\$propertyName)->getDirection() == 'from'){
+                    if( \$this->neo4j_meta->getRelation(\$propertyName)->getDirection() == 'from'){
                         \$nodeUrl = \$relation['end'];
                         \$root = \$relation['start'];
                     }else{

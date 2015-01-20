@@ -165,6 +165,34 @@ class Entity
         }
         return NULL;
     }
+    
+    function getManyToManyRelation($labelName)
+    {
+        foreach($this->manyToManyRelations as $rel){
+            if($rel->getName() == $labelName){
+                return $rel;
+                break;
+            }
+        }
+        return NULL;
+    }
+    
+    function getRelation($labelName)
+    {
+        foreach($this->manyToManyRelations as $rel){
+            if($rel->getName() == $labelName){
+                return $rel;
+                break;
+            }
+        }
+        foreach($this->manyToOneRelations as $rel){
+            if($rel->getName() == $labelName){
+                return $rel;
+                break;
+            }
+        }
+        return NULL;
+    }
     /**
      * Finds property by $name.
      *
