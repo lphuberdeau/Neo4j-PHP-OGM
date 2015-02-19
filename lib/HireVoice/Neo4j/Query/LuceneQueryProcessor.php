@@ -45,7 +45,7 @@ class LuceneQueryProcessor
 
     public function addQueryTerm($term, $value, $expr = 'AND', $mode = self::STRICT)
     {
-        if($this->isValidExpression($expr)) {
+        if ($this->isValidExpression($expr)) {
             $method = '_'.strtolower($expr);
             $this->$method($term, $value);
         }
@@ -67,12 +67,13 @@ class LuceneQueryProcessor
      public function prepareValue($value)
     {
         $value = trim($value);
-        if(strpos($value, ' ')) {
+        if (false !== strpos($value, ' ')) {
             $fl = mb_substr($value, 0, 1, 'UTF-8');
-            if ($fl != '(')
+            if ($fl != '(') {
                 return '"'.$value.'"';
-            else
+            } else {
                 return $value;
+			}
         }
         return $value;
     }
@@ -82,7 +83,7 @@ class LuceneQueryProcessor
      */
     public function isValidExpression($expr)
     {
-        if(!array_key_exists($expr, $this->allowedExpressions)) {
+        if (!array_key_exists($expr, $this->allowedExpressions)) {
             throw new \InvalidArgumentException(sprintf('The expression "%s" is not a valid expression', $expr));
         }
         return true;
@@ -103,13 +104,13 @@ class LuceneQueryProcessor
     {
         $query = '';
 
-        foreach($this->allowedExpressions as $expr => $queryExpr) {
+        foreach ($this->allowedExpressions as $expr => $queryExpr) {
             $arguments = $this->_args[$expr];
             $inlinedArguments = array();
-            foreach($arguments as $arg) {
+            foreach ($arguments as $arg) {
                 $inlinedArguments[] = $arg['term'].':'.$arg['value'];
             }
-            if('' !== $query) {
+            if ('' !== $query) {
                 $query .= $queryExpr;
             }
             $query .= implode($queryExpr, $inlinedArguments);

@@ -25,12 +25,20 @@ namespace HireVoice\Neo4j\Meta;
 
 class Reflection
 {
+    /**
+     * @param string $methodName
+     * @return string
+     */
     public static function getProperty($methodName)
     {
         $property = substr($methodName, 3);
         return self::singularizeProperty($property);
     }
 
+    /**
+     * @param string $property
+     * @return string
+     */
     public static function singularizeProperty($property)
     {
         $property = lcfirst($property);

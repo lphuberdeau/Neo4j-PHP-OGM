@@ -24,19 +24,44 @@
 namespace HireVoice\Neo4j\Proxy;
 
 use Doctrine\Common\Persistence\Proxy as BaseProxy;
+use Everyman\Neo4j\Node;
 
 interface Entity extends BaseProxy
 {
+    /**
+     * Returns the entity object
+     *
+     * @return Object
+     */
     function getEntity();
 
+    /**
+     * @param string $name
+     * @return null
+     */
     function __addHydrated($name);
 
+    /**
+     * @param $meta
+     * @return null
+     */
     function __setMeta($meta);
 
+    /**
+     * @param Node $node
+     * @return null
+     */
     function __setNode($node);
 
+    /**
+     * @return Node
+     */
     function __getNode();
 
+    /**
+     * @param callable $loadCallback
+     * @return null
+     */
     function __setLoadCallback(\Closure $loadCallback);
 }
 

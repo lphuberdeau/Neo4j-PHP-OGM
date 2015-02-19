@@ -34,10 +34,15 @@ use Doctrine\Common\Collections\ArrayCollection;
  */
 class Path
 {
+    /**
+     * @var \Doctrine\Common\Collections\ArrayCollection
+     */
     protected $entities;
 
-    protected $entityManager;
-
+    /**
+     * @param RawPath $path
+     * @param EntityManager $entityManager
+     */
     public function __construct(RawPath $path, EntityManager $entityManager)
     {
         $this->entities = new ArrayCollection();
@@ -47,6 +52,9 @@ class Path
         }
     }
 
+    /**
+     * @return ArrayCollection
+     */
     public function getEntities()
     {
         return $this->entities;
