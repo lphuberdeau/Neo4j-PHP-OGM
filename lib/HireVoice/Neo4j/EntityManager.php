@@ -425,37 +425,29 @@ class EntityManager
      * @param string $name
      * @param Object $a
      * @param Object $b
+     * @param string $direction
      */
     public function addRelation($name, $a, $b, $direction)
     {
+        if(strtolower($direction) == 'to'){
+            $tmp = $b;
+            $b = $a;
+            $a = $tmp; 
+        }
         $a = $this->getLoadedNode($a);
         $b = $this->getLoadedNode($b);
-
         $this->dispatchEvent(new Events\PreRelationCreate($a, $b, $name));
-
         $existing = $this->getRelationsFrom($a, $name);
-
         foreach ($existing as $r) {
             if (basename($r['end']) == $b->getId()) {
                 return;
             }
         }
-
-        if(strtolower($direction) == 'to'){
-            $relationship = $b->relateTo($a, $name)
-                ->setProperty('creationDate', $this->getCurrentDate())
-                ->save();
-                
-            list($name, $b, $a) = func_get_args();
-            $this->dispatchEvent(new Events\PostRelationCreate($b, $a, $name, $relationship));
-        }else{
-            $relationship = $a->relateTo($b, $name)
-                ->setProperty('creationDate', $this->getCurrentDate())
-                ->save();
-                
-            list($name, $a, $b) = func_get_args();
-            $this->dispatchEvent(new Events\PostRelationCreate($a, $b, $name, $relationship));    
-        }
+        $relationship = $a->relateTo($b, $name)
+            ->setProperty('creationDate', $this->getCurrentDate())
+            ->save();
+        list($name, $a, $b) = func_get_args();
+        $this->dispatchEvent(new Events\PostRelationCreate($a, $b, $name, $relationship));
     }
 
     /**

@@ -135,6 +135,10 @@ class Property
                 $this->name = $annotation->relation;
             }
 
+            if ($annotation->direction) {
+                $this->direction = $annotation->direction;
+            }
+            
             $this->traversed = !$annotation->readOnly;
 
             return true;
@@ -173,25 +177,6 @@ class Property
     function isWriteOnly()
     {
         return $this->writeOnly;
-    }
-
-    function isRelation()
-    {
-        if ($annotation = $this->reader->getPropertyAnnotation($this->property, self::TO_ONE)) {
-            if ($annotation->relation) {
-                $this->name = $annotation->relation;
-            }
-            
-            if ($annotation->direction) {
-                $this->direction = $annotation->direction;
-            }
-            
-            $this->traversed = ! $annotation->readOnly;
-
-            return true;
-        }
-
-        return false;
     }
 
     /**
