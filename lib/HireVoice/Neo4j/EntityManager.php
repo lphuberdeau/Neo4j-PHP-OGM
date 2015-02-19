@@ -426,7 +426,7 @@ class EntityManager
      * @param Object $a
      * @param Object $b
      */
-    public function addRelation($name, $a, $b)
+    public function addRelation($name, $a, $b, $direction)
     {
         $a = $this->getLoadedNode($a);
         $b = $this->getLoadedNode($b);
@@ -438,15 +438,24 @@ class EntityManager
         foreach ($existing as $r) {
             if (basename($r['end']) == $b->getId()) {
                 return;
-    }
+            }
         }
 
-        $relationship = $a->relateTo($b, $name)
-            ->setProperty('creationDate', $this->getCurrentDate())
-            ->save();
-
-        list($name, $a, $b) = func_get_args();
-        $this->dispatchEvent(new Events\PostRelationCreate($a, $b, $name, $relationship));
+        if(strtolower($direction) == 'to'){
+            $relationship = $b->relateTo($a, $name)
+                ->setProperty('creationDate', $this->getCurrentDate())
+                ->save();
+                
+            list($name, $b, $a) = func_get_args();
+            $this->dispatchEvent(new Events\PostRelationCreate($b, $a, $name, $relationship));
+        }else{
+            $relationship = $a->relateTo($b, $name)
+                ->setProperty('creationDate', $this->getCurrentDate())
+                ->save();
+                
+            list($name, $a, $b) = func_get_args();
+            $this->dispatchEvent(new Events\PostRelationCreate($a, $b, $name, $relationship));    
+        }
     }
 
     /**
@@ -653,59 +662,6 @@ class EntityManager
         };
 
         $this->traverseRelations($entity, $addCallback, $removeCallback);
-    }
-
-    /**
-     * @param $from
-     * @param $relation
-     * @param $exception
-     */
-    function addRelation($relation, $a, $b, $direction)
-    {
-        $a = $this->getLoadedNode($a);
-        $b = $this->getLoadedNode($b);
-
-        $existing = $this->getRelationsFrom($a, $relation);
-
-        foreach ($existing as $r) {
-            if (basename($r['end']) == $b->getId()) {
-                return;
-            }
-        }
-
-        if(strtolower($direction) == 'to'){
-            $relationship = $b->relateTo($a, $relation)
-                ->setProperty('creationDate', $this->getCurrentDate())
-                ->save();
-                
-            list($relation, $b, $a) = func_get_args();
-            $this->triggerEvent(self::RELATION_CREATE, $relation, $b, $a, $relationship);
-        }else{
-            $relationship = $a->relateTo($b, $relation)
-                ->setProperty('creationDate', $this->getCurrentDate())
-                ->save();
-                
-            list($relation, $a, $b) = func_get_args();
-            $this->triggerEvent(self::RELATION_CREATE, $relation, $a, $b, $relationship);    
-        }
-    }
-
-    /**
-     * @access private
-     */
-    function removeRelation($relation, $a, $b)
-    {
-        $a = $this->getLoadedNode($a);
-        $b = $this->getLoadedNode($b);
-
-        $existing = $this->getRelationsFrom($a, $relation);
-
-        foreach ($existing as $r) {
-            if (basename($r['end']) == $b->getId()) {
-                $this->deleteRelationship($r);
-                return;
-            }
-        }
     }
 
     private function removePreviousRelations($from, $relation, $exception)
