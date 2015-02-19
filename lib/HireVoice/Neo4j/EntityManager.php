@@ -123,7 +123,7 @@ class EntityManager
             $configuration = new Configuration;
         } elseif (is_array($configuration)) {
             $configuration = new Configuration($configuration);
-        } elseif (!$configuration instanceof Configuration) {
+        } elseif (! $configuration instanceof Configuration) {
             throw new Exception('Provided argument must be a Configuration object or an array.');
         }
 
@@ -425,26 +425,27 @@ class EntityManager
      * @param string $name
      * @param Object $a
      * @param Object $b
+     * @param string $direction
      */
-    public function addRelation($name, $a, $b)
+    public function addRelation($name, $a, $b, $direction)
     {
+        if(strtolower($direction) == 'to'){
+            $tmp = $b;
+            $b = $a;
+            $a = $tmp; 
+        }
         $a = $this->getLoadedNode($a);
         $b = $this->getLoadedNode($b);
-
         $this->dispatchEvent(new Events\PreRelationCreate($a, $b, $name));
-
         $existing = $this->getRelationsFrom($a, $name);
-
         foreach ($existing as $r) {
             if (basename($r['end']) == $b->getId()) {
                 return;
             }
         }
-
         $relationship = $a->relateTo($b, $name)
             ->setProperty('creationDate', $this->getCurrentDate())
             ->save();
-
         list($name, $a, $b) = func_get_args();
         $this->dispatchEvent(new Events\PostRelationCreate($a, $b, $name, $relationship));
     }
@@ -518,13 +519,12 @@ class EntityManager
     private function traverseRelations($entity, $addCallback, $removeCallback = null)
     {
         $meta = $this->getMeta($entity);
-
         foreach ($meta->getManyToManyRelations() as $property) {
             if ($property->isTraversed()) {
                 $list = $property->getValue($entity);
 
                 foreach ($list as $entry) {
-                    $addCallback($entry, $property->getName());
+                    $addCallback($entry, $property->getName(), $property->getDirection());
                 }
 
                 if ($removeCallback && $list instanceof Extension\ArrayCollection) {
@@ -541,7 +541,7 @@ class EntityManager
                     if ($removeCallback) {
                         $this->removePreviousRelations($entity, $property->getName(), $entry);
                     }
-                    $addCallback($entry, $property->getName());
+                    $addCallback($entry, $property->getName(), $property->getDirection());
                 }
             }
         }
@@ -646,9 +646,8 @@ class EntityManager
     private function writeRelationsFor($entity)
     {
         $em = $this;
-
-        $addCallback = function ($entry, $relation) use ($entity, $em) {
-            $em->addRelation($relation, $entity, $entry);
+        $addCallback = function ($entry, $relation, $direction) use ($entity, $em) {
+            $em->addRelation($relation, $entity, $entry, $direction);
         };
         $removeCallback = function ($entry, $relation) use ($entity, $em) {
             $em->removeRelation($relation, $entity, $entry);
@@ -657,11 +656,6 @@ class EntityManager
         $this->traverseRelations($entity, $addCallback, $removeCallback);
     }
 
-    /**
-     * @param $from
-     * @param $relation
-     * @param $exception
-     */
     private function removePreviousRelations($from, $relation, $exception)
     {
         $node = $this->getLoadedNode($from);

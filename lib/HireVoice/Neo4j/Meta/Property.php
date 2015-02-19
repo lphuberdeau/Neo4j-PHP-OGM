@@ -68,10 +68,7 @@ class Property
      * @var string
      */
     private $format = 'relation';
-
-    /**
-     * @var bool
-     */
+    private $direction = 'direction';
     private $traversed = true;
 
     /**
@@ -103,9 +100,9 @@ class Property
             foreach ($this->reader->getPropertyAnnotations($this->property) as $annotation) {
                 if ($annotation instanceof Annotation\Index) {
                     $copy = clone $annotation;
-                    $copy->name = $copy->name ? : $this->property->class;
-                    $copy->field = $copy->field ? : $this->property->name;
-                    $copy->type = $copy->type ? : 'node';
+                    $copy->name = $copy->name ?: $this->property->class;
+                    $copy->field = $copy->field ?: $this->property->name;
+                    $copy->type = $copy->type ?: 'node';
                     $this->indexes[] = $copy;
                 }
             }
@@ -138,6 +135,10 @@ class Property
                 $this->name = $annotation->relation;
             }
 
+            if ($annotation->direction) {
+                $this->direction = $annotation->direction;
+            }
+            
             $this->traversed = !$annotation->readOnly;
 
             return true;
@@ -187,8 +188,12 @@ class Property
             if ($annotation->relation) {
                 $this->name = $annotation->relation;
             }
-
-            $this->traversed = !$annotation->readOnly;
+            
+            if ($annotation->direction) {
+                $this->direction = $annotation->direction;
+            }
+            
+            $this->traversed = ! $annotation->readOnly;
             $this->writeOnly = $annotation->writeOnly;
 
             return true;
@@ -224,23 +229,23 @@ class Property
         switch ($this->format) {
             case self::FORMAT_SCALAR:
             case self::FORMAT_RELATION:
-                return $raw;
+            return $raw;
 
             case self::FORMAT_ARRAY:
-                return serialize($raw);
+            return serialize($raw);
 
             case self::FORMAT_JSON:
-                return json_encode($raw);
+            return json_encode($raw);
 
             case self::FORMAT_DATE:
-                if ($raw) {
-                    $value = clone $raw;
-                    $value->setTimezone(new \DateTimeZone('UTC'));
+            if ($raw) {
+                $value = clone $raw;
+                $value->setTimezone(new \DateTimeZone('UTC'));
 
-                    return $value->format('Y-m-d H:i:s');
-                } else {
-                    return null;
-                }
+                return $value->format('Y-m-d H:i:s');
+            } else {
+                return null;
+            }
 
             default:
                 return $raw;
@@ -256,26 +261,26 @@ class Property
         switch ($this->format) {
             case self::FORMAT_SCALAR:
             case self::FORMAT_RELATION:
-                $this->property->setValue($entity, $value);
-                break;
+            $this->property->setValue($entity, $value);
+            break;
 
             case self::FORMAT_ARRAY:
-                $this->property->setValue($entity, unserialize($value));
-                break;
+            $this->property->setValue($entity, unserialize($value));
+            break;
 
             case self::FORMAT_JSON:
-                $this->property->setValue($entity, json_decode($value, true));
-                break;
+            $this->property->setValue($entity, json_decode($value, true));
+            break;
 
             case self::FORMAT_DATE:
-                $date = null;
-                if ($value) {
-                    $date = new \DateTime($value . ' UTC');
-                    $date->setTimezone(new \DateTimeZone(date_default_timezone_get()));
-                }
+            $date = null;
+            if ($value) {
+                $date = new \DateTime($value . ' UTC');
+                $date->setTimezone(new \DateTimeZone(date_default_timezone_get()));
+            }
 
-                $this->property->setValue($entity, $date);
-                break;
+            $this->property->setValue($entity, $date);
+            break;
 
             default:
                 $this->property->setValue($entity, $value);
@@ -290,6 +295,11 @@ class Property
         return $this->name;
     }
 
+    function getDirection()
+    {
+        return $this->direction;
+    }
+    
     /**
      * @return string
      */
