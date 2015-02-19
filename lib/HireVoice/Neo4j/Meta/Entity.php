@@ -22,20 +22,67 @@
  */
 
 namespace HireVoice\Neo4j\Meta;
+
 use Doctrine\Common\Annotations\Reader as AnnotationReader;
 use HireVoice\Neo4j\Exception;
+use ReflectionProperty;
 
 class Entity
 {
+    /**
+     * @var string
+     */
     private $repositoryClass = 'HireVoice\\Neo4j\\Repository';
+
+    /**
+     * @var array
+     */
     private $labels = array();
+
+    /**
+     * @var string
+     */
     private $className;
+
+    /**
+     * @var int
+     */
     private $primaryKey;
+
+    /**
+     * @var \HireVoice\Neo4j\Meta\Property[]
+     */
     private $properties = array();
+
+    /**
+     * @var \HireVoice\Neo4j\Meta\Property[]
+     */
     private $indexedProperties = array();
+
+    /**
+     * @var \HireVoice\Neo4j\Meta\Property[]
+     */
     private $manyToManyRelations = array();
+
+    /**
+     * @var \HireVoice\Neo4j\Meta\Property[]
+     */
     private $manyToOneRelations = array();
 
+    /**
+     * @param string $className
+     */
+    public function __construct($className)
+    {
+        $this->className = $className;
+    }
+
+    /**
+     * @param AnnotationReader $reader
+     * @param string $className
+     * @return Entity
+     * @throws \HireVoice\Neo4j\Exception
+     */
     public static function fromClass(AnnotationReader $reader, $className)
     {
         $class = new \ReflectionClass($className);
@@ -45,7 +92,7 @@ class Entity
             $className = $class->getName();
         }
 
-        if (! $entity = $reader->getClassAnnotation($class, 'HireVoice\\Neo4j\\Annotation\\Entity')) {
+        if (!$entity = $reader->getClassAnnotation($class, 'HireVoice\\Neo4j\\Annotation\\Entity')) {
             throw new Exception("Class $className is not declared as an entity.");
         }
 
@@ -102,32 +149,42 @@ class Entity
         return $props_arr;
     }
 
-    public function __construct($className)
-    {
-        $this->className = $className;
-    }
-
-    function getRepositoryClass()
+	/*
+     * @return string
+     */
+    public function getRepositoryClass()
     {
         return $this->repositoryClass;
     }
 
-    function getLabels()
+    /**
+     * @return array
+     */
+    public function getLabels()
     {
         return $this->labels;
     }
 
-    function getProxyClass()
+    /**
+     * @return string
+     */
+    public function getProxyClass()
     {
         return 'neo4jProxy' . str_replace('\\', '_', $this->className);
     }
 
-    function getName()
+    /**
+     * @return string
+     */
+    public function getName()
     {
         return $this->className;
     }
 
-    function getIndexedProperties()
+    /**
+     * @return array
+     */
+    public function getIndexedProperties()
     {
         return $this->indexedProperties;
     }
@@ -135,22 +192,31 @@ class Entity
     /**
      * @return \HireVoice\Neo4j\Meta\Property[]
      */
-    function getProperties()
+    public function getProperties()
     {
         return $this->properties;
     }
 
-    function getPrimaryKey()
+    /**
+     * @return \HireVoice\Neo4j\Meta\Property
+     */
+    public function getPrimaryKey()
     {
         return $this->primaryKey;
     }
 
-    function getManyToManyRelations()
+    /**
+     * @return Property[]
+     */
+    public function getManyToManyRelations()
     {
         return $this->manyToManyRelations;
     }
 
-    function getManyToOneRelations()
+    /**
+     * @return Property[]
+     */
+    public function getManyToOneRelations()
     {
         return $this->manyToOneRelations;
     }
@@ -199,7 +265,7 @@ class Entity
      * @param string $name
      * @return \HireVoice\Neo4j\Meta\Property|null
      */
-    function findProperty($name)
+    public function findProperty($name)
     {
         $property = Reflection::getProperty($name);
 
@@ -220,21 +286,30 @@ class Entity
                 return $p;
             }
         }
+
+        return null;
     }
 
+    /**
+     * @param Property $property
+     * @throws \HireVoice\Neo4j\Exception
+     */
     private function setPrimaryKey(Property $property)
     {
         if ($this->primaryKey) {
-             throw new Exception("Class {$this->className} contains multiple targets for @Auto");
+            throw new Exception("Class {$this->className} contains multiple targets for @Auto");
         }
 
         $this->primaryKey = $property;
     }
 
+    /**
+     * @throws \HireVoice\Neo4j\Exception
+     */
     private function validate()
     {
-        if (! $this->primaryKey) {
-             throw new Exception("Class {$this->className} contains no @Auto property");
+        if (!$this->primaryKey) {
+            throw new Exception("Class {$this->className} contains no @Auto property");
         }
     }
 }

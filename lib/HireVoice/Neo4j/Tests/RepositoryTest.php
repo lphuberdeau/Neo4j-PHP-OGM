@@ -2,7 +2,7 @@
 /**
  * Copyright (C) 2012 Louis-Philippe Huberdeau
  *
- * Permission is hereby granted, free of charge, to any person obtaining a 
+ * Permission is hereby granted, free of charge, to any person obtaining a
  * copy of this software and associated documentation files (the "Software"),
  * to deal in the Software without restriction, including without limitation
  * the rights to use, copy, modify, merge, publish, distribute, sublicense,
@@ -22,16 +22,12 @@
  */
 
 namespace HireVoice\Neo4j\Tests;
+
 use Doctrine\Common\Collections\ArrayCollection;
+use HireVoice\Neo4j\Tests\Entity\City;
 
 class RepositoryTest extends TestCase
 {
-    private function getRepository()
-    {
-        $em = $this->getEntityManager();
-        return $em->getRepository('HireVoice\\Neo4j\\Tests\\Entity\\Movie');
-    }
-
     public function testCreateLuceneQueryWithWordWithoutSpaces()
     {
         $repo = $this->getRepository();
@@ -41,7 +37,14 @@ class RepositoryTest extends TestCase
         $this->assertEquals($expectedQuery, $query);
     }
 
-        public function testCreateLuceneQueryWithWordWithSpaces()
+    public function testCreateInvalidQueryThrowsException()
+    {
+        $this->setExpectedException('\InvalidArgumentException');
+        $repo = $this->getRepository();
+        $repo->createQuery(array());
+    }
+
+    public function testCreateLuceneQueryWithWordWithSpaces()
     {
         $repo = $this->getRepository();
         $criteria = array('fullname' => 'angus young', 'lastname' => 'lord nelson');
@@ -85,9 +88,9 @@ class RepositoryTest extends TestCase
 
         $repo = $this->getRepository();
 
-        $movie = $repo->findOneBy(array('title' => 'The '.$uid));
+        $movie = $repo->findOneBy(array('title' => 'The ' . $uid));
 
-        $this->assertEquals('The '.$uid, $movie->getTitle());
+        $this->assertEquals('The ' . $uid, $movie->getTitle());
     }
 
     public function testQueryForMultipleReturningNodes()
@@ -109,7 +112,7 @@ class RepositoryTest extends TestCase
 
         $repo = $this->getRepository();
 
-        $movies = $repo->findBy(array('title' => '*'.$uid));
+        $movies = $repo->findBy(array('title' => '*' . $uid));
 
         $this->assertTrue($movies instanceof ArrayCollection);
 
@@ -146,7 +149,7 @@ class RepositoryTest extends TestCase
         $em->persist($matrix);
 
         $matrix2 = new Entity\Movie;
-        $matrix2->setTitle('The '.$uid);
+        $matrix2->setTitle('The ' . $uid);
         $matrix->setCategory('scifi');
         $em->persist($matrix2);
 
@@ -167,9 +170,11 @@ class RepositoryTest extends TestCase
 
         $repository = $this->getRepository();
 
-        $movie = $repository->findOneBy(array(
-            'title' => '(+*am* Of +*hron*)'
-        ));
+        $movie = $repository->findOneBy(
+            array(
+                'title' => '(+*am* Of +*hron*)'
+            )
+        );
 
         $this->assertEquals($entity->getTitle(), $movie->getTitle());
     }
@@ -194,12 +199,92 @@ class RepositoryTest extends TestCase
 
         $users = $em->getRepository('HireVoice\Neo4j\Tests\Entity\FindAllUser')->findAll();
 
-        foreach($users as $user){
+        foreach ($users as $user) {
             $em->remove($user);
         }
 
         $em->flush();
 
         $this->assertEquals(3, count($users));
+    }
+
+    public function testFind()
+    {
+        $em = $this->getEntityManager();
+
+        $city = new City();
+        $city->setName('Zurich');
+
+        $em->persist($city);
+        $em->flush();
+        $em->clear();
+
+        $id = $city->getId();
+
+        $result = $em->getRepository('HireVoice\Neo4j\Tests\Entity\City')
+            ->find($id);
+
+        $this->assertInstanceOf('HireVoice\Neo4j\Tests\Entity\City', $result);
+        $this->assertSame($city->getId(), $result->getId());
+        $this->assertSame($city->getName(), $result->getName());
+    }
+
+    public function testFindOneBy()
+    {
+        $em = $this->getEntityManager();
+
+        $city = new City();
+        $city->setName('Zurich');
+
+        $em->persist($city);
+        $em->flush();
+        $em->clear();
+
+        $name = $city->getName();
+
+        $result = $em->getRepository('HireVoice\Neo4j\Tests\Entity\City')
+            ->findOneBy(array('name' => $name));
+
+        $this->assertInstanceOf('HireVoice\Neo4j\Tests\Entity\City', $result);
+        $this->assertSame($city->getName(), $result->getName());
+
+        $result = $em->getRepository('HireVoice\Neo4j\Tests\Entity\City')
+            ->findOneBy(array('name' => 'Does not exist!'));
+
+        $this->assertNull($result);
+    }
+
+    public function testInvalidRepositoryCall()
+    {
+        $this->setExpectedException('\InvalidArgumentException');
+        $repo = $this->getRepository();
+
+        $repo->findNothing();
+    }
+
+    public function testGetEntityManager()
+    {
+        $repo = $this->getRepository();
+        $em = $repo->getEntityManager();
+
+        $this->assertInstanceOf('HireVoice\Neo4j\EntityManager', $em);
+    }
+
+    public function testGetMeta()
+    {
+        $repo = $this->getRepository();
+        $meta = $repo->getMeta();
+
+        $this->assertInstanceOf('HireVoice\Neo4j\Meta\Entity', $meta);
+    }
+
+    /**
+     * @return \HireVoice\Neo4j\Repository
+     */
+    private function getRepository()
+    {
+        $em = $this->getEntityManager();
+
+        return $em->getRepository('HireVoice\\Neo4j\\Tests\\Entity\\Movie');
     }
 }

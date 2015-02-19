@@ -2,7 +2,7 @@
 /**
  * Copyright (C) 2012 Louis-Philippe Huberdeau
  *
- * Permission is hereby granted, free of charge, to any person obtaining a 
+ * Permission is hereby granted, free of charge, to any person obtaining a
  * copy of this software and associated documentation files (the "Software"),
  * to deal in the Software without restriction, including without limitation
  * the rights to use, copy, modify, merge, publish, distribute, sublicense,
@@ -23,23 +23,42 @@
 
 namespace HireVoice\Neo4j\Proxy;
 
-use Doctrine\Common\Collections\ArrayCollection;
-use HireVoice\Neo4j\Extension\ArrayCollection as ExtendedArrayCollection;
+use Everyman\Neo4j\Node;
 use HireVoice\Neo4j\Exception;
+use HireVoice\Neo4j\Extension\ArrayCollection as ExtendedArrayCollection;
 use HireVoice\Neo4j\Meta\Entity as Meta;
+use HireVoice\Neo4j\Meta\Repository;
+use ReflectionMethod;
 
 class Factory
 {
+    /**
+     * @var string
+     */
     private $proxyDir;
+
+    /**
+     * @var bool
+     */
     private $debug;
 
+    /**
+     * @param string $proxyDir
+     * @param bool $debug
+     */
     function __construct($proxyDir = '/tmp', $debug = false)
     {
         $this->proxyDir = rtrim($proxyDir, '/');
-        $this->debug = (bool) $debug;
+        $this->debug = (bool)$debug;
     }
 
-    function fromNode($node, $repository, \Closure $loadCallback)
+    /**
+     * @param Node $node
+     * @param Repository $repository
+     * @param callable $loadCallback
+     * @return mixed
+     */
+    function fromNode(Node $node, Repository $repository, \Closure $loadCallback)
     {
         $class = $node->getProperty('class');
         $meta = $repository->fromClass($class);
@@ -72,15 +91,11 @@ class Factory
         return $proxy;
     }
 
-    private function initializeProperties($object, Meta $meta)
-    {
-        foreach ($meta->getManyToManyRelations() as $metaProperty) {
-            $metaProperty->setValue($object, new ExtendedArrayCollection);
-        }
-
-        return $object;
-    }
-
+    /**
+     * @param Meta $meta
+     * @return Entity
+     * @throws \HireVoice\Neo4j\Exception
+     */
     private function createProxy(Meta $meta)
     {
         $proxyClass = $meta->getProxyClass();
@@ -91,23 +106,29 @@ class Factory
         }
 
         $targetFile = "{$this->proxyDir}/$proxyClass.php";
-        if ($this->debug || ! file_exists($targetFile)) {
+        if ($this->debug || !file_exists($targetFile)) {
             $functions = '';
             $reflectionClass = new \ReflectionClass($className);
             foreach ($reflectionClass->getMethods(\ReflectionMethod::IS_PUBLIC) as $method) {
-                if (! $method->isConstructor() && ! $method->isDestructor() && ! $method->isFinal()) {
+                if (!$method->isConstructor() && !$method->isDestructor() && !$method->isFinal()) {
                     $functions .= $this->methodProxy($method, $meta);
                 }
             }
 
             $properties = $meta->getProperties();
             $properties[] = $meta->getPrimaryKey();
-            $properties = array_filter($properties, function ($property) {
-                return ! $property->isPrivate();
-            });
-            $properties = array_map(function ($property) {
-                return $property->getName();
-            }, $properties);
+            $properties = array_filter(
+                $properties,
+                function ($property) {
+                    return !$property->isPrivate();
+                }
+            );
+            $properties = array_map(
+                function ($property) {
+                    return $property->getName();
+                },
+                $properties
+            );
             $properties = var_export($properties, true);
 
             $content = <<<CONTENT
@@ -241,20 +262,41 @@ class $proxyClass extends $className implements HireVoice\\Neo4j\\Proxy\\Entity
 
 
 CONTENT;
-            if ( ! is_dir($this->proxyDir)) {
+            if (!is_dir($this->proxyDir)) {
                 if (false === @mkdir($this->proxyDir, 0775, true)) {
                     throw new Exception('Proxy Dir is not writable');
                 }
-            } else if ( ! is_writable($this->proxyDir)) {
-                throw new Exception('Proxy Dir is not writable');
+            } else {
+                if (!is_writable($this->proxyDir)) {
+                    throw new Exception('Proxy Dir is not writable');
+                }
             }
             file_put_contents($targetFile, $content);
         }
 
         require $targetFile;
+
         return $this->initializeProperties($this->newInstance($proxyClass), $meta);
     }
 
+    /**
+     * @param Object $object
+     * @param Meta $meta
+     * @return Object
+     */
+    private function initializeProperties($object, Meta $meta)
+    {
+        foreach ($meta->getManyToManyRelations() as $metaProperty) {
+            $metaProperty->setValue($object, new ExtendedArrayCollection);
+        }
+
+        return $object;
+    }
+
+    /**
+     * @param string $proxyClass
+     * @return Entity
+     */
     private function newInstance($proxyClass)
     {
         static $prototypes = array();
@@ -266,18 +308,23 @@ CONTENT;
         return clone $prototypes[$proxyClass];
     }
 
-    private function methodProxy($method, $meta)
+    /**
+     * @param ReflectionMethod $method
+     * @param Meta $meta
+     * @return string
+     */
+    private function methodProxy(ReflectionMethod $method, Meta $meta)
     {
         $property = $meta->findProperty($method->getName());
 
-        if (! $property) {
+        if (!$property) {
             // No need for a proxy if not related to a property
-            return;
+            return null;
         }
 
         if ($property->isProperty()) {
             // Properties are loaded straight-up, no need for proxies
-            return;
+            return null;
         }
 
         $parts = array();

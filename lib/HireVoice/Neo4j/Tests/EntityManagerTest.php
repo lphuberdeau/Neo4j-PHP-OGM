@@ -22,7 +22,11 @@
  */
 
 namespace HireVoice\Neo4j\Tests;
+use Doctrine\Common\EventManager;
 use HireVoice\Neo4j\EntityManager;
+use HireVoice\Neo4j\Event\PostPersist;
+use HireVoice\Neo4j\Event\QueryAwareEvent;
+use HireVoice\Neo4j\Event\RelationAwareEvent;
 
 class EntityManagerTest extends TestCase
 {
@@ -168,7 +172,7 @@ class EntityManagerTest extends TestCase
     }
 
     /**
-     * @expectedException HireVoice\Neo4j\Exception
+     * @expectedException \HireVoice\Neo4j\Exception
      */
     function testSearchMissingProperty()
     {
@@ -179,7 +183,7 @@ class EntityManagerTest extends TestCase
     }
 
     /**
-     * @expectedException HireVoice\Neo4j\Exception
+     * @expectedException \HireVoice\Neo4j\Exception
      */
     function testSearchUnindexedProperty()
     {
@@ -238,7 +242,7 @@ class EntityManagerTest extends TestCase
     }
 
     /**
-     * @expectedException HireVoice\Neo4j\Exception
+     * @expectedException \HireVoice\Neo4j\Exception
      */
     function testPersistNonEntity()
     {
@@ -247,7 +251,7 @@ class EntityManagerTest extends TestCase
     }
 
     /**
-     * @expectedException HireVoice\Neo4j\Exception
+     * @expectedException \HireVoice\Neo4j\Exception
      */
     function testPersistEntityWithoutPersistableId()
     {
@@ -358,111 +362,6 @@ class EntityManagerTest extends TestCase
 
         $this->assertEquals('foobar', $result['creationDate']);
         $this->assertEquals('baz', $result['updateDate']);
-    }
-
-    function testEntityCreationHook()
-    {
-        $title = null;
-
-        $movie = new Entity\Movie;
-        $movie->setTitle('Terminator');
-        $em = $this->getEntityManager();
-        $em->registerEvent(EntityManager::ENTITY_CREATE, function ($entity) use (& $title) {
-            $title = $entity->getTitle();
-        });
-
-        $em->persist($movie);
-        $em->flush();
-
-        $this->assertEquals('Terminator', $title);
-    }
-
-    function testRelationCreationHook()
-    {
-        $code = null;
-        $em = $this->getEntityManager();
-        $em->registerEvent(EntityManager::RELATION_CREATE, function ($type, $start, $end) use (& $code) {
-            $code = $start->getTitle() . '-' . $type . '-' . $end->getFirstName();
-        });
-
-        $movie = new Entity\Movie;
-        $movie->setTitle('Terminator');
-        $actor = new Entity\Person;
-        $actor->setFirstName('Arnold');
-        $movie->addActor($actor);
-
-        $em->persist($movie);
-        $em->flush();
-
-        $this->assertEquals("Terminator-actor-Arnold", $code);
-    }
-
-    function testCypherQueryRunHook()
-    {
-        $queryObj = null;
-        $timeElapsed = null;
-        $paramsArray = null;
-        $em = $this->getEntityManager();
-
-        $em->registerEvent(EntityManager::QUERY_RUN, function (\Everyman\Neo4j\Cypher\Query $query, $parameters, $time) use (& $queryObj, & $timeElapsed, & $paramsArray) {
-            $queryObj = $query;
-            $timeElapsed = $time;
-            $paramsArray = $parameters;
-        });
-
-        $movie = new Entity\Movie;
-        $movie->setTitle('Terminator');
-        $actor = new Entity\Person;
-        $actor->setFirstName('Arnold');
-        $movie->addActor($actor);
-
-        $em->persist($movie);
-        $em->flush();
-
-        $em->createCypherQuery()
-           ->start('movie = node(:movie)')
-           ->end('movie')
-           ->set('movie', $movie)
-           ->getOne();
-
-        $expectedParams = array(
-            'movie' => $movie->getId()
-        );
-
-        $this->assertInstanceOf('Everyman\Neo4j\Cypher\Query', $queryObj);
-        $this->assertEquals($expectedParams, $paramsArray);
-        $this->assertGreaterThan(0, $timeElapsed);
-    }
-
-    function testGremlinQueryRunHook()
-    {
-        $queryObj = null;
-        $timeElapsed = null;
-        $paramsArray = null;
-        $em = $this->getEntityManager();
-
-        $em->registerEvent(EntityManager::QUERY_RUN, function (\Everyman\Neo4j\Gremlin\Query $query, $parameters, $time) use (& $queryObj, & $timeElapsed, & $paramsArray) {
-            $queryObj = $query;
-            $timeElapsed = $time;
-            $paramsArray = $parameters;
-        });
-
-        $movie = new Entity\Movie;
-        $movie->setTitle('Terminator');
-        $actor = new Entity\Person;
-        $actor->setFirstName('Arnold');
-        $movie->addActor($actor);
-
-        $em->persist($movie);
-        $em->flush();
-
-        $em->createGremlinQuery("g.v(:movie).out('actor')")
-           ->set('movie', $movie)
-           ->getList();
-
-        $this->assertInstanceOf('Everyman\Neo4j\Gremlin\Query', $queryObj);
-        $this->assertEmpty($paramsArray);
-        $this->assertGreaterThan(0, $timeElapsed);
     }
 
     function testStoreArray()
