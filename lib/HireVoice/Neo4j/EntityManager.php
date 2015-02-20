@@ -189,10 +189,6 @@ class EntityManager
                 $node = $this->client->getNode($id);
 
                 if($node){
-                    $class = $meta->getName();
-                    $index = $this->getRepository($class)->getIndex();
-                    $index->remove($node);
-
                     $relationships = $node->getRelationships();
                     foreach ($relationships as $relationship){
                         $relationship->delete();
@@ -223,8 +219,10 @@ class EntityManager
         $this->writeRelations();
         $this->writeIndexes();
 
+        $this->removeIndexes();
         $this->removeEntities();
-
+        
+        
         $this->entities = array();
         $this->nodes = array();
     }
@@ -781,6 +779,26 @@ class EntityManager
         $this->commit();
     }
 
+    /**
+    * Remove all entities indexes.
+    * 
+    */
+    private function removeIndexes(){
+        foreach ($this->entitiesToRemove as $entity) {
+            $meta = $this->getMeta($entity);
+            $node = $this->getLoadedNode($entity);
+            foreach ($meta->getIndexedProperties() as $property) {
+                foreach ($property->getIndexes() as $index) {
+                    $class = $index->name;
+                    $index = $this->getRepository($class)->getIndex();
+                    $index->remove($node);
+                }
+            }
+            $class = $meta->getName();
+            $mainIndex = $this->createIndex($class);
+            $mainIndex->remove($node, 'id', $entity->getId());
+        } 
+    }
     /**
      * @param $entity
      * @return Meta\Entity
