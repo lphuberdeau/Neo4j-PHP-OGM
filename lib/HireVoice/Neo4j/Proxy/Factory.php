@@ -86,8 +86,8 @@ class Factory
             if ($property->isWriteOnly()) {
                 $proxy->__addHydrated($property->getName());
             }
-        }
-
+        }                           
+        
         return $proxy;
     }
 
@@ -217,15 +217,21 @@ class $proxyClass extends $className implements HireVoice\\Neo4j\\Proxy\\Entity
             \$command = new Extension\GetNodeRelationshipsLight(\$this->neo4j_node->getClient(), \$this->neo4j_node);
             \$this->neo4j_relationships = \$command->execute();
         }
-
+        
         \$this->__addHydrated(\$propertyName);
         \$collection = new ArrayCollection;
         foreach (\$this->neo4j_relationships as \$relation) {
             if (\$relation['type'] == \$propertyName) {
                 // Read-only relations read the start node instead
                 if (\$property->isTraversed()) {
-                    \$nodeUrl = \$relation['end'];
-                    \$root = \$relation['start'];
+                    if( \$this->neo4j_meta->getRelation(\$propertyName)->getDirection() == 'from'){
+                        \$nodeUrl = \$relation['end'];
+                        \$root = \$relation['start'];
+                    }else{
+                        \$nodeUrl = \$relation['start'];
+                        \$root = \$relation['end'];
+                    }
+                    
                 } else {
                      \$nodeUrl = \$relation['start'];
                      \$root = \$relation['end'];

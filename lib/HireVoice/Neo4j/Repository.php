@@ -75,6 +75,8 @@ class Repository
 
             if ($node = $this->getIndex()->findOne($property, $arguments[0])) {
                 return $this->entityManager->load($node);
+            }else{
+                return NULL;
             }
         } elseif (strpos($name, 'findBy') === 0) {
             $property = $this->getSearchableProperty(substr($name, 6));
