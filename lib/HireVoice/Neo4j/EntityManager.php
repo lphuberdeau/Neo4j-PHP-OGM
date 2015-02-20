@@ -222,7 +222,6 @@ class EntityManager
         $this->removeIndexes();
         $this->removeEntities();
         
-        
         $this->entities = array();
         $this->nodes = array();
     }
@@ -785,11 +784,12 @@ class EntityManager
     */
     private function removeIndexes(){
         foreach ($this->entitiesToRemove as $entity) {
+            $entity = $this->reload($entity);
             $meta = $this->getMeta($entity);
-            $node = $this->getLoadedNode($entity);
+            $node = $entity->__getNode();
             foreach ($meta->getIndexedProperties() as $property) {
                 foreach ($property->getIndexes() as $index) {
-                    $class = $index->name;
+                    $class = $property->getClass();
                     $index = $this->getRepository($class)->getIndex();
                     $index->remove($node);
                 }

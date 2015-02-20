@@ -295,6 +295,17 @@ class Property
         return $this->name;
     }
 
+    /**
+     * @return string
+     */
+    function getClass()
+    {
+        return $this->property->class;
+    }
+    
+    /**
+    * @return string
+    */
     function getDirection()
     {
         return $this->direction;

@@ -220,29 +220,12 @@ class Entity
     {
         return $this->manyToOneRelations;
     }
-
-    function getManyToOneRelation($labelName)
-    {
-        foreach($this->manyToOneRelations as $rel){
-            if($rel->getName() == $labelName){
-                return $rel;
-                break;
-            }
-        }
-        return NULL;
-    }
     
-    function getManyToManyRelation($labelName)
-    {
-        foreach($this->manyToManyRelations as $rel){
-            if($rel->getName() == $labelName){
-                return $rel;
-                break;
-            }
-        }
-        return NULL;
-    }
-    
+    /**
+    * Return a relation by name
+    * 
+    * @param mixed $labelName
+    */
     function getRelation($labelName)
     {
         foreach($this->manyToManyRelations as $rel){
@@ -259,6 +242,7 @@ class Entity
         }
         return NULL;
     }
+    
     /**
      * Finds property by $name.
      *
