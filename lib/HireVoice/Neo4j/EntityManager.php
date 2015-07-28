@@ -536,7 +536,7 @@ class EntityManager
             if ($property->isTraversed()) {
                 if ($entry = $property->getValue($entity)) {
                     if ($removeCallback) {
-                        $this->removePreviousRelations($entity, $property->getName(), $entry);
+                        $this->removePreviousRelations($entity, $property->getName(), $property->getDirection(), $entry);
                     }
                     $addCallback($entry, $property->getName(), $property->getDirection());
                 }
@@ -616,7 +616,7 @@ class EntityManager
     {
         $this->begin();
         foreach ($this->entities as $entity) {
-            $this->writeRelationsFor($entity);
+            $this->writeRelationsFor($entity); 
         }
         $this->commit();
     }
@@ -653,14 +653,19 @@ class EntityManager
         $this->traverseRelations($entity, $addCallback, $removeCallback);
     }
 
-    private function removePreviousRelations($from, $relation, $exception)
+    private function removePreviousRelations($from, $relation, $direction, $exception)
     {
         $node = $this->getLoadedNode($from);
 
         foreach ($this->getRelationsFrom($node, $relation) as $r) {
-            if (basename($r['end']) != $exception->getId()) {
-                $this->deleteRelationship($r);
+            if(strtolower($direction) == 'to'){
+                $rstart = basename($r['start']);
+            }else{
+                $rstart = basename($r['end']);    
             }
+            if ($rstart != $exception->getId()) {
+                $this->deleteRelationship($r);
+            } 
         }
     }
 
