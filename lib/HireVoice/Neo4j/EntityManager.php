@@ -262,18 +262,24 @@ class EntityManager
      */
     public function load($node)
     {
-        if (! isset($this->loadedNodes[$node->getId()])) {
+        if ($node instanceof Proxy\Entity) {
+            $pk = $this->getPrimaryKeyValue($node);
+        }else{
+            $pk = $node->getId();
+        }
+        
+        if (! isset($this->loadedNodes[$pk])) {
             $em = $this;
 
             $entity = $this->proxyFactory->fromNode($node, $this->metaRepository, function ($node) use ($em) {
                 return $em->load($node);
             });
 
-            $this->loadedNodes[$node->getId()] = $entity;
+            $this->loadedNodes[$pk] = $entity;
             $this->nodes[$this->getHash($entity)] = $node;
         }
 
-        return $this->loadedNodes[$node->getId()];
+        return $this->loadedNodes[$pk];
     }
 
     /**
@@ -287,9 +293,9 @@ class EntityManager
     public function reload($entity)
     {
         if ($entity instanceof Proxy\Entity) {
-            return $this->load($this->findAny($entity->getId()));
+            return $this->load($this->findAny($this->getPrimaryKeyValue($entity)));
         } else {
-            return $this->find(get_class($entity), $entity->getId());
+            return $this->find(get_class($entity), $this->getPrimaryKeyValue($entity));
         }
     }
 
@@ -656,14 +662,15 @@ class EntityManager
     private function removePreviousRelations($from, $relation, $direction, $exception)
     {
         $node = $this->getLoadedNode($from);
-
+        
         foreach ($this->getRelationsFrom($node, $relation) as $r) {
             if(strtolower($direction) == 'to'){
                 $rstart = basename($r['start']);
-            }else{
+            }else{        
                 $rstart = basename($r['end']);    
-            }
-            if ($rstart != $exception->getId()) {
+            } 
+
+            if ($rstart != $this->getPrimaryKeyValue($exception)){
                 $this->deleteRelationship($r);
             } 
         }
@@ -766,7 +773,7 @@ class EntityManager
 
         $class = $meta->getName();
         $mainIndex = $this->createIndex($class);
-        $mainIndex->add($node, 'id', $entity->getId());
+        $mainIndex->add($node, 'id', $this->getPrimaryKeyValue($entity));
     }
 
     private function writeIndexes()
@@ -801,7 +808,7 @@ class EntityManager
             }
             $class = $meta->getName();
             $mainIndex = $this->createIndex($class);
-            $mainIndex->remove($node, 'id', $entity->getId());
+            $mainIndex->remove($node, 'id', $this->getPrimaryKeyValue($entity));
         } 
     }
     /**
@@ -848,5 +855,16 @@ class EntityManager
     public function getPathFinder()
     {
         return clone $this->pathFinder;
+    }
+    
+    /**
+     * @return \HireVoice\Neo4j\Meta\Property
+     */
+    public function getPrimaryKeyValue($entity)
+    {
+        $meta = $this->getMeta($entity);
+        $pk = $meta->getPrimaryKey();
+        $pkGetter = 'get'.ucfirst($pk->getName());
+        return $entity->$pkGetter();
     }
 }
