@@ -9,7 +9,7 @@ before_install:
     - sudo wget -O - http://debian.neo4j.org/neotechnology.gpg.key| sudo apt-key add - # Import  signing key
     - echo 'deb http://debian.neo4j.org/repo stable/' | sudo tee -a /etc/apt/sources.list.d/neo4j.list # Create an Apt sources.list file
     - sudo apt-get update -qq
-    - sudo apt-get install -qq neo4j
+    - sudo apt-get install -qq neo4j=2.1.8
     - sudo unzip util/contrib/neo4j-gremlin-plugin-2.0-SNAPSHOT-server-plugin.zip -d /var/lib/neo4j/plugins/gremlin-plugin
     - echo 'dbms.security.auth_enabled=false' | sudo tee -a /var/lib/neo4j/conf/neo4j-server.properties
     - sudo /etc/init.d/neo4j-service restart
