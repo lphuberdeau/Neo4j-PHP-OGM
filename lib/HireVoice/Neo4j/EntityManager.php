@@ -424,7 +424,7 @@ class EntityManager
      * @param Object $b
      * @param string $direction
      */
-    public function addRelation($name, $a, $b, $direction)
+    public function addRelation($name, $a, $b, $direction = 'from')
     {
         if(strtolower($direction) == 'to'){
             $tmp = $b;

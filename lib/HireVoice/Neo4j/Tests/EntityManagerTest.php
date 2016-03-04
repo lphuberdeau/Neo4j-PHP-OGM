@@ -638,6 +638,46 @@ class EntityManagerTest extends TestCase
 
         $this->assertTrue(true);
     }
+
+    public function testAddRelationWithoutSpecifyingDirection()
+    {
+        $em = $this->getEntityManager();
+
+        $movie = new Entity\Movie;
+        $movie->setTitle('Terminator');
+        $em->persist($movie);
+
+        $cinema = new Entity\Cinema;
+        $cinema->setName('UGC');
+        $em->persist($cinema);
+
+        $em->flush();
+
+        $movie = $em->reload($movie);
+        $cinema = $em->reload($cinema);
+
+        $em->addRelation('presentedMovie', $movie, $cinema);
+    }
+
+    public function testAddRelationBySpecifyingDirection()
+    {
+        $em = $this->getEntityManager();
+
+        $movie = new Entity\Movie;
+        $movie->setTitle('Terminator');
+        $em->persist($movie);
+
+        $cinema = new Entity\Cinema;
+        $cinema->setName('UGC');
+        $em->persist($cinema);
+
+        $em->flush();
+
+        $movie = $em->reload($movie);
+        $cinema = $em->reload($cinema);
+
+        $em->addRelation('presentedMovie', $movie, $cinema, 'to');
+    }
 }
 
 /**
