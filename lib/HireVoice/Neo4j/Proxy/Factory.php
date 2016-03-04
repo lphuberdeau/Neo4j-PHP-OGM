@@ -237,7 +237,10 @@ class $proxyClass extends $className implements HireVoice\\Neo4j\\Proxy\\Entity
                      \$root = \$relation['end'];
                 }
 
-                if (basename(\$root) == \$this->getId()) {
+                \$pk = \$this->neo4j_meta->getPrimaryKey();
+                \$pkGetter = 'get'.ucfirst(\$pk->getName());
+
+                if (basename(\$root) == \$this->\$pkGetter()) {
                     \$node = \$this->neo4j_node->getClient()->getNode(basename(\$nodeUrl));
                     \$loader = \$this->neo4j_loadCallback;
                     \$collection->add(\$loader(\$node));

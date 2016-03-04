@@ -104,4 +104,31 @@ class InheritanceTest extends TestCase
 
         $this->assertEquals(5, $mp->getRooms());
     }
+    
+    public function testRemove()
+    {
+        $em = $this->getEntityManager();
+
+        $movie = new Entity\Movie;
+        $movie->setTitle('Army of Darkness');
+        
+        $cinema = new Entity\Cinema;
+        $cinema->setName('Nuovo Cinema paradiso');
+        $cinema->addPresentedMovie($movie);
+
+        $multiplex = new Entity\Multiplex();
+        $multiplex->setName('Multisala Portanova');
+        $multiplex->addPresentedMovie($movie);
+        $multiplex->setRooms(5);
+        
+        $em->persist($multiplex);
+        $em->flush();
+        
+        $id = $multiplex->getId();
+        
+        $em->remove($multiplex);
+        $em->flush();
+        
+        $this->assertEquals(null, $em->getRepository('HireVoice\Neo4j\Tests\Entity\Multiplex')->findOneBy(array('id' => $id)));
+    }
 }
