@@ -103,7 +103,13 @@ class FreePrimaryKeyTest extends TestCase
         $this->assertEquals('This pasta is terrible', $loaded->getName());
         $this->assertGreaterThanOrEqual(3, count($loaded->getOlives()));
 
-        $this->assertEquals( 'terrible olive', $loaded->getOlives()->first()->getName());
+        $update_found = FALSE;
+        foreach($loaded->getOlives() as $olive){
+            if($olive->getName() == 'terrible olive'){
+                $update_found = TRUE;
+            }
+        }
+        $this->assertTrue( $update_found );
         $this->assertGreaterThanOrEqual(1, count($loaded->getTomato()));
     }
     
