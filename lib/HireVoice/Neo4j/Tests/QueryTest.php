@@ -455,6 +455,7 @@ class QueryTest extends TestCase
             ->optionalMatch('(movie) -[:actor]-> (actor)')
             ->optionalMatch('(actor) -[:friend]-> (x)')
             ->end('actor.firstName as n1,x.firstName as n2')
+            ->order('n1 DESC')
             ->getResult();
 
          $this->assertEquals(array(
