@@ -221,7 +221,7 @@ class EntityManager
 
         $this->removeIndexes();
         $this->removeEntities();
-        
+
         $this->entities = array();
         $this->nodes = array();
     }
@@ -429,7 +429,7 @@ class EntityManager
         if(strtolower($direction) == 'to'){
             $tmp = $b;
             $b = $a;
-            $a = $tmp; 
+            $a = $tmp;
         }
         $a = $this->getLoadedNode($a);
         $b = $this->getLoadedNode($b);
@@ -535,10 +535,12 @@ class EntityManager
         foreach ($meta->getManyToOneRelations() as $property) {
             if ($property->isTraversed()) {
                 if ($entry = $property->getValue($entity)) {
+                    $relation = $property->getName();
+                    $direction = $property->getDirection();
                     if ($removeCallback) {
-                        $this->removePreviousRelations($entity, $property->getName(), $entry);
+                        $this->removePreviousRelations($entity, $entry, $relation, $direction);
                     }
-                    $addCallback($entry, $property->getName(), $property->getDirection());
+                    $addCallback($entry, $relation, $direction);
                 }
             }
         }
@@ -653,12 +655,18 @@ class EntityManager
         $this->traverseRelations($entity, $addCallback, $removeCallback);
     }
 
-    private function removePreviousRelations($from, $relation, $exception)
+    private function removePreviousRelations($a, $b, $relation, $direction)
     {
-        $node = $this->getLoadedNode($from);
+        if (strtolower($direction) == 'to') {
+            $tmp = $a;
+            $a = $b;
+            $b = $tmp;
+        }
+        $node = $this->getLoadedNode($a);
+        $relations = $this->getRelationsFrom($node, $relation);
 
-        foreach ($this->getRelationsFrom($node, $relation) as $r) {
-            if (basename($r['end']) != $exception->getId()) {
+        foreach ($relations as $r) {
+            if (basename($r['end']) != $b->getId()) {
                 $this->deleteRelationship($r);
             }
         }
@@ -779,9 +787,8 @@ class EntityManager
     }
 
     /**
-    * Remove all entities indexes.
-    * 
-    */
+     * Remove all entities indexes.
+     */
     private function removeIndexes(){
         foreach ($this->entitiesToRemove as $entity) {
             $entity = $this->reload($entity);
@@ -797,7 +804,7 @@ class EntityManager
             $class = $meta->getName();
             $mainIndex = $this->createIndex($class);
             $mainIndex->remove($node, 'id', $entity->getId());
-        } 
+        }
     }
     /**
      * @param $entity

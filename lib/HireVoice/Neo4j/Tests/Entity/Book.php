@@ -40,6 +40,16 @@ class Book
      */
     protected $name;
 
+    /**
+     * @OGM\ManyToMany(relation="BasedOn", direction="from")
+     */
+    protected $sagas;
+
+    function __construct()
+    {
+        $this->sagas = new ArrayCollection;
+    }
+
     function getId()
     {
         return $this->id;
@@ -66,6 +76,21 @@ class Book
     public function getName()
     {
         return $this->name;
+    }
+
+    function getSagas()
+    {
+        return $this->sagas;
+    }
+
+    function addSaga($saga)
+    {
+        $this->sagas->add($saga);
+    }
+
+    function setSagas(ArrayCollection $sagas)
+    {
+        $this->sagas = $sagas;
     }
 
 }

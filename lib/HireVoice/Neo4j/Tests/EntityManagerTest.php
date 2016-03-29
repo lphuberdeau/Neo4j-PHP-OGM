@@ -638,6 +638,36 @@ class EntityManagerTest extends TestCase
 
         $this->assertTrue(true);
     }
+
+    function testRelationIntegrityOnMultipleFlush()
+    {
+        $em = $this->getEntityManager();
+
+        $book = new Entity\Book();
+        $saga = new Entity\Saga();
+        $saga->setTitle('A tale of two cities');
+        $book->setName('A tale of two cities');
+        $book->addSaga($saga);
+        $saga->setBook($book);
+        $em->persist($book);
+        $em->persist($saga);
+        $em->flush();
+
+        $query = $em->createCypherQuery()
+            ->startWithNode("book", array($book))
+            ->match("(saga)<-[:BasedOn]-book")
+            ->end("saga");
+
+        $testSaga = $query->getOne();
+        $this->assertEquals($testSaga->getId(), $saga->getId());
+
+        $em->persist($saga);
+        $em->flush();
+
+        $testSaga = $query->getOne();
+        $this->assertNotNull($testSaga);
+        $this->assertEquals($testSaga->getId(), $saga->getId());
+    }
 }
 
 /**
