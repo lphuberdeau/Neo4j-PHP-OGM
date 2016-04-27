@@ -2,7 +2,7 @@
 /**
  * Copyright (C) 2012 Louis-Philippe Huberdeau
  *
- * Permission is hereby granted, free of charge, to any person obtaining a 
+ * Permission is hereby granted, free of charge, to any person obtaining a
  * copy of this software and associated documentation files (the "Software"),
  * to deal in the Software without restriction, including without limitation
  * the rights to use, copy, modify, merge, publish, distribute, sublicense,
@@ -85,7 +85,7 @@ class EntityManagerTest extends TestCase
         $em->flush();
 
         $movieKey = $entity->getMovieRegistryCode();
-        
+
         $em = $this->getEntityManager();
         $repository = $em->getRepository(get_class($entity));
         $movie = $repository->findOneByMovieRegistryCode($movieKey);
@@ -95,6 +95,34 @@ class EntityManagerTest extends TestCase
         $movies = $repository->findByMovieRegistryCode($movieKey);
         $this->assertCount(1, $movies);
         $this->assertEquals($entity, $movies->first()->getEntity());
+    }
+
+    function testUpdateLookupIndex()
+    {
+        $john = new Entity\User;
+        $john->setFirstName('John');
+        $john->setLastName('Doe');
+
+        $jane = new Entity\User;
+        $jane->setFirstName('Jane');
+        $jane->setLastName('Doe');
+
+        $em = $this->getEntityManager();
+        $em->persist($john);
+        $em->persist($jane);
+        $em->flush();
+
+        $lastName = $john->getLastName();
+        $repository = $em->getRepository(get_class($john));
+        $results = $repository->findByLastName($lastName);
+        $this->assertCount(2, $results);
+
+        $jane->setLastName('Foo');
+        $em->persist($jane);
+        $em->flush();
+
+        $updatedResults = $repository->findByLastName($lastName);
+        $this->assertCount(1, $updatedResults);
     }
 
     function testNodeIndexLookup()
@@ -545,7 +573,7 @@ class EntityManagerTest extends TestCase
         $em = $this->getEntityManager();
 
         $user1 = new Entity\User;
-        $user1->setFirstName('Alex'); 
+        $user1->setFirstName('Alex');
 
         $user2 = new Entity\User;
         $user2->setFirstName('Ivan');
@@ -574,7 +602,7 @@ class EntityManagerTest extends TestCase
         $repo = $em->getRepository('HireVoice\\Neo4j\\Tests\\Entity\\User');
 
         $user = new Entity\User;
-        $user->setFirstName('Alex'); 
+        $user->setFirstName('Alex');
 
         $em->persist($user);
         $em->flush();
@@ -613,7 +641,7 @@ class EntityManagerTest extends TestCase
     }
 
     /**
-     * Check the fix of issue #54. 
+     * Check the fix of issue #54.
      */
     function testRemoveEntity()
     {
@@ -680,4 +708,3 @@ class FailedEntity
      */
     private $name;
 }
-
