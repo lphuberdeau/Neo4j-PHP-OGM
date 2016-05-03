@@ -26,10 +26,13 @@ namespace HireVoice\Neo4j\Query;
 use Everyman\Neo4j\Node;
 use Everyman\Neo4j\Path;
 use HireVoice\Neo4j\EntityManager;
+use Everyman\Neo4j\Cypher\Query as InternalCypherQuery;
 
 class Cypher extends Query
 {
     const CLAUSE_WHERE = 'where';
+
+    const CLAUSE_ORWHERE = 'or where';
 
     const CLAUSE_USING = 'using';
 
@@ -238,6 +241,11 @@ class Cypher extends Query
         return $this->appendToQuery(self::CLAUSE_WHERE, func_get_args());
     }
 
+    public function orWhere($string)
+    {
+        return $this->appendToQuery(self::CLAUSE_ORWHERE, func_get_args());
+    }
+
     /**
      * @api
      * @param string $string
@@ -321,10 +329,18 @@ class Cypher extends Query
     {
         switch ($clause) {
             case self::CLAUSE_WHERE:
-                if ($this->currentClause !== $clause) {
+                if ($this->currentClause !== self::CLAUSE_WHERE && $this->currentClause !== self::CLAUSE_ORWHERE) {
                     $this->query .= PHP_EOL . $clause . ' (' . implode(') AND (', $args) . ')';
                 } else {
                     $this->query .= ' AND (' . implode(') AND (', $args) . ')';
+                }
+                break;
+
+            case self::CLAUSE_ORWHERE:
+                if ($this->currentClause !== self::CLAUSE_WHERE && $this->currentClause !== self::CLAUSE_ORWHERE) {
+                    $this->query .= PHP_EOL . self::CLAUSE_WHERE . ' (' . implode(') OR (', $args) . ')';
+                } else {
+                    $this->query .= ' OR (' . implode(') OR (', $args) . ')';
                 }
                 break;
 
@@ -349,6 +365,15 @@ class Cypher extends Query
         $this->currentClause = $clause;
 
         return $this;
+    }
+
+    /**
+     * @return \Everyman\Neo4j\Cypher\Query
+     */
+    public function getQuery()
+    {
+        $parameters = $this->processor->process();
+        return new InternalCypherQuery($this->em->getClient(), $this->query, $parameters);
     }
 
     /**
